@@ -14,3 +14,7 @@
 	history = log -a --full-diff -p .
 [init]
 	defaultBranch = main
+[commit]
+	gpgSign = true
+[user]
+	signingkey = F5C90C4CED6CF22A4DCAEA47A73D326C0BD70E32
