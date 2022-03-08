@@ -45,6 +45,7 @@ function install_work_mac {
     rc_install fish-config              .config/fish/config.fish
     rc_install fish-mac_config          .config/fish/conf.d/mac_config.fish
     rc_install gitconfig-work           .gitconfig
+    rc_install gitconfig-work-dev       .config/dev/gitconfig
     rc_install sh-inputrc               .inputrc
     rc_install sh-profile               .profile
     rc_install tmux-conf                .tmux.conf
