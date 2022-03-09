@@ -39,6 +39,7 @@ function install_work_mac {
     install_rvm
     install_pybin
     install_git
+    install_openjdk
 
     install_homebrew_tools
 
@@ -145,7 +146,7 @@ function install_git {
         return
     fi
 
-    if $(is_linux) ; then
+    if is_linux ; then
         apt install git
     else
         xcode-select --install
@@ -157,7 +158,7 @@ function install_openjdk {
         return
     fi
 
-    if $(is_linux) ; then
+    if is_linux ; then
         install_with_curl \
             corretto \
             https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.tar.gz \
@@ -165,7 +166,7 @@ function install_openjdk {
             a56da85a5487991f997cd566344d963f69e257ee9835bf1099f70ed3fe6aee6e0c5b4757617b47847f31997dd7cbdb66605a97daa555560959c1c78f30efc158
 
         read -p "In a new shell, unzip the corretto installation, press any key to continue..."
-    elif $(is_mac) ; then
+    elif is_mac ; then
         echo "Install java from the amazon downloads page: [link should open automatically]"
         echo "For help see: https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/macos-install.html"
         open "https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/macos-install.html"
