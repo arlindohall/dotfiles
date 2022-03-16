@@ -20,3 +20,5 @@ function journal
 end
 
 fish_add_path -p    /Library/Java/JavaVirtualMachines/amazon-corretto-11.jdk/Contents/Home/bin/
+
+rvm default
