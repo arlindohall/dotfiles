@@ -18,6 +18,14 @@ function dl
     mv $argv $HOME/.rm-trash-can/
 end
 
+function last-field
+    ruby -ane 'puts $F.last'
+end
+
+function first-field
+    ruby -ane 'puts $F.first'
+end
+
 ## Use local path first
 fish_add_path -p    $HOME/bin
 fish_add_path -p    ~/pybin/bin
