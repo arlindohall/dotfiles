@@ -123,7 +123,7 @@ function install_rvm {
 }
 
 function homebrew_tools_installed {
-    which rg && which watch && which node && which fish && which tmux
+    which rg && which watch && which node && which fish && which tmux && which delta
 }
 
 function install_homebrew_tools {
@@ -133,6 +133,7 @@ function install_homebrew_tools {
 
     brew install \
         rg \
+        git-delta \
         fish \
         node \
         tmux \
