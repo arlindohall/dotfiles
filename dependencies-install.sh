@@ -49,7 +49,7 @@ function install_work_mac {
 }
 
 function install_work_linux {
-    true
+    install_rvm
 }
 
 #### Specific installations ####
@@ -111,9 +111,10 @@ function install_rvm {
         rvm \
         https://get.rvm.io \
         'bash -s stable' \
-        58d498927cda6d8d79f6d94a4a91d9996f1641932122eb7184e92b01507d323779b2438f6967beeeac0fa69f79152d5e7f94ae35d1db4b4c54d70fbaf1b841db
+        9480c31d52b2841b1389d3cf02d54f9c85a6010312c3c141977b396d168e556c4a52137286a288286988ddec0f6244430eb220341dfbd0c73ce538509053c2fc
 
     # Fish configuration
+    mkdir -p "$HOME/.config/fish/functions/"
     install_with_curl \
         rvm-fish \
         https://raw.github.com/lunks/fish-nuggets/master/functions/rvm.fish \

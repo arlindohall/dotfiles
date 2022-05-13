@@ -36,14 +36,11 @@ function set_up_directory_structure {
 
 function random_digits {
     length=$1
-    if [ -z $length ] ; then
-        length=4
-    fi
-    ruby -e "Random.bytes($length/2).bytes.map{|b| b.to_s(16)}.join"
+    ruby -e "puts Random.bytes($length/2).bytes.map{|b| b.to_s(16)}.join"
 }
 
 function install_with_curl {
-    name="/tmp/$1-$(random_digits)"
+    name="/tmp/$1-$(random_digits 4)"
     url=$2
     run_command=$3
     hash=$4
