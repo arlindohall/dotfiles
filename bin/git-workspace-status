@@ -2,18 +2,18 @@
 
 require 'pathname'
 
-class WorkspaceStatus
+require_relative 'lib/workspace_each'
+
+class WorkspaceStatus < WorkspaceEach
   def initialize(path)
-    @path = Pathname.new(path)
+    super path do |child|
+      inspect_git_repo child
+    end
   end
 
-  def inspect_git_repos
-    @path.each_child do |child|
-      if child.directory? && child.join('.git').exist?
-        print_name child
-        dump_git child
-      end
-    end
+  def inspect_git_repo repo
+    print_name repo
+    dump_git repo
   end
 
   private
@@ -45,4 +45,4 @@ class WorkspaceStatus
 end
 
 
-WorkspaceStatus.new('.').inspect_git_repos
+WorkspaceStatus.new('.').act_git_repos
