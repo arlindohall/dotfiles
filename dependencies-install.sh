@@ -11,6 +11,7 @@ function install_home_mac {
     install_rvm
     install_pybin
     install_git
+    install_git_delta
     install_openjdk
 
     install_homebrew_tools
@@ -28,6 +29,7 @@ function install_home_linux {
     install_rvm
     install_pybin
     install_git
+    install_git_delta
     install_openjdk
 
     install_homebrew_tools
@@ -39,6 +41,7 @@ function install_work_mac {
     install_rvm
     install_pybin
     install_git
+    install_git_delta
     install_openjdk
 
     install_homebrew_tools
@@ -50,6 +53,8 @@ function install_work_mac {
 
 function install_work_linux {
     install_rvm
+    install_rust
+    install_git_delta
 }
 
 #### Specific installations ####
@@ -87,6 +92,11 @@ function install_rust {
     if ls $HOME/.cargo/bin/cargo ; then
         return
     fi
+
+    # Add cargo to path just for the duration of install script
+    # This is technically a global variable but it makes it easier
+    # to install later without checking where cargo is installed
+    export PATH="$PATH:$HOME/.cargo/bin"
 
     install_with_curl \
         rustup \
@@ -175,6 +185,18 @@ function install_openjdk {
         open "https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/macos-install.html"
         read -p "Press any key to continue"
     fi
+}
+
+function install_git_delta {
+    if which delta ; then
+        return
+    fi
+
+    if ! which cargo ; then
+        install_rust
+    fi
+
+    cargo install git-delta
 }
 
 install
