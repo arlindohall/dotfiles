@@ -1,5 +1,7 @@
 source /etc/zsh/zshrc.default.inc.zsh
 
+PATH=$PATH:$HOME/bin
+
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
