@@ -115,7 +115,7 @@ function install_rust {
         rustup \
         https://sh.rustup.rs  \
         sh \
-        2d4bb2575338948c647d0a09ce486a4ca9080b7add15e7f699e2997404f318694318b7b4561f71d5a8e1c94d217db4b19083925845157bbf43957aeea7c1de20
+        baf397601a78f37584a80e6c66f83f503bc42839c1362c8e2ccb719f5bb74e00801d74940fcf559dcc35d06c9b4124866017f85ba8766e545a2ef30068637839
 }
 
 function install_rvm {
