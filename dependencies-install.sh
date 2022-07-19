@@ -2,7 +2,20 @@
 
 set -euxo pipefail
 
-. ./helpers.sh
+INSTALL_PATH="$HOME/dotfiles/helpers.sh"
+WORKING_PATH="$HOME/workspace/dotfiles/helpers.sh"
+
+if ls "$INSTALL_PATH"
+then
+    . "$INSTALL_PATH"
+elif ls "$WORKING_PATH"
+then
+    . "$WORKING_PATH"
+else
+    echo "Unable to run script..."
+    echo "Please place dir in either $HOME/dotfiles or $HOME/worksapce/dotfiles..."
+    exit 1
+fi
 
 #### Dependency and files installation ####
 function install_home_mac {
