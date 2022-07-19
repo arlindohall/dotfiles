@@ -134,7 +134,14 @@ function install_rvm {
 }
 
 function homebrew_tools_installed {
-    which rg && which watch && which node && which fish && which tmux && which delta && which bat
+    which rg &&
+        which watch &&
+        which node &&
+        which fish &&
+        which tmux &&
+        which delta &&
+        which bat &&
+        which tree
 }
 
 function install_homebrew_tools {
@@ -143,14 +150,15 @@ function install_homebrew_tools {
     fi
 
     brew install \
-        rg \
-        git-delta \
         bat \
         fish \
-        node \
-        tmux \
+        git-delta \
         graphviz \
+        node \
         pandoc \
+        rg \
+        tmux \
+        tree \
         watch
 }
 

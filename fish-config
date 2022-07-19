@@ -26,6 +26,8 @@ function first-field
     ruby -ane 'puts $F.first'
 end
 
+alias tree "tree | bat"
+
 ## Use local path first
 fish_add_path -p    $HOME/bin
 fish_add_path -p    ~/pybin/bin
