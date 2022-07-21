@@ -15,6 +15,7 @@ alias 'note-index'          'notego && index && cd -'
 alias 'note-preview'        'cd ~/var/notes ; fish build.fish ; cd -'
 alias yearcat               'cat ~/var/notes/src/(todays-year)/*.md'
 
+alias docker                podman
 
 function note
     if test ! -f (todays-note)

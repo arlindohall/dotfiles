@@ -30,8 +30,9 @@ alias tree "tree | bat"
 
 ## Use local path first
 fish_add_path -p    $HOME/bin
-fish_add_path -p    ~/pybin/bin
+fish_add_path -p    $HOME/pybin/bin
 fish_add_path       $HOME/.cargo/bin
+fish_add_path       $HOME/.bun/bin
 
 # Suppress greeting
 set fish_greeting
