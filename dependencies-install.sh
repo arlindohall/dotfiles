@@ -149,15 +149,15 @@ function install_rvm {
 }
 
 function homebrew_tools_installed {
-    which rg &&
-        which watch &&
-        which node &&
-        which fish &&
-        which tmux &&
+    which bat &&
         which delta &&
-        which bat &&
+        which fish &&
+        which node &&
         which podman &&
-        which tree
+        which rg &&
+        which tmux &&
+        which tree &&
+        which watch
 }
 
 function install_homebrew_tools {
