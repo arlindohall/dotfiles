@@ -68,6 +68,8 @@ function install_work_linux {
     install_rvm
     install_rust
     install_git_delta
+
+    install_apt_tools
 }
 
 #### Specific installations ####
@@ -173,6 +175,23 @@ function install_homebrew_tools {
         tmux \
         tree \
         watch
+}
+
+function install_apt_tools {
+    if apt_tools_insatlled ; then
+        return
+    fi
+
+    sudo apt install -y \
+        bat \
+        tree \
+        watch
+}
+
+function apt_tools_installed {
+    which bat &&
+        which tree &&
+        which watch
 }
 
 function install_git {
