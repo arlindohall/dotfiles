@@ -156,6 +156,7 @@ function homebrew_tools_installed {
         which tmux &&
         which delta &&
         which bat &&
+        which podman &&
         which tree
 }
 
@@ -171,6 +172,7 @@ function install_homebrew_tools {
         graphviz \
         node \
         pandoc \
+        podman \
         rg \
         tmux \
         tree \
