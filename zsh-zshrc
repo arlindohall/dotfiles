@@ -2,6 +2,7 @@ source /etc/zsh/zshrc.default.inc.zsh
 
 PATH=$PATH:$HOME/bin
 
+alias bat=batcat
 alias tree='tree | bat'
 
 bindkey -v
