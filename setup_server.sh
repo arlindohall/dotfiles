@@ -8,7 +8,7 @@ usermod -a -G sudo miller
 echo 'miller    ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 mkdir /home/miller/.ssh
-cat .ssh/authorized_keys >> /home/miller/.ssh/authorized_keys
+cat /root/.ssh/authorized_keys >> /home/miller/.ssh/authorized_keys
 
 chown miller:miller /home/miller/.ssh
 chown miller:miller /home/miller/.ssh/*
