@@ -94,7 +94,6 @@ function install_homebrew_tools {
     brew install \
         bat \
         fish \
-        git-delta \
         graphviz \
         node \
         pandoc \
@@ -112,6 +111,13 @@ function install_apt_tools {
 
     sudo apt install -y \
         bat \
+        docker.io \
+        fish \
+        graphviz \
+        node \
+        pandoc \
+        rg \
+        tmux \
         tree \
         watch
 }

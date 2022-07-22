@@ -40,7 +40,6 @@ function install_home_mac {
 }
 
 function install_home_linux {
-    install_homebrew
     install_rust
     install_rvm
     install_pybin
@@ -48,7 +47,7 @@ function install_home_linux {
     install_git_delta
     install_openjdk
 
-    install_homebrew_tools
+    install_apt_tools
 }
 
 function install_work_mac {
