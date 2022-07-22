@@ -13,6 +13,10 @@ function install {
 }
 
 function random_digits {
+    if ! which ruby ; then
+      sudo apt install ruby
+    fi
+
     length=$1
     ruby -e "puts Random.bytes($length/2).bytes.map{|b| b.to_s(16)}.join"
 }
