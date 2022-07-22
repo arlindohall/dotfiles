@@ -5,6 +5,10 @@ function install_pybin {
         return
     fi
 
+    if is_linux ; then
+        apt install python3.10-venv
+    fi
+
     python3 -m venv $HOME/pybin
 }
 
