@@ -49,6 +49,8 @@ http {
 
 sudo service nginx restart
 
+sudo apt install -y certbot
+sudo apt-get install python3-certbot-nginx
 certbot --nginx
 
 sudo -u miller npm install --global yarn

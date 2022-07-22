@@ -12,8 +12,10 @@ The `dependencies-install.sh` script really only needs to be run once for each n
 ## Contents
 
 - `bin`: little helper programs I like to have on each machine
+- `setup-server.sh`: run this first on a new server, sets up my user to get ready for other installs
+  - Once this has been run, run the other two scripts as user instead of root
 - `install.sh`: installs dotfiles, meant to be run very quickly
-- `helpers.sh`: just defines functions, no actions
+- `lib/*helpers.sh`: just defines functions, no actions
 - `dependencies-install.sh`: sometimes downloads items, calls other programs, can be slow
 - dotfiles: each dotfile is named after the program it's for
 
