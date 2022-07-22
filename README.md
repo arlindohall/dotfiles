@@ -5,7 +5,8 @@
 These are all my configuration files, plus a handful of scripts that install them on a fresh computer.
 Any dependencies that these files reference are also installed by the install scripts.
 
-The install scripts use `helpers.sh` for shared or helper functions, so the scripts have to be run from this directory (to avoid any annoying manipulation of the path).
+The install scripts use `rc_helpers.sh` or `dependencies_helpers.sh` for helper functions, but each helper detects where the script was run from to avoid path issues.
+That said, the scripts should be located in `~/dotfiles` or `~/workspace/dotfiles`, which make sense if you've just cloned the repo to a new machine, or if you're working on the files, respectively.
 The `dependencies-install.sh` script really only needs to be run once for each new VM or system.
 
 ## Contents
