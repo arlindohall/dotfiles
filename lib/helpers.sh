@@ -13,7 +13,7 @@ function install {
 }
 
 function random_digits {
-    if ! which ruby ; then
+    if ! (which ruby 1>/dev/null) ; then
         set +o pipefail # about to interrupt this pipe
         base64 /dev/urandom | tr -d '+/' | head -c 4
         set -o pipefail
