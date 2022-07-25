@@ -8,6 +8,12 @@ alias tree='tree | bat'
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+# Add Cargo to PATH to install git-delta
+export PATH="$PATH:$HOME/.cargo/bin"
+
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
