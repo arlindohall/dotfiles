@@ -102,7 +102,7 @@ function install_homebrew_tools {
         node \
         pandoc \
         podman \
-        rg \
+        ripgrep \
         tmux \
         tree \
         watch
@@ -118,9 +118,8 @@ function install_apt_tools {
         docker.io \
         fish \
         graphviz \
-        node \
         pandoc \
-        rg \
+        ripgrep \
         tmux \
         tree \
         watch
@@ -128,6 +127,12 @@ function install_apt_tools {
 
 function apt_tools_installed {
     which bat &&
+        which docker &&
+        which fish &&
+        which dot &&
+        which pandoc &&
+        which rg &&
+        which tmux &&
         which tree &&
         which watch
 }
