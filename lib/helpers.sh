@@ -1,3 +1,6 @@
+#!/bin/bash
+
+# shellcheck disable=SC2002
 
 #### Top-level command ###
 function install {
@@ -30,10 +33,10 @@ function install_with_curl {
     run_command=$3
     hash=$4
 
-    curl -sSLf $url > $name
+    curl -sSLf "$url" > "$name"
 
     # Run command is not quoted because it might have arguments stuffed in
-    openssl sha512 -r $name | grep $hash && cat $name | $run_command
+    openssl sha512 -r "$name" | grep "$hash" && cat "$name" | $run_command
 }
 
 function is_linux {

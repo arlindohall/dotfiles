@@ -28,7 +28,7 @@ sudo -u miller chsh -s /usr/bin/fish
 echo 'Port 1989' >> /etc/ssh/sshd_config
 service ssh restart
 
-sudo echo '
+echo '
 events {}
 
 http {
@@ -45,7 +45,7 @@ http {
     listen 80;
   }
 }
-' > /etc/nginx/nginx.conf
+' > sudo tee /etc/nginx/nginx.conf
 
 sudo service nginx restart
 
