@@ -6,40 +6,22 @@ require_relative 'lib/workspace_each'
 
 class WorkspaceStatus < WorkspaceEach
   def initialize(path)
-    super path do |child|
-      inspect_git_repo child
-    end
+    super(path)
   end
 
-  def inspect_git_repo repo
-    print_name repo
-    dump_git repo
+  def act(child)
+    inspect_git_repo(child)
+  end
+
+  def inspect_git_repo(repo)
+    print_name(repo)
+    dump_git(repo)
   end
 
   private
 
-    def print_name child
-      name = " #{child.basename.to_s} "
-      padding = '-' * ((max_length - name.length) / 2)
-      header = "#{padding}#{name}#{padding}"
-      header = header + '-' if header.length.odd?
-      puts "\n#{header}\n\n"
-    end
-
-    def max_length
-      @max_length ||= calculate_max_length
-    end
-
-    def calculate_max_length
-      max = @path.each_child.map(&:basename).map(&:to_s).max_by(&:length).length + 12
-      max >= 80 ? max : 80
-    end
-
-    def dump_git child
-      system <<~EOF
-      cd #{child}
-      git status
-      EOF
+    def dump_git(child)
+      within_child(child, "git status")
     end
 
 end

@@ -33,7 +33,7 @@ class Index
     private
 
         def index
-            <<~EOF
+            <<~index_file
                 # Index\n
                 ## Directories\n
                 #{directory_entries}\n
@@ -41,7 +41,7 @@ class Index
                 #{file_entries}\n\n
                 [Return to Parent...](../INDEX.md)
 
-            EOF
+            index_file
         end
 
         def directory_entries

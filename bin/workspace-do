@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+
+require_relative 'lib/workspace_each'
+
+class WorkspaceDo < WorkspaceEach
+  def initialize(path, cmd)
+    super(path)
+    @cmd = cmd
+  end
+
+  def act(child)
+    print_name(child)
+    puts "Running command: '#{command}'\n\n"
+    within_child(child, command)
+  end
+
+  private
+
+    def command
+      @cmd.join(" ")
+    end
+end
+
+WorkspaceDo.new('.', ARGV).act_git_repos
