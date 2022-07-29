@@ -58,7 +58,9 @@
 " Ch 4
 " Note that this mapping works for the 2nd-last character of a word
 :inoremap <c-u> <esc>viwUea
+:inoremap <c-l> <esc>viwuea
 :nnoremap <c-u> viwU
+:nnoremap <c-l> viwu
 
 " Ch 5
 " converted the above mappings to *noremap*
