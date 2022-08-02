@@ -69,7 +69,6 @@ function install_work_mac {
 }
 
 function install_work_linux {
-    install_rvm
     install_rust
     install_git_delta
 
