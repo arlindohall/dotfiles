@@ -75,7 +75,7 @@ function install_rvm {
     install_with_curl \
         rvm-fish \
         https://raw.github.com/lunks/fish-nuggets/master/functions/rvm.fish \
-        "tee > $HOME/.config/fish/functions/rvm.fish" \
+        "tee $HOME/.config/fish/functions/rvm.fish" \
         80f8cd98656c99b2ce66c665ee957a77d107e62a87c0554bf3c7fc291680382653a8acf4f5f78397e254002c985dc2dae85f3c7b07c3251d8634c5ea5a530ecb
 }
 
@@ -161,7 +161,7 @@ function install_openjdk {
         install_with_curl \
             corretto \
             https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.tar.gz \
-            "tee > /opt/amazon-corretto-11-x64-linux-jdk.tar.gz" \
+            "tee /opt/amazon-corretto-11-x64-linux-jdk.tar.gz" \
             a56da85a5487991f997cd566344d963f69e257ee9835bf1099f70ed3fe6aee6e0c5b4757617b47847f31997dd7cbdb66605a97daa555560959c1c78f30efc158
 
         read -pr "In a new shell, unzip the corretto installation, press any key to continue..."
