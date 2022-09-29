@@ -6,6 +6,7 @@ fish_add_path       /opt/homebrew/bin
 alias 'todays-date'         'echo (date +%Y/%m%d.md)'
 alias 'todays-year'         'echo (date +%Y)'
 alias 'todays-note'         'echo ~/var/notes/src/(todays-date)'
+alias 'last-note'           "find ~/var/notes/src | rg '\d{4}/\d{4}.md' | sort | tail -1"
 alias 'time-right-now'      'echo (date +%H:%M)'
 
 alias notecat               'cat (todays-note)'
