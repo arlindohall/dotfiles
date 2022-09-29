@@ -12,7 +12,9 @@ bindkey '^R' history-incremental-search-backward
 export PATH="$PATH:$HOME/.rvm/bin"
 
 # Add Cargo to PATH to install git-delta
-export PATH="$PATH:$HOME/.cargo/bin"
+# Installed under `.rust/bin` because that's where instances
+# come with Rust installed when I use zsh
+export PATH="$PATH:$HOME/.rust/bin"
 
 function dl {
     mv $@ $HOME/.rm-trash-can/

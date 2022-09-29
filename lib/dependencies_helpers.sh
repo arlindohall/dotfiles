@@ -40,10 +40,17 @@ function install_rust {
         return
     fi
 
+    if ls "$HOME"/.rust/bin/cargo ; then
+        return
+    fi
+
     # Add cargo to path just for the duration of install script
     # This is technically a global variable but it makes it easier
     # to install later without checking where cargo is installed
+    #
+    # Might be on an instance where rust is installed at `.rust/bin/`
     export PATH="$PATH:$HOME/.cargo/bin"
+    export PATH="$PATH:$HOME/.rust/bin"
 
     install_with_curl \
         rustup \
