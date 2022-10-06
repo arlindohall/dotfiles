@@ -31,6 +31,13 @@ Each one is a javascript bookmarklet to transform a google document or sheet.
 ```
 javascript:window.location.host.includes('google.com')&&window.location.assign(window.location.href.replace(/edit|copy/, 'preview'))
 ```
+
+### Edit
+
+```
+javascript:window.location.host.includes('google.com')&&window.location.assign(window.location.href.replace(/preview|copy/, 'edit'))
+```
+
 ### Preview as PDF
 
 ```
