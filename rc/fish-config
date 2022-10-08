@@ -26,6 +26,14 @@ function first-field
     ruby -ane 'puts $F.first'
 end
 
+function disk-usage --argument-names dir
+    if test "$dir"
+        du -hs "$dir"/* 2>/dev/null | sort -h
+    else
+        du -hs ./* 2>/dev/null | sort -h
+    end
+end
+
 alias tree "tree | bat"
 
 ## Use local path first
