@@ -10,6 +10,8 @@ function install {
         install_home_mac
     elif hostname | grep 'droplet' && is_linux ; then
         install_home_linux
+    elif hostname | grep 'hall-server' && is_linux ; then
+        install_home_linux
     else
         install_work_linux
     fi
