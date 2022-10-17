@@ -9,11 +9,13 @@ function rc_install {
         source="$INSTALL_PATH/rc/$1"
         dest=$HOME/$2
 
+	mkdir -p "$(dirname $dest)"
         cp "$source" "$dest"
     elif ls "$WORKING_PATH" ; then
         source="$WORKING_PATH/rc/$1"
         dest=$HOME/$2
 
+	mkdir -p "$(dirname $dest)"
         cp "$source" "$dest"
     else
         echo "Unable to run script..."

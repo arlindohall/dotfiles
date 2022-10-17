@@ -7,7 +7,7 @@ function install_pybin {
     fi
 
     if is_linux ; then
-        apt install python3.10-venv
+        sudo apt install -y python3.10-venv
     fi
 
     python3 -m venv "$HOME"/pybin
@@ -33,6 +33,10 @@ function install_homebrew {
         https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh \
         /bin/bash \
         72600deefd090113dc51c5a5e4620d59bf411e76f1a8d9991b720e17b195366e24dca535a2d75cad44cec610a27608c55440da887132feb2643f7b11775bd8b5
+}
+
+function install_clang {
+    sudo apt install -y clang
 }
 
 function install_rust {
@@ -153,7 +157,7 @@ function install_git {
     fi
 
     if is_linux ; then
-        apt install git
+        sudo apt install -y git
     else
         xcode-select --install
     fi
@@ -169,7 +173,7 @@ function install_openjdk {
             corretto \
             https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.tar.gz \
             "tee /opt/amazon-corretto-11-x64-linux-jdk.tar.gz" \
-            a56da85a5487991f997cd566344d963f69e257ee9835bf1099f70ed3fe6aee6e0c5b4757617b47847f31997dd7cbdb66605a97daa555560959c1c78f30efc158
+            5fd3899788ca447f0b8f572e15e6b02b602be6e08b3413ce1e368886dbab380c4195cd1e6f218304c87fc68297372fca9193fdf3dca88d65649f166768046569
 
         read -pr "In a new shell, unzip the corretto installation, press any key to continue..."
     elif is_mac ; then

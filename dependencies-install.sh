@@ -42,12 +42,12 @@ function install_home_mac {
 }
 
 function install_home_linux {
+    install_clang
     install_rust
     install_rvm
     install_pybin
     install_git
     install_git_delta
-    install_openjdk
 
     install_apt_tools
 }
