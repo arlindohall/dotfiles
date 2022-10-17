@@ -50,6 +50,8 @@ function install_home_linux {
     install_git_delta
 
     install_apt_tools
+
+    set_install_shell
 }
 
 function install_work_mac {

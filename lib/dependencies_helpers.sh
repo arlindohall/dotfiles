@@ -195,3 +195,7 @@ function install_git_delta {
 
     cargo install git-delta
 }
+
+function set_install_shell {
+    chsh -s $(which fish) millerhall
+}
