@@ -1,4 +1,6 @@
 # Aliases
+alias sc systemctl
+alias jc journalctl
 
 ## Check for bad words
 ##
