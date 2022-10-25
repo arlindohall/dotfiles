@@ -21,3 +21,19 @@ export PATH="$PATH:$HOME/.cargo/bin"
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
+
+function journal-service {
+    if (! test $1) ; then
+        echo "Usage: journal-service <service-name>"
+        return
+    fi
+    name=$1
+    shift
+
+    systemctl status "*$name*" |
+        grep '●' |
+        awk '{ print $2 }' |
+        xargs -i{} echo --unit={} |
+        xargs journalctl --output=json $@ |
+        $(echo /opt/*/bin/journalfmt)
+}
