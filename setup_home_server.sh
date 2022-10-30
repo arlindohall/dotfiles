@@ -37,8 +37,8 @@ function install_pihole {
 }
 
 function setup_static_page {
-  build_sum="$(find server/static-homesite/build/ -type file | xargs cat | md5sum)"
-  target_sum="$(find /var/hall-house/www/ -type file | xargs cat | md5sum)"
+  build_sum="$(find server/static-homesite/build/ -type f | xargs cat | md5sum | awk '{print $1}')"
+  target_sum="$(find /var/hall-house/www/ -type f | xargs cat | md5sum | awk '{print $1}')"
 
   if test "$build_sum" = "$target_sum" ; then
     return
