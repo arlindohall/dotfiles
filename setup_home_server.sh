@@ -46,7 +46,7 @@ function setup_static_page {
 
   sudo rm -rf /var/hall-house/www/
   sudo mkdir -p /var/hall-house/www/
-  sudo cp ./server/static-homesite/build/* /var/hall-house/www/
+  sudo cp -r ./server/static-homesite/build/* /var/hall-house/www/
   sudo systemctl restart nginx
 }
 
