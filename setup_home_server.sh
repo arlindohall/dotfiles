@@ -19,19 +19,24 @@ function setup_static_ip {
 }
 
 function install_nginx {
-  sudo apt update -y
-  sudo apt install -y nginx
+  if ! which nginx ; then
+    sudo apt update -y
+    sudo apt install -y nginx
+  fi
 
   sudo cp ./server/nginx-home_server /etc/nginx/nginx.conf
   sudo systemctl restart nginx
 }
 
 function install_pihole {
-  curl -sSL https://install.pi-hole.net | bash
+  if ! which pihole ; then
+    curl -sSL https://install.pi-hole.net | bash
+  fi
 }
 
 function setup {
   setup_static_ip
+  install_nginx
   install_pihole
 }
 
