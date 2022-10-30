@@ -2,7 +2,7 @@
 
 function setup_static_ip {
   CONFIG_FILE="./server/netplan-home_server_netplan_installer"
-  if test (hostname -I | grep 192.168.1.200) ; then
+  if test $(hostname -I | grep 192.168.1.200) ; then
     return
   fi
 
