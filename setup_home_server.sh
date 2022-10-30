@@ -34,10 +34,17 @@ function install_pihole {
   fi
 }
 
+function setup_static_page {
+  rm -rf /var/hall-house/www/
+  mkdir -p /var/hall-house/www/
+  cp ./server/static-homesite/build/* /var/hall-house/www/
+}
+
 function setup {
   setup_static_ip
   install_nginx
   install_pihole
+  setup_static_page
 }
 
 setup

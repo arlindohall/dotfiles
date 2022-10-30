@@ -27,10 +27,11 @@ http {
 	server {
 		listen 80 default_server;
 		server_name _;
+		root /var/hall-house/www;
 
 		# deny all
 		location / {
-			try_files index.html;
+			return 404;
 		}
 	}
 }
