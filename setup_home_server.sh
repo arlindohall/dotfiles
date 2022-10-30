@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 function setup_static_ip {
   CONFIG_FILE="./server/netplan-home_server_netplan_installer"
   if hostname -I | grep 192.168.1.200 ; then
@@ -35,9 +37,17 @@ function install_pihole {
 }
 
 function setup_static_page {
+  build_sum="$(find server/static-homesite/build/ -type file | xargs cat | md5sum)"
+  target_sum="$(find /var/hall-house/www/ -type file | xargs cat | md5sum)"
+
+  if test "$build_sum" = "$target_sum" ; then
+    return
+  fi
+
   sudo rm -rf /var/hall-house/www/
   sudo mkdir -p /var/hall-house/www/
   sudo cp ./server/static-homesite/build/* /var/hall-house/www/
+  sudo systemctl restart nginx
 }
 
 function setup {
