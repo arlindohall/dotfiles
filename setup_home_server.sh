@@ -21,6 +21,9 @@ function setup_static_ip {
 function install_nginx {
   sudo apt update -y
   sudo apt install -y nginx
+
+  sudo cp ./server/nginx-home_server /etc/nginx/nginx.conf
+  sudo systemctl restart nginx
 }
 
 function install_pihole {
