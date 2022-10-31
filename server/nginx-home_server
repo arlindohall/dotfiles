@@ -56,8 +56,9 @@ http {
 	# Virtual Host Configs
 	##
 
-	include /etc/nginx/conf.d/*.conf;
-	include /etc/nginx/sites-enabled/*;
+	# TODO: refactor virtual hosts into this format
+	# include /etc/nginx/conf.d/*.conf;
+	# include /etc/nginx/sites-enabled/*;
 
 	server {
 		listen 80;
@@ -69,6 +70,7 @@ http {
 
 	server {
 		listen 80 default_server;
+		server_name _;
 		root /var/hall-house/www;
 		index index.html;
 
