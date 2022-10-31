@@ -69,7 +69,6 @@ http {
 
 	server {
 		listen 80 default_server;
-		server_name _;
 		root /var/hall-house/www;
 		index index.html;
 
