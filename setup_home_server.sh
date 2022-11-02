@@ -4,7 +4,7 @@ set -euxo pipefail
 
 function setup_static_ip {
   CONFIG_FILE="./server/netplan-home_server_netplan_installer"
-  if hostname -I | grep 192.168.1.200 ; then
+  if hostname -I | grep 192.168.0.200 ; then
     return
   fi
 
@@ -15,7 +15,7 @@ function setup_static_ip {
     exit 1
   fi
 
-  echo "Warning: This will reset the network to use IP 192.168.1.200, you will need to reconnect..."
+  echo "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
   sudo cp "$CONFIG_FILE" /etc/netplan/00-installer-config.yaml
   sudo netplan apply
 }
