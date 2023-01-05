@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+class PullRequest
+  def create!
+    system command
+  end
+
+  private
+
+  def command
+    "open #{remote}/pull/new/#{branch}"
+  end
+
+  def remote
+    non_git_url.split.drop(1).first
+  end
+
+  def non_git_url
+    push_target.split(".git").first
+  end
+
+  def push_target
+    `git remote -v`.lines.find { |line| line.include?("push") }
+  end
+
+  def branch
+    branch_output.split.last
+  end
+
+  def branch_output
+    `git branch`
+  end
+end
+
+PullRequest
+  .new
+  .create!
