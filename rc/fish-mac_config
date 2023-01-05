@@ -17,7 +17,15 @@ alias 'note-preview'        'cd ~/var/notes ; fish build.fish ; cd -'
 alias yearcat               'cat ~/var/notes/src/(todays-year)/*.md'
 
 alias docker                podman
-alias mmdc                  'npx @mermaid-js/mermaid-cli'
+
+function mermaid
+  npx @mermaid-js/mermaid-cli \
+    -i "$HOME/var/scratch/diagram.mm" \
+    -o "$HOME/var/scratch/diagram.png"
+
+  echo "Writing the output of mermaid-cli to $HOME/var/scratch/"
+  open "$HOME/var/scratch/diagram.png"
+end
 
 function note
     if test ! -f (todays-note)
