@@ -17,6 +17,7 @@ alias 'note-preview'        'cd ~/var/notes ; fish build.fish ; cd -'
 alias yearcat               'cat ~/var/notes/src/(todays-year)/*.md'
 
 alias docker                podman
+alias mmdc                  'npx @mermaid-js/mermaid-cli'
 
 function note
     if test ! -f (todays-note)
