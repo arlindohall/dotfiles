@@ -2,7 +2,21 @@
 
 class PullRequest
   def create!
+    usage("Must be called with a branch (not main) checked out") if branch == "main"
+    usage("No arguments allowed") unless ARGV.empty?
+
     system command
+  end
+
+  def usage(*messages)
+    puts "Usage: create-pr"
+
+    messages.each do |message|
+      print " - "
+      puts message
+    end
+
+    exit -1
   end
 
   private
@@ -16,7 +30,10 @@ class PullRequest
   end
 
   def non_git_url
-    push_target.split(".git").first
+    push_target
+      .gsub(".git", "")
+      .gsub("ssh://", "https://")
+      .gsub("http://", "https://")
   end
 
   def push_target
