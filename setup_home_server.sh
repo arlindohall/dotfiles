@@ -61,12 +61,13 @@ function setup_baby_buddy {
 }
 
 function run_baby_buddy_container {
+  # todo: use https
   sudo docker run -d \
     --name=babybuddy \
     -e PUID=1000 \
     -e PGID=1000 \
     -e TZ=America/New_York \
-    -e CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,https://babybuddy.domain.com \
+    -e CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,http://baby.hallhouse.link \
     -p 3080:8000 \
     -v "$HOME/var/babybuddy/appdata:/config" \
     --restart unless-stopped \
