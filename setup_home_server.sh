@@ -76,8 +76,12 @@ function run_baby_buddy_container {
 function setup {
   setup_static_ip
   install_nginx
+
   install_pihole
+
   setup_static_page
+
+  setup_baby_buddy
 }
 
 setup
