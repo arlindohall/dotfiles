@@ -53,7 +53,7 @@ function setup_static_page {
 function setup_baby_buddy {
   mkdir -p "$HOME/var/babybuddy/appdata"
 
-  if sudo docker ps | grep babybuddy ; then
+  if sudo docker ps -a | grep babybuddy ; then
     return
   fi
 
