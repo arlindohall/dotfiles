@@ -51,7 +51,7 @@ function setup_static_page {
 }
 
 function setup_baby_buddy {
-  mkdir -p /var/babybuddy/appdata
+  mkdir -p "$HOME/var/babybuddy/appdata"
 
   if sudo docker ps | grep babybuddy ; then
     return
@@ -68,7 +68,7 @@ function run_baby_buddy_container {
     -e TZ=America/New_York \
     -e CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,https://babybuddy.domain.com \
     -p 3080:8000 \
-    -v /var/babybuddy/appdata:/config \
+    -v "$HOME/var/babybuddy/appdata:/config" \
     --restart unless-stopped \
     lscr.io/linuxserver/babybuddy:latest
 }
