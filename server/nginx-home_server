@@ -62,9 +62,17 @@ http {
 
 	server {
 		listen 80;
-		server_name pihole.hallhouse.link; 
+		server_name pihole.hallhouse.link;
 		location / {
 			proxy_pass http://localhost:2080/;
+		}
+	}
+
+	server {
+		listen 80;
+		server_name baby.hallhouse.link;
+		location / {
+			proxy_pass http://localhost:3080/;
 		}
 	}
 
