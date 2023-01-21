@@ -74,6 +74,20 @@ function run_baby_buddy_container {
     lscr.io/linuxserver/babybuddy:latest
 }
 
+function setup_wassup {
+  mkdir -p "$HOME/var/wassup/appdata"
+
+  if sudo docker ps -a | grep wassup ; then
+    return
+  fi
+
+  run_wassup_container
+}
+
+function run_wassup_container {
+  sudo docker run # todo: run wassup as a container
+}
+
 function setup {
   setup_static_ip
   install_nginx
