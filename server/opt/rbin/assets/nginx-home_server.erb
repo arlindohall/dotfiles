@@ -60,21 +60,16 @@ http {
 	# include /etc/nginx/conf.d/*.conf;
 	# include /etc/nginx/sites-enabled/*;
 
+	<% servers.each do |server| %>
+	<% next unless server.nginx? %>
 	server {
 		listen 80;
-		server_name pihole.hallhouse.link;
+		server_name <%= server.host %>;
 		location / {
-			proxy_pass http://localhost:2080/;
+			proxy_pass http://localhost:<%= server.port %>/;
 		}
 	}
-
-	server {
-		listen 80;
-		server_name baby.hallhouse.link;
-		location / {
-			proxy_pass http://localhost:3080/;
-		}
-	}
+	<% end %>
 
 	server {
 		listen 80 default_server;

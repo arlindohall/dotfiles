@@ -1,3 +1,4 @@
+# code: language=yaml
 # This is the network config written by 'subiquity'
 network:
   ethernets:
