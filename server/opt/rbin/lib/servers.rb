@@ -36,6 +36,7 @@ module Servers
     end
 
     def check_output(command, expected, debug_value = true)
+      puts "# Checking output of '#{command}' expecting '#{expected}', using debug value #{debug_value}"
       debug_value
     end
 
@@ -43,16 +44,12 @@ module Servers
       puts "Writing to file #{pathname}\n#{string.indent("######  ")}"
     end
 
-    def read_file(pathname)
-      "file_contents"
-    end
-
     def make_path(pathname)
-      run_command("mkdir -p #{pathname}")
+      puts "Making path with parents #{pathname}"
     end
 
     def rbin_dir
-      Pathname.new("/opt/rbin")
+      Pathname.new(__FILE__).parent.parent
     end
 
     def assets_path
@@ -86,7 +83,10 @@ module Servers
     end
 
     def check_output(command, expected)
-      command_output(command).tap { |out| puts out.indent }.match?(expected)
+      puts "# Checking output of command against:\n#{expected.indent(">>  ")}"
+      command_output(command)
+        .tap { |out| puts out.indent("<<  ") }
+        .match?(expected)
     end
 
     def write_file(pathname, string)
@@ -94,12 +94,8 @@ module Servers
       pathname.write(string)
     end
 
-    def read_file(pathname)
-      pathname.read
-    end
-
     def make_path(pathname)
-      puts "Making path #{pathname}"
+      puts "Making path with parents #{pathname}"
       pathname.mkpath
     end
 
@@ -335,6 +331,7 @@ module Servers
     def setup_network
       return if network_setup?
 
+      # todo: actually put this in bash because it restarts things
       puts "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
       io.run_commands(
         "cp #{netplan_file} /etc/netplan/00-installer-config.yaml",
@@ -377,7 +374,7 @@ module Servers
     end
 
     def config_erb
-      io.read_file(io.rbin_dir.join("assets").join("nginx-home_server.erb"))
+      io.rbin_dir.join("assets").join("nginx-home_server.erb").read
     end
 
     def servers
