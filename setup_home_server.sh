@@ -7,6 +7,10 @@ function check_root {
   fi
 }
 
+function install_ruby {
+  apt install -y ruby
+}
+
 function install_systemd_startup_service {
   if ! ls ./server/opt/rbin ; then
     echo "Run this script from the project root..."
@@ -18,7 +22,7 @@ function install_systemd_startup_service {
   rm -rf /opt/rbin
   cp -r ./server/opt/rbin /opt/
   cp ./server/systemd/start-servers.service /etc/systemd/system/
-  systemd start start-servers
+  systemctl start start-servers
 }
 
 function install_cron_backup_service {
@@ -35,6 +39,7 @@ function crontab_file {
 
 function setup {
   check_root
+  install_ruby
   install_systemd_startup_service
   install_cron_backup_service
 };setup
