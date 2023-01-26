@@ -1,0 +1,6 @@
+[Unit]
+Description=Start services for home server
+
+[Service]
+Type=oneshot
+ExecStart=/opt/rbin/start-servers
