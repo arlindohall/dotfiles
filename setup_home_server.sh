@@ -29,7 +29,7 @@ function install_cron_backup_service {
 
 function crontab_file {
   echo "# Crontab set by setup_home_server.sh
-0 3 * * 0 /opt/rbin/backup
+0 3 * * * /opt/rbin/backup
 "
 }
 
