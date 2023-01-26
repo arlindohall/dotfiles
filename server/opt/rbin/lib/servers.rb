@@ -331,7 +331,8 @@ module Servers
     def setup_network
       return if network_setup?
 
-      # todo: actually put this in bash because it restarts things
+      # todo: put all install and uninstall in separate non-bash script
+      # todo: add stop script to start-service
       puts "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
       io.run_commands(
         "cp #{netplan_file} /etc/netplan/00-installer-config.yaml",
