@@ -1,8 +1,11 @@
 #!/usr/bin/env ruby
+# code: language=ruby
 
 class PullRequest
   def create!
-    usage("Must be called with a branch (not main) checked out") if branch == "main"
+    if branch == "main"
+      usage("Must be called with a branch (not main) checked out")
+    end
     usage("No arguments allowed") unless ARGV.empty?
 
     system command
@@ -49,6 +52,4 @@ class PullRequest
   end
 end
 
-PullRequest
-  .new
-  .create!
+PullRequest.new.create!

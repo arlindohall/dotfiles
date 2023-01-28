@@ -100,7 +100,8 @@ function homebrew_tools_installed {
         which shellcheck &&
         which tmux &&
         which tree &&
-        which watch
+        which watch &&
+        which watchman
 }
 
 function install_homebrew_tools {
@@ -119,7 +120,8 @@ function install_homebrew_tools {
         shellcheck \
         tmux \
         tree \
-        watch
+        watch \
+        watchman
 }
 
 function install_apt_tools {
@@ -197,5 +199,5 @@ function install_git_delta {
 }
 
 function set_install_shell {
-    chsh -s $(which fish) millerhall
+    chsh -s "$(which fish)" millerhall
 }

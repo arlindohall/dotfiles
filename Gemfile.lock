@@ -7,7 +7,10 @@ GEM
       language_server-protocol (~> 3.17.0)
       sorbet-runtime
       syntax_tree (>= 4.0.2, < 5.0.0)
+    sorbet (0.5.10634)
+      sorbet-static (= 0.5.10634)
     sorbet-runtime (0.5.10610)
+    sorbet-static (0.5.10634-universal-darwin-21)
     syntax_tree (4.3.0)
       prettier_print (>= 1.0.2)
 
@@ -16,6 +19,7 @@ PLATFORMS
 
 DEPENDENCIES
   ruby-lsp (~> 0.3.7)
+  sorbet
 
 BUNDLED WITH
    2.3.22

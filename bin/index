@@ -1,39 +1,40 @@
 #!/usr/bin/env ruby
+# code: language=ruby
 
-require 'pathname'
+require "pathname"
 
 class Index
-    def initialize base
-        @base           = base
+  def initialize(base)
+    @base = base
 
-        @directories    = []
-        @files          = []
+    @directories = []
+    @files = []
+  end
+
+  def build_index
+    @base.each_child do |child|
+      if child.directory?
+        @directories << child
+
+        Index.new(child).write
+      elsif child.file?
+        @files << child
+      end
     end
+  end
 
-    def build_index
-        @base.each_child do |child|
-            if child.directory?
-                @directories << child
+  def write
+    return if is_git?
 
-                Index.new(child).write
-            elsif child.file?
-                @files << child
-            end
-        end
-    end
+    build_index
 
-    def write
-        return if is_git?
+    @base.join("INDEX.md").write index
+  end
 
-        build_index
+  private
 
-        @base.join('INDEX.md').write index
-    end
-
-    private
-
-        def index
-            <<~index_file
+  def index
+    <<~index_file
                 # Index\n
                 ## Directories\n
                 #{directory_entries}\n
@@ -42,28 +43,30 @@ class Index
                 [Return to Parent...](../INDEX.md)
 
             index_file
-        end
+  end
 
-        def directory_entries
-            @directories.map(&:basename)
-                .map(&:to_s)
-                .sort
-                .map{ |name| "- [#{name}](#{name}/INDEX.md)" }
-                .join("\n")
-        end
+  def directory_entries
+    @directories
+      .map(&:basename)
+      .map(&:to_s)
+      .sort
+      .map { |name| "- [#{name}](#{name}/INDEX.md)" }
+      .join("\n")
+  end
 
-        def file_entries
-            @files.map(&:basename)
-                .map(&:to_s)
-                .filter{ |name| !name.eql? "INDEX.md" }
-                .sort
-                .map{ |name| "- [#{name}](#{name})" }
-                .join("\n")
-        end
+  def file_entries
+    @files
+      .map(&:basename)
+      .map(&:to_s)
+      .filter { |name| !name.eql? "INDEX.md" }
+      .sort
+      .map { |name| "- [#{name}](#{name})" }
+      .join("\n")
+  end
 
-        def is_git?
-            @base.basename.to_s.eql? ".git"
-        end
+  def is_git?
+    @base.basename.to_s.eql? ".git"
+  end
 end
 
-Index.new(Pathname.new('.')).build_index
+Index.new(Pathname.new(".")).build_index

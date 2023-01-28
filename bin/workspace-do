@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# code: language=ruby
 
 require 'pathname'
 
