@@ -299,13 +299,12 @@ module Servers
 
     def start_command
       <<~start
-        # todo: use https
         docker run -d \
           --name=#{name.downcase} \
           -e PUID=1000 \
           -e PGID=1000 \
           -e TZ=America/New_York \
-          -e CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,http://#{host} \
+          -e CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,https://#{host} \
           -p 3080:8000 \
           -v "#{babybuddy_appdata_directory}:/config" \
           --restart unless-stopped \
