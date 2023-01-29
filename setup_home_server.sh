@@ -17,12 +17,12 @@ function install_systemd_startup_service {
     exit 2
   fi
 
-  echo "Installing systemd startup service"
+  echo "Installing systemd home-servers service"
 
   rm -rf /opt/rbin
   cp -r ./server/opt/rbin /opt/
-  cp ./server/systemd/start-servers.service /etc/systemd/system/
-  systemctl start start-servers
+  cp ./server/systemd/home-servers.service /etc/systemd/system/
+  systemctl start home-servers
 }
 
 function install_cron_backup_service {

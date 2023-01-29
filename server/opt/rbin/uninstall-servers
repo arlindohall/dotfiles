@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# code: language=ruby
+
+require_relative "lib/servers"
+
+def usage
+  puts <<~usage
+  Usage: uninstall-servers [<server>...]
+  usage
+end
+
+usage if ARGV.empty?
+
+ARGV.each { |arg| Servers::BaseServer.server(arg, &:uninstall) }

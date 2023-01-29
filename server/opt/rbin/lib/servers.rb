@@ -1,3 +1,4 @@
+# typed: false
 require "erb"
 require "pathname"
 
@@ -147,6 +148,22 @@ module Servers
     def port
       return "<no-port>" unless @port
       @port
+    end
+
+    class << self
+      def server(name)
+        server =
+          SERVERS.find do |server|
+            /#{name.downcase}/.match? server.name.downcase
+          end
+
+        unless server
+          puts "Unable to find server matching name '#{name}'"
+          exit(1)
+        end
+
+        yield(server)
+      end
     end
   end
 

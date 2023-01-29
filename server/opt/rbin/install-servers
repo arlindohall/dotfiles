@@ -3,4 +3,6 @@
 
 require_relative "lib/servers"
 
-Servers::SERVERS.map(&:new).each(&:start)
+Servers::Nginx.setup
+
+Servers::SERVERS.map(&:new).each(&:setup)

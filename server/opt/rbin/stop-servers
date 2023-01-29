@@ -3,4 +3,4 @@
 
 require_relative "lib/servers"
 
-Servers::SERVERS.map(&:new).each(&:start)
+Servers::SERVERS.map(&:new).each(&:stop)
