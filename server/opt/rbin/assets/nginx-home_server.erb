@@ -63,10 +63,15 @@ http {
 	<% servers.each do |server| %>
 	<% next unless server.nginx? %>
 	server {
-		listen 80;
+		listen 443;
 		server_name <%= server.host %>;
+
+		ssl on;
+		ssl_certificate /etc/letsencrypt/live/hallhouse.link/fullchain.pem;
+		ssl_certificate_key /etc/letsencrypt/live/hallhouse.link/privkey.pem;
+
 		location / {
-			proxy_pass http://localhost:<%= server.port %>/;
+			proxy_pass https://localhost:<%= server.port %>/;
 		}
 	}
 	<% end %>
