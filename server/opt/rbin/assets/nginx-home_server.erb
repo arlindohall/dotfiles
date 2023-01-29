@@ -71,7 +71,7 @@ http {
 		ssl_certificate_key /etc/letsencrypt/live/hallhouse.link/privkey.pem;
 
 		location / {
-			proxy_pass https://localhost:<%= server.port %>/;
+			proxy_pass http://localhost:<%= server.port %>/;
 		}
 	}
 	<% end %>
