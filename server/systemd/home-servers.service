@@ -6,3 +6,6 @@ Type=oneshot
 ExecStart=/opt/rbin/start-servers
 ExecStop=/opt/rbin/stop-servers
 Environment="PRODUCTION=true"
+
+[Install]
+WantedBy=multi-user.target
