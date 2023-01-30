@@ -304,10 +304,11 @@ module Servers
     private
 
     def running?
-      io.check_output("docker ps -a", name.downcase)
+      io.check_output("docker ps", name.downcase)
     end
 
-    def running?
+    def present?
+      io.check_output("docker ps -a", name.downcase)
     end
 
     def make_directory
