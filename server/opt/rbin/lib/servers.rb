@@ -287,8 +287,7 @@ module Servers
     end
 
     def start
-      return if running?
-      stop if present? && !running?
+      stop if present?
       io.run_command(start_command)
     end
 
