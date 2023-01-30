@@ -5,6 +5,7 @@ Description=Start services for home server
 Type=oneshot
 ExecStart=/opt/rbin/start-servers
 ExecStop=/opt/rbin/stop-servers
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
