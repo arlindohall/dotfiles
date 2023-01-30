@@ -288,7 +288,13 @@ module Servers
 
     def start
       return if running?
+      stop if present? && !running?
       io.run_command(start_command)
+    end
+
+    def stop
+      io.run_command(stop_command) if running?
+      io.run_command(remove_command) if present?
     end
 
     def backup
@@ -299,6 +305,9 @@ module Servers
 
     def running?
       io.check_output("docker ps -a", name.downcase)
+    end
+
+    def running?
     end
 
     def make_directory
@@ -318,6 +327,14 @@ module Servers
           --restart unless-stopped \
           lscr.io/linuxserver/babybuddy:latest
       start
+    end
+
+    def stop_command
+      "docker kill #{name.downcase}"
+    end
+
+    def remove_command
+      "docker container rm #{name.downcase}"
     end
 
     def backup_task
