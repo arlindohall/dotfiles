@@ -3,6 +3,6 @@
 
 require_relative "lib/servers"
 
-Servers::Nginx.setup
+Servers::Nginx.install
 
-Servers::SERVERS.map(&:new).each(&:setup)
+Servers::Registry.servers_for_args(ARGV).each(&:install)

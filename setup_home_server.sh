@@ -21,7 +21,15 @@ function install_systemd_startup_service {
 
   rm -rf /opt/rbin
   cp -r ./server/opt/rbin /opt/
+
+  /opt/rbin/install-servers
+
+  echo "Starting home-servers service"
+
   cp ./server/systemd/home-servers.service /etc/systemd/system/
+
+  systemctl daemon-reload
+  systemctl enable home-servers
   systemctl start home-servers
 }
 

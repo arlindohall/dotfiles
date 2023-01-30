@@ -3,4 +3,4 @@
 
 require_relative "lib/servers"
 
-Servers::SERVERS.map(&:new).each(&:start)
+Servers::Registry.servers_for_args(ARGV).map(&:new).each(&:start)

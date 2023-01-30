@@ -2,7 +2,7 @@
 require "erb"
 require "pathname"
 
-$debug = !ENV["PRODUCTION"]
+$debug = __FILE__.match?("/opt/rbin/")
 
 ####################################################################################################
 ########################################## String Extensions #######################################
@@ -122,8 +122,12 @@ module Servers
       @io = IO.instance
     end
 
-    def setup
+    def install
       puts "No-op install for server #{name} (#{host}:#{port})"
+    end
+
+    def uninstall
+      puts "No-op install means no-op uninstall for server #{name} (#{host}:#{port})"
     end
 
     def start
@@ -149,22 +153,6 @@ module Servers
       return "<no-port>" unless @port
       @port
     end
-
-    class << self
-      def server(name)
-        server =
-          SERVERS.find do |server|
-            /#{name.downcase}/.match? server.name.downcase
-          end
-
-        unless server
-          puts "Unable to find server matching name '#{name}'"
-          exit(1)
-        end
-
-        yield(server)
-      end
-    end
   end
 
   ####################################################################################################
@@ -175,7 +163,7 @@ module Servers
       super(name: "Static Homesite")
     end
 
-    def setup
+    def install
       return if checksums_match?
 
       io.run_commands(
@@ -186,8 +174,16 @@ module Servers
       )
     end
 
+    def uninstall
+      io.run_command("rm -rf #{dest_path}")
+    end
+
     def start
       puts "Homesite start is managed by nginx"
+    end
+
+    def stop
+      puts "Homesite is managed by nginx, nothing to stop"
     end
 
     private
@@ -237,10 +233,18 @@ module Servers
       puts "Pihole start is automated by setup"
     end
 
-    def setup
+    def stop
+      puts "Pihole start is automated by setup, nothing to stop"
+    end
+
+    def install
       return if installed?
       io.run_command("curl -sSL https://install.pi-hole.net | bash")
       update_port
+    end
+
+    def uninstall
+      puts "Please uninstall pihole manually"
     end
 
     private
@@ -274,8 +278,12 @@ module Servers
 
     def nginx? = true
 
-    def setup
+    def install
       make_directory
+    end
+
+    def uninstall
+      puts "BabyBuddy is run using docker, you can remove it by killing the docker process"
     end
 
     def start
@@ -335,11 +343,15 @@ module Servers
       @io = IO.instance
     end
 
-    def setup
+    def install
       setup_network
       install_nginx
       place_config_file
       restart_nginx
+    end
+
+    def uninstall
+      puts "Will not uninstall nginx"
     end
 
     private
@@ -347,8 +359,6 @@ module Servers
     def setup_network
       return if network_setup?
 
-      # todo: put all install and uninstall in separate non-bash script
-      # todo: add stop script to start-service
       puts "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
       io.run_commands(
         "cp #{netplan_file} /etc/netplan/00-installer-config.yaml",
@@ -395,12 +405,12 @@ module Servers
     end
 
     def servers
-      SERVERS.map(&:new)
+      Registry.servers
     end
 
     class << self
-      def setup
-        new.setup
+      def install
+        new.install
       end
     end
   end
@@ -443,5 +453,29 @@ module Servers
     end
   end
 
-  SERVERS = [Pihole, StaticHomesite, BabyBuddy]
+  class Registry
+    class << self
+      def servers_for_args(args)
+        argv.empty? ? servers : servers.map { |name| server(name) }
+      end
+
+      def servers
+        [Pihole.new, StaticHomesite.new, BabyBuddy.new]
+      end
+
+      def server(name)
+        server =
+          servers.find do |server|
+            /#{name.downcase}/.match? server.name.downcase
+          end
+
+        unless server
+          puts "Unable to find server matching name '#{name}'"
+          exit(1)
+        end
+
+        yield(server)
+      end
+    end
+  end
 end
