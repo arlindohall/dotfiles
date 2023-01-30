@@ -29,8 +29,8 @@ function install_systemd_startup_service {
   cp ./server/systemd/home-servers.service /etc/systemd/system/
 
   systemctl daemon-reload
-  systemctl enable home-servers
   systemctl start home-servers
+  systemctl enable home-servers
 }
 
 function install_cron_backup_service {
