@@ -456,7 +456,7 @@ module Servers
   class Registry
     class << self
       def servers_for_args(args)
-        argv.empty? ? servers : servers.map { |name| server(name) }
+        args.empty? ? servers : args.map { |name| server(name) }
       end
 
       def servers
