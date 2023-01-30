@@ -210,9 +210,7 @@ module Servers
 
     def checksum(path)
       io
-        .command_output(
-          "find server/static-homesite/build/ -type f | xargs cat | md5sum"
-        )
+        .command_output("find #{path} -type f | xargs cat | md5sum")
         .split
         .first
         .tap { |sum| puts "Checksum for #{path} is [#{sum}]" }
