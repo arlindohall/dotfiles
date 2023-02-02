@@ -40,7 +40,7 @@ function install_cron_backup_service {
 }
 
 function crontab_file {
-  echo "# Crontab set by setup_home_server.sh
+  echo "# Crontab set by setup-home-server.sh
 0 3 * * * /opt/rbin/backup
 "
 }

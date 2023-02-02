@@ -404,7 +404,11 @@ module Servers
     end
 
     def netplan_file
-      io.rbin_dir.join("assets").join("netplan-home_server_netplan_installer")
+      io
+        .rbin_dir
+        .join("assets")
+        .join("netplan")
+        .join("home_server_netplan_installer")
     end
 
     def config_destination
@@ -416,7 +420,7 @@ module Servers
     end
 
     def config_erb
-      io.rbin_dir.join("assets").join("nginx-home_server.erb").read
+      io.rbin_dir.join("assets").join("nginx").join("home_server.erb").read
     end
 
     def servers
