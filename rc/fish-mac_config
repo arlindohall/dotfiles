@@ -29,7 +29,7 @@ end
 
 function note
     if test ! -f (todays-note)
-        mkdir -p "~/var/notes/src/(todays-year)"
+        mkdir -p ~/var/notes/src/(todays-year)
         date +'# %B %d %Y' > (todays-note)
     end
     echo >> (todays-note)
