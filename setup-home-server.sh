@@ -20,7 +20,7 @@ function install_systemd_startup_service {
   echo "Installing systemd home-servers service"
 
   rm -rf /opt/rbin
-  cp -r ./server/opt-rbin /opt/
+  cp -r ./server/opt-rbin /opt/rbin
 
   /opt/rbin/install-servers
 
