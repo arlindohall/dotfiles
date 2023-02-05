@@ -12,7 +12,7 @@ function install_ruby {
 }
 
 function install_systemd_startup_service {
-  if ! ls ./server/opt/rbin ; then
+  if ! ls ./server/opt-rbin ; then
     echo "Run this script from the project root..."
     exit 2
   fi
@@ -20,7 +20,7 @@ function install_systemd_startup_service {
   echo "Installing systemd home-servers service"
 
   rm -rf /opt/rbin
-  cp -r ./server/opt/rbin /opt/
+  cp -r ./server/opt-rbin /opt/
 
   /opt/rbin/install-servers
 
