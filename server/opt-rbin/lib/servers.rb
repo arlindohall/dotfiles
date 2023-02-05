@@ -228,21 +228,23 @@ module Servers
     def nginx? = true
 
     def start
-      puts "Pihole start is automated by setup"
+      update_port
+      io.run_command("pihole restartdns")
     end
 
     def stop
-      puts "Pihole start is automated by setup, nothing to stop"
+      puts "Pihole start is automated by setup, nothing to stop, if you need to stop pihole, use:"
+      puts "pihole stop"
     end
 
     def install
       return if installed?
       io.run_command("curl -sSL https://install.pi-hole.net | bash")
-      update_port
     end
 
     def uninstall
-      puts "Please uninstall pihole manually"
+      puts "Please uninstall pihole manually with:"
+      puts "pihole uninstall"
     end
 
     private
@@ -253,11 +255,23 @@ module Servers
 
     def update_port
       io.write_file(config_path, config)
+      start_or_restart_lighttpd
+    end
+
+    def start_or_restart_lighttpd
+      return io.run_command("systemctl restart lighttpd") if lighttpd_running?
+
+      io.run_command("systemctl start lighttpd")
+    end
+
+    def lighttpd_running?
+      io.check_output("systemctl status lighttpd", "running")
     end
 
     def config
       <<~config
         server.port := #{port}
+        setenv.add-environment = ( "VIRTUAL_HOST" => "#{host}" )
       config
     end
 
