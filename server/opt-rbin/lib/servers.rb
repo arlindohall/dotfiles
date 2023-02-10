@@ -675,7 +675,8 @@ module Servers
           exit(1)
         end
 
-        yield(server)
+        yield(server) if block_given?
+        server
       end
     end
   end
