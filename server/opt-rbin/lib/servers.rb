@@ -402,6 +402,7 @@ module Servers
     def install
       make_directory
       git_clone
+      touch_database_file
       build_docker_image
     end
 
@@ -443,6 +444,10 @@ module Servers
     def make_directory
       io.make_path(src_directory)
       io.make_path(app_directory)
+    end
+
+    def touch_database_file
+      database_file.touch
     end
 
     def git_clone
