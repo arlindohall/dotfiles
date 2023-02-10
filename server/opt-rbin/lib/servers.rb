@@ -403,7 +403,6 @@ module Servers
       make_directory
       git_clone
       build_docker_image
-      setup_app_directory
     end
 
     def uninstall
@@ -414,6 +413,11 @@ module Servers
 
     def start
       stop if present?
+      unless master_key_file.exist?
+        puts "Unable to start server because master key does not exist at #{master_key_file}"
+        return
+      end
+
       from_directory(app_directory) { io.run_command(start_command) }
     end
 
@@ -441,10 +445,6 @@ module Servers
       io.make_path(app_directory)
     end
 
-    def setup_app_directory
-      io.run_command(db_migrate_command)
-    end
-
     def git_clone
       io.run_command("git clone #{repo} --depth 1 #{src_directory}")
     end
@@ -465,26 +465,13 @@ module Servers
 
     def start_command
       <<-bash
-        docker run -d                               \
-          --name home-library                       \
-          --restart=unless-stopped                  \
-          -v #{app_directory}/db/:/app/db/          \
-          -p #{port}:3000                           \
-          -e ENVIRONMENT=production                 \
-          -e RAILS_MASTER_KEY=#{master_key}         \
+        docker run -d                                   \
+          --name home-library                           \
+          --restart=unless-stopped                      \
+          -v #{app_directory}:/app/db                   \
+          -v #{master_key_file}:/app/config/master.key  \
+          -p #{port}:3000                               \
           home-library:latest
-      bash
-    end
-
-    def db_migrate_command
-      <<-bash
-        docker run -it --rm                         \
-          --name home-library-migrator              \
-          -e ENVIROMENT=production                  \
-          -e RAILS_MASTER_KEY=#{master_key}         \
-          -v #{app_directory}/db/:/app/db/          \
-          home-library:latest                       \
-          db:migrate
       bash
     end
 
@@ -503,10 +490,6 @@ module Servers
     def from_directory(directory)
       io.chdir(directory)
       yield
-    end
-
-    def master_key
-      io.read_file(master_key_file).strip
     end
 
     def master_key_file
