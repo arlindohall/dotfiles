@@ -466,12 +466,12 @@ module Servers
 
     def start_command
       <<-bash
-        docker run -d                                   \
-          --name home-library                           \
-          --restart=unless-stopped                      \
-          -v #{app_directory}:/app/db                   \
-          -v #{master_key_file}:/app/config/master.key  \
-          -p #{port}:3000                               \
+        docker run -d                         \
+          --name home-library                 \
+          --restart=unless-stopped            \
+          -v #{app_directory}:/app/db         \
+          -e RAILS_MASTER_KEY=#{master_key}   \
+          -p #{port}:3000                     \
           home-library:latest
       bash
     end
@@ -491,6 +491,10 @@ module Servers
     def from_directory(directory)
       io.chdir(directory)
       yield
+    end
+
+    def master_key
+      io.read_file(master_key_file).chomp
     end
 
     def master_key_file
