@@ -454,6 +454,7 @@ module Servers
     end
 
     def clean_docker_images
+      io.run_command("docker image rm #{snake_case_name}")
       from_directory(src_directory) do
         io.run_command("./docker-clean-orphaned-images.rb")
       end
