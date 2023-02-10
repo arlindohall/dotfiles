@@ -441,7 +441,16 @@ module Servers
     end
 
     def start_command
-      "RESTART=true ./docker-run.rb"
+      system(<<-bash)
+        docker run -d                               \
+          --name home-library                       \
+          --restart=unless-stopped                  \
+          -v #{app_directory}/db/:/app/db/          \
+          -v #{app_directory}/config/:/app/config/  \
+          -p #{port}:3000                           \
+          -e ENVIRONMENT=production                 \
+          home-library:latest
+      bash
     end
 
     def stop_command
