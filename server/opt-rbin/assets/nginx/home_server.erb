@@ -65,13 +65,13 @@ http {
 	server {
 		listen 443;
 		server_name <%= server.host %>;
-		<%= server.optional_includes %>
 
 		ssl on;
 		ssl_certificate /etc/letsencrypt/live/hallhouse.link/fullchain.pem;
 		ssl_certificate_key /etc/letsencrypt/live/hallhouse.link/privkey.pem;
 
 		location / {
+			<%= server.optional_includes %>
 			proxy_pass http://localhost:<%= server.port %>/;
 		}
 	}
