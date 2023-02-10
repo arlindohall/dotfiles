@@ -469,7 +469,7 @@ module Servers
         docker run -d                         \
           --name home-library                 \
           --restart=unless-stopped            \
-          -v #{app_directory}:/app/db         \
+          -v #{database_file}:/app/db/development.sqlite3 \
           -e RAILS_MASTER_KEY=#{master_key}   \
           -p #{port}:3000                     \
           home-library:latest
@@ -511,6 +511,10 @@ module Servers
 
     def app_directory
       Pathname.new("/home/millerhall/var/#{snake_case_name}")
+    end
+
+    def database_file
+      app_directory.join("db").join("production.sqlite3")
     end
 
     def src_directory
