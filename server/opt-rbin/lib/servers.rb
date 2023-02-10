@@ -115,6 +115,7 @@ module Servers
 
     def touch(pathname)
       puts "Touching file #{pathname}"
+      pathname.parent.mkpath
       FileUtils.touch(pathname)
     end
 
