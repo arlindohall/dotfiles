@@ -49,6 +49,10 @@ module Servers
       puts "Making path with parents #{pathname}"
     end
 
+    def chdir(pathname)
+      puts "Moving to directory #{pathname}"
+    end
+
     def rbin_dir
       Pathname.new(__FILE__).parent.parent
     end
@@ -98,6 +102,11 @@ module Servers
     def make_path(pathname)
       puts "Making path with parents #{pathname}"
       pathname.mkpath
+    end
+
+    def chdir(pathname)
+      puts "Moving to directory #{pathname}"
+      Dir.chdir(pathname)
     end
 
     def rbin_dir
@@ -363,6 +372,113 @@ module Servers
   end
 
   ####################################################################################################
+  ########################################## Home Library ############################################
+  ####################################################################################################
+  class HomeLibrary < BaseServer
+    def initialize
+      super(host_prefix: "books", port: 4080, name: "Home Library")
+    end
+
+    def nginx? = true
+
+    def install
+      make_directory
+      git_clone
+      build_docker_image
+    end
+
+    def uninstall
+      stop if present?
+      clean_docker_images
+      clean_src_directory
+    end
+
+    def start
+      stop if present?
+      from_directory(app_directory) { io.run_command(start_command) }
+    end
+
+    def stop
+      io.run_command(stop_command) if running?
+      io.run_command(remove_command) if present?
+    end
+
+    def backup
+      backup_task.run
+    end
+
+    private
+
+    def present?
+      io.check_output("docker ps -a", snake_case_name)
+    end
+
+    def running?
+      io.check_output("docker ps", snake_case_name)
+    end
+
+    def make_directory
+      io.make_path(src_directory)
+      io.make_path(app_directory)
+    end
+
+    def git_clone
+      io.run_command("git clone #{repo} --depth 1 #{src_directory}")
+    end
+
+    def build_docker_image
+      from_directory(src_directory) { io.run_command("./docker-build.rb") }
+    end
+
+    def clean_docker_images
+      from_directory(src_directory) do
+        io.run_command("./docker-clean-orphaned-images.rb")
+      end
+    end
+
+    def clean_src_directory
+      io.run_command("rm -rf #{src_directory}")
+    end
+
+    def start_command
+      "RESTART=true ./docker-run.rb"
+    end
+
+    def stop_command
+      "docker stop #{snake_case_name}"
+    end
+
+    def remove_command
+      "docker container rm #{snake_case_name}"
+    end
+
+    def repo
+      "https://github.com/arlindohall/home-library"
+    end
+
+    def from_directory(directory)
+      io.chdir(directory)
+      yield
+    end
+
+    def backup_task
+      Backup.new(path: app_directory, name: snake_case_name)
+    end
+
+    def snake_case_name
+      name.downcase.split.join("-")
+    end
+
+    def app_directory
+      Pathname.new("/home/millerhall/var/#{snake_case_name}")
+    end
+
+    def src_directory
+      Pathname.new("/home/millerhall/var/#{snake_case_name}-src")
+    end
+  end
+
+  ####################################################################################################
   ########################################## Nginx ###################################################
   ####################################################################################################
   class Nginx
@@ -493,7 +609,7 @@ module Servers
       end
 
       def servers
-        [Pihole.new, StaticHomesite.new, BabyBuddy.new]
+        [Pihole.new, StaticHomesite.new, BabyBuddy.new, HomeLibrary.new]
       end
 
       def server(name)
