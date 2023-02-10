@@ -506,7 +506,7 @@ module Servers
     end
 
     def master_key
-      io.read_file(master_key_file)
+      io.read_file(master_key_file).strip
     end
 
     def master_key_file
