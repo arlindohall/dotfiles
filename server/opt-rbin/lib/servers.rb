@@ -45,6 +45,11 @@ module Servers
       puts "Writing to file #{pathname}\n#{string.indent("######  ")}"
     end
 
+    def read_file(pathname)
+      puts "Reading from file #{pathname}"
+      "fake_file_contents"
+    end
+
     def make_path(pathname)
       puts "Making path with parents #{pathname}"
     end
@@ -97,6 +102,11 @@ module Servers
     def write_file(pathname, string)
       puts "Writing to file #{pathname}\n#{string.indent("######  ")}"
       pathname.write(string)
+    end
+
+    def read_file(pathname)
+      puts "Reading from file #{pathname}"
+      pathname.read
     end
 
     def make_path(pathname)
@@ -161,6 +171,10 @@ module Servers
     def port
       return "<no-port>" unless @port
       @port
+    end
+
+    def optional_includes
+      ""
     end
   end
 
@@ -381,10 +395,15 @@ module Servers
 
     def nginx? = true
 
+    def optional_includes
+      "include mime.types;"
+    end
+
     def install
       make_directory
       git_clone
       build_docker_image
+      setup_app_directory
     end
 
     def uninstall
@@ -422,6 +441,10 @@ module Servers
       io.make_path(app_directory)
     end
 
+    def setup_app_directory
+      io.run_command(db_migrate_command)
+    end
+
     def git_clone
       io.run_command("git clone #{repo} --depth 1 #{src_directory}")
     end
@@ -446,10 +469,22 @@ module Servers
           --name home-library                       \
           --restart=unless-stopped                  \
           -v #{app_directory}/db/:/app/db/          \
-          -v #{app_directory}/config/:/app/config/  \
           -p #{port}:3000                           \
           -e ENVIRONMENT=production                 \
+          -e RAILS_MASTER_KEY=#{master_key}         \
           home-library:latest
+      bash
+    end
+
+    def db_migrate_command
+      <<-bash
+        docker run -it --rm                         \
+          --name home-library-migrator              \
+          -e ENVIROMENT=production                  \
+          -e RAILS_MASTER_KEY=#{master_key}         \
+          -v #{app_directory}/db/:/app/db/          \
+          home-library:latest                       \
+          db:migrate
       bash
     end
 
@@ -468,6 +503,14 @@ module Servers
     def from_directory(directory)
       io.chdir(directory)
       yield
+    end
+
+    def master_key
+      io.read_file(master_key_file)
+    end
+
+    def master_key_file
+      Pathname.new("/etc/home-library/master.key")
     end
 
     def backup_task
