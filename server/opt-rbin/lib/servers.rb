@@ -50,6 +50,10 @@ module Servers
       "fake_file_contents"
     end
 
+    def touch(pathname)
+      puts "Touching file #{pathname}"
+    end
+
     def make_path(pathname)
       puts "Making path with parents #{pathname}"
     end
@@ -107,6 +111,11 @@ module Servers
     def read_file(pathname)
       puts "Reading from file #{pathname}"
       pathname.read
+    end
+
+    def touch(pathname)
+      puts "Touching file #{pathname}"
+      FileUtils.touch(pathname)
     end
 
     def make_path(pathname)
@@ -447,7 +456,7 @@ module Servers
     end
 
     def touch_database_file
-      database_file.touch
+      io.touch(database_file)
     end
 
     def git_clone
