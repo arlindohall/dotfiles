@@ -13,4 +13,4 @@ end
 
 usage! if ARGV.empty?
 
-Servers::Registry.servers_for_name(ARGV).each(&:uninstall)
+Servers::Registry.servers_for_args(ARGV).each(&:uninstall)
