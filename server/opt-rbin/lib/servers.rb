@@ -441,7 +441,7 @@ module Servers
     end
 
     def start_command
-      system(<<-bash)
+      <<-bash
         docker run -d                               \
           --name home-library                       \
           --restart=unless-stopped                  \
