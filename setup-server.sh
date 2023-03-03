@@ -7,10 +7,12 @@ if ! whoami | grep -q root ; then
   exit 1
 fi
 
-adduser miller
-adduser miller root
-usermod -a -G root miller
-echo 'miller    ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+if ! grep miller /etc/passwd ; then
+  adduser miller
+  adduser miller root
+  usermod -a -G root miller
+  echo 'miller    ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+fi
 
 mkdir /home/miller/.ssh
 cat /root/.ssh/authorized_keys >> /home/miller/.ssh/authorized_keys
