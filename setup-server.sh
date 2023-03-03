@@ -2,6 +2,11 @@
 
 set -euxo pipefail
 
+if ! whoami | grep -q root ; then
+  echo "Please run as root."
+  exit 1
+fi
+
 adduser miller
 adduser miller root
 usermod -a -G sudo miller
