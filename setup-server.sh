@@ -56,15 +56,17 @@ http {
 
 service nginx restart
 
-sudo apt install -y snapd
-snap install core
-snap refresh core
-snap install --classic certbot
-ln -s /snap/bin/certbot /usr/bin/certbot
+if read -p echo "Install certbot/enable https?" | grep 'y\|Y\|yes\|YES\|Yes' ; then
+  sudo apt install -y snapd
+  snap install core
+  snap refresh core
+  snap install --classic certbot
+  ln -s /snap/bin/certbot /usr/bin/certbot
+fi
 
 certbot certonly --nginx
 
 sudo -u miller npm install --global yarn
 sudo -u miller gem install rails bundler
 
-restart
+reboot
