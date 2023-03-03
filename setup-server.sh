@@ -9,7 +9,7 @@ fi
 
 adduser miller
 adduser miller root
-usermod -a -G miller
+usermod -a -G root miller
 echo 'miller    ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 mkdir /home/miller/.ssh
