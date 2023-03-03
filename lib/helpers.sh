@@ -12,6 +12,8 @@ function install {
         install_home_linux
     elif hostname | grep 'hall-server' && is_linux ; then
         install_home_linux
+    elif hostname | grep 'ubuntu' && is_linux ; then
+        install_home_linux
     else
         install_work_linux
     fi
