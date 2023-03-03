@@ -9,7 +9,7 @@ fi
 
 adduser miller
 adduser miller root
-usermod -a -G sudo miller
+usermod -a -G miller
 echo 'miller    ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 mkdir /home/miller/.ssh
@@ -50,13 +50,19 @@ http {
     listen 80;
   }
 }
-' > sudo tee /etc/nginx/nginx.conf
+' > /etc/nginx/nginx.conf
 
-sudo service nginx restart
+service nginx restart
 
-sudo apt install -y certbot
-sudo apt-get install python3-certbot-nginx
-certbot --nginx
+sudo apt install -y snapd
+snap install core
+snap refresh core
+snap install --classic certbot
+ln -s /snap/bin/certbot /usr/bin/certbot
+
+certbot certonly --nginx
 
 sudo -u miller npm install --global yarn
 sudo -u miller gem install rails bundler
+
+restart
