@@ -565,6 +565,7 @@ module Servers
 
       puts "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
       io.run_commands(
+        "! ls /etc/netplan/00-installer-config-wifi.yaml || mv /etc/netplan/00-installer-config-wifi.yaml /var/"
         "cp #{netplan_file} /etc/netplan/00-installer-config.yaml",
         "netplan apply"
       )
