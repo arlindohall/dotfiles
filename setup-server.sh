@@ -28,7 +28,10 @@ apt install -y \
     nodejs npm \
     nginx \
     git \
+    docker \
     vim tmux
+
+sudo gpasswd -a miller docker
 
 sudo -u miller chsh -s /usr/bin/fish
 
