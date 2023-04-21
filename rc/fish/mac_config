@@ -20,11 +20,11 @@ alias docker                podman
 
 function mermaid
   npx @mermaid-js/mermaid-cli \
-    -i "$HOME/var/scratch/diagram.mm" \
-    -o "$HOME/var/scratch/diagram.png"
+    -i "$HOME/var/scratch/mermaid/diagram.mm" \
+    -o "$HOME/var/scratch/mermaid/diagram.png"
 
   echo "Writing the output of mermaid-cli to $HOME/var/scratch/"
-  open "$HOME/var/scratch/diagram.png"
+  open "$HOME/var/scratch/mermaid/diagram.png"
 end
 
 function note
