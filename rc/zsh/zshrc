@@ -8,8 +8,7 @@ alias tree='tree | bat'
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
+eval "$(rbenv init - zsh)"
 
 # Add Cargo to PATH to install git-delta
 # Installed under `.rust/bin` because that's where instances

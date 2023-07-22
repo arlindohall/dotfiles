@@ -1,4 +1,4 @@
-rvm system
+rbenv init - fish | source
 
 function dcd
     set workspace $argv[1]

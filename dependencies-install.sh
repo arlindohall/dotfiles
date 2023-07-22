@@ -26,7 +26,7 @@ use_helper dependencies_helpers.sh
 function install_home_mac {
     install_homebrew
     install_rust
-    install_rvm
+    install_rbenv
     install_pybin
     install_git
     install_git_delta
@@ -44,7 +44,7 @@ function install_home_mac {
 function install_home_linux {
     install_clang
     install_rust
-    install_rvm
+    install_rbenv
     install_pybin
     install_git
     install_git_delta
@@ -57,7 +57,7 @@ function install_home_linux {
 function install_work_mac {
     install_homebrew
     install_rust
-    install_rvm
+    install_rbenv
     install_pybin
     install_git
     install_git_delta
