@@ -69,7 +69,9 @@ function install_rbenv {
     fi
 
     if is_linux ; then
-        sudo apt install -y rbenv
+        git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+        PATH=$PATH:$HOME/.rbenv/bin
+        git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
     else
         brew install rbenv ruby-build
     fi
