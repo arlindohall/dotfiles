@@ -182,7 +182,7 @@ function install_git_delta {
         install_rust
     fi
 
-    cargo install git-delta
+    cargo install -j 8 git-delta
 }
 
 function set_install_shell {
