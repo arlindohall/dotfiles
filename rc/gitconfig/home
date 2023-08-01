@@ -26,6 +26,7 @@
 	goal = log --graph --oneline --all --decorate
 	ll = log --oneline --decorate
 	history = log -a --full-diff -p .
+	wistory = log -wa --full-diff -p .
 [init]
 	defaultBranch = main
 [commit]
