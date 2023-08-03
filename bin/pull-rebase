@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# typed: true
+# frozen_string_literal: true
+
+class PullRebase
+  class BranchException < StandardError; end
+
+  class << self
+    def execute
+      new.execute
+    end
+  end
+
+  def initialize
+    @main_branch = main_branch
+    @original_branch = original_branch
+    @interactive = ARGV.include?('--interactive') || ARGV.include?('-i')
+  end
+
+  def execute
+    pull_main && rebase_over_main
+  end
+
+  private
+
+  def pull_main
+    switch_to_main && command("git pull")
+  end
+
+  def switch_to_main
+    command("git switch #{@main_branch}")
+  end
+
+  def rebase_over_main
+    if @interactive
+      switch_to_current && command("git rebase -i #{@main_branch}")
+    else
+      switch_to_current && command("git rebase #{@main_branch}")
+    end
+  end
+
+  def switch_to_current
+    command("git switch #{@original_branch}")
+  end
+
+  def command(cmd)
+    puts "-- Running: #{cmd}"
+    system(cmd)
+  end
+
+  def main_branch
+    case `git branch`
+    when /main/
+      'main'
+    when /master/
+      'master'
+    else
+      raise BranchException, "Cannot find main branch"
+    end
+  end
+
+  def original_branch
+    `git branch --show-current`.chomp
+  end
+end
+
+PullRebase.execute
