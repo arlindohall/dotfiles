@@ -4,7 +4,7 @@ PATH=$PATH:$HOME/bin
 
 alias bat=batcat
 alias tree='tree | bat'
-alias dependencies-install="tmux new $HOME/dotfiles/dependencies-install.sh"
+alias dependencies-install="tmux new -d $HOME/dotfiles/dependencies-install.sh"
 
 bindkey -v
 bindkey '^R' history-incremental-search-backward
