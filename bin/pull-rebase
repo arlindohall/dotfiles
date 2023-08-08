@@ -2,6 +2,44 @@
 # typed: true
 # frozen_string_literal: true
 
+class Object
+  def debug(message)
+    $stderr.puts message
+  end
+
+  def output(message)
+    $stdout.puts message
+  end
+end
+
+class ArgParser
+  def initialize(argv)
+    @argv = argv
+
+    parse!
+  end
+
+  def interactive?
+    (!!@args[:interactive]).tap { |v| debug("-- Interactive mode: #{v}") }
+  end
+
+  private
+
+  def parse!
+    @args = {}
+
+    until @argv.empty?
+      arg = @argv.shift
+      case arg
+      when '-i', '--interactive'
+        @args[:interactive] = true
+      else
+        raise "Unknown argument: #{arg}"
+      end
+    end
+  end
+end
+
 class PullRebase
   class BranchException < StandardError; end
 
@@ -14,7 +52,8 @@ class PullRebase
   def initialize
     @main_branch = main_branch
     @original_branch = original_branch
-    @interactive = ARGV.include?('--interactive') || ARGV.include?('-i')
+
+    set_arguments(ArgParser.new(ARGV))
   end
 
   def execute
@@ -44,7 +83,7 @@ class PullRebase
   end
 
   def command(cmd)
-    puts "-- Running: #{cmd}"
+    debug("-- Running: #{cmd}")
     system(cmd)
   end
 
@@ -61,6 +100,10 @@ class PullRebase
 
   def original_branch
     `git branch --show-current`.chomp
+  end
+
+  def set_arguments(args)
+    @interactive = args.interactive?
   end
 end
 
