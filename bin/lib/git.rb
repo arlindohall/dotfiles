@@ -54,6 +54,10 @@ module Git
       switch_to_main && command("git pull")
     end
 
+    def pull_main_with_prune
+      switch_to_main && command("git pull --prune")
+    end
+
     def switch_to_main
       command("git switch #{@main_branch}")
     end

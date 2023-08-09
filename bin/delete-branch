@@ -7,7 +7,7 @@ require_relative "lib/git"
 
 class DeleteBranch < Git::Command
   def execute
-    pull_main &&
+    pull_main_with_prune &&
       rebase_over_main &&
       switch_to_main &&
       delete_current_branch
