@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# typed: true
+# frozen_string_literal: true
+
+require_relative "lib/helpers"
+require_relative "lib/git"
+
+class DeleteBranch < Git::Command
+  def execute
+    pull_main &&
+      rebase_over_main &&
+      switch_to_main &&
+      delete_current_branch
+  end
+end
+
+DeleteBranch.execute
