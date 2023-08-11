@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+# typed: true
+# frozen_string_literal: true
+
+require 'net/http'
+
+require_relative 'lib/helpers'
+
+class Manners
+  class ArgParser
+    def initialize(argv)
+      @argv = argv
+      parse!
+    end
+
+    def has_files?
+      @args.key?(:files)
+    end
+
+    def files
+      @args[:files]
+    end
+
+    private
+
+    def parse!
+      @args = {}
+
+      until @argv.empty?
+        arg = @argv.shift
+        @args[:files] ||= []
+        @args[:files] << arg
+      end
+    end
+  end
+
+  class << self
+    def execute
+      new.execute
+    end
+  end
+
+  def initialize
+    @args = ArgParser.new(ARGV)
+  end
+
+  def execute
+    download_swear_words
+    search_for_swear_words
+  end
+
+  # private
+
+  def download_swear_words
+    debug("Downloading swear words from #{swear_words_uri}")
+    @swear_words ||= Net::HTTP.get(swear_words_uri)
+      .gsub("\r", "")
+      .split("\n")
+  end
+
+  def swear_words_uri
+    URI("http://www.bannedwordlist.com/lists/swearWords.txt")
+  end
+
+  def search_for_swear_words
+    if @args.has_files?
+      debug("Searching for #{@swear_words.size} swear words in files=#{@args.files}...")
+      system("rg -w '#{@swear_words.join("|")}' #{@args.files.join(" ")}")
+    else
+      debug("Searching for #{@swear_words.size} swear words in current directory...")
+      system("rg -w '#{@swear_words.join("|")}'")
+    end
+  end
+end
+
+Manners.execute
