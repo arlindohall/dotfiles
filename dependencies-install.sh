@@ -76,6 +76,8 @@ function install_work_linux {
     install_git_delta
 
     install_apt_tools
+
+    set_install_shell
 }
 
 install
