@@ -1,4 +1,6 @@
 
+alias dependencies-install "tmux new -d $HOME/dotfiles/dependencies-install.sh"
+
 function dcd
     set workspace $argv[1]
     cd (dev cd -n $workspace)
