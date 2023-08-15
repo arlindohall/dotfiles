@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+class SpinFish
+  class << self
+    def execute
+      new(ARGV).execute
+    end
+  end
+
+  def initialize(argv)
+    @argv = argv
+
+    raise ArgumentError, "Cannot process additional args" if @argv.size > 1
+  end
+
+  def execute
+    fish_ssh
+  end
+
+  private
+
+  def fish_ssh
+    if hostname
+      $stderr.puts "SSH to #{hostname}"
+      system("ssh #{hostname} -t fish -li")
+    else
+      $stderr.puts "No host given, opening search"
+      system("ssh #{input_hostname} -t fish -li")
+    end
+  end
+
+  def hostname
+    return unless host_search_term
+
+    match_hostname("spin show #{host_search_term}")
+  end
+
+  def host_search_term
+    @argv[0]
+  end
+
+  def input_hostname
+    match_hostname("spin show")
+  end
+
+  def match_hostname(command)
+    `#{command}`
+      .lines
+      .find { |line| line.match(/^fqdn:/) }
+      .split
+      .last
+  end
+end
+
+SpinFish.execute

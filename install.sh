@@ -80,6 +80,9 @@ function install_work_linux {
     set_up_directory_structure
     install_personal_bin
 
+    rc_install fish/config              .config/fish/config.fish
+    rc_install fish/linux_config        .config/fish/conf.d/linux_config.fish
+    rc_install fish/work_linux_config   .config/fish/conf.d/work_linux_config.fish
     rc_install gitconfig/work           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
     rc_install sh/inputrc               .inputrc

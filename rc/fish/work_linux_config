@@ -1,0 +1,5 @@
+
+function dcd
+    set workspace $argv[1]
+    cd (dev cd -n $workspace)
+end
