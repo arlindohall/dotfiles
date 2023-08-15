@@ -44,11 +44,12 @@ class SpinFish
   end
 
   def match_hostname(command)
-    `#{command}`
+    line = `#{command}`
       .lines
       .find { |line| line.match(/^fqdn:/) }
-      .split
-      .last
+    return unless line
+
+    line.split.last
   end
 end
 
