@@ -186,5 +186,9 @@ function install_git_delta {
 }
 
 function set_install_shell {
-    chsh -s "$(which fish)" millerhall
+    if hostname | rg "spin" ; then
+        chsh -s "$(which fish)" spin
+    else
+        chsh -s "$(which fish)" millerhall
+    fi
 }
