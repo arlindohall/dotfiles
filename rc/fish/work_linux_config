@@ -2,6 +2,7 @@
 alias dependencies-install "tmux new -d $HOME/dotfiles/dependencies-install.sh"
 
 fish_add_path $HOME/.rust/bin
+fish_add_path -p /opt/dev/bin/
 
 function dcd
     set workspace $argv[1]
