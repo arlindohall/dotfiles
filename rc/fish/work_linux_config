@@ -1,5 +1,6 @@
 
 alias dependencies-install "tmux new -d $HOME/dotfiles/dependencies-install.sh"
+alias bat batcat
 
 fish_add_path $HOME/.rust/bin
 fish_add_path $HOME/.cargo/bin
