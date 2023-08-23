@@ -2,8 +2,8 @@
 
 class Spearfish
   class << self
-    def execute
-      new(ARGV).execute
+    def call
+      new(ARGV).call
     end
   end
 
@@ -13,7 +13,7 @@ class Spearfish
     raise ArgumentError, "Cannot process additional args" if @argv.size > 1
   end
 
-  def execute
+  def call
     fish_ssh
   end
 
@@ -61,4 +61,4 @@ class Spearfish
   end
 end
 
-Spearfish.execute
+Spearfish.call

@@ -32,8 +32,8 @@ module Git
 
   class Command
     class << self
-      def execute
-        new.execute
+      def call
+        new.call
       end
     end
 
@@ -44,8 +44,8 @@ module Git
       set_arguments(Git::ArgParser.new(ARGV))
     end
 
-    def execute
-      raise NotImplementedError, "Git Commands must implement the execute method"
+    def call
+      raise NotImplementedError, "Git Commands must implement the call method"
     end
 
     private

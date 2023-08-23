@@ -35,8 +35,8 @@ class Manners
   end
 
   class << self
-    def execute
-      new.execute
+    def call
+      new.call
     end
   end
 
@@ -44,7 +44,7 @@ class Manners
     @args = ArgParser.new(ARGV)
   end
 
-  def execute
+  def call
     download_swear_words
     search_for_swear_words
   end
@@ -73,4 +73,4 @@ class Manners
   end
 end
 
-Manners.execute
+Manners.call

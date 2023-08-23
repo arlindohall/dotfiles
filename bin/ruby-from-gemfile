@@ -82,11 +82,11 @@ class RubyFromGemfile
   class NotEqual < Comparison
   end
 
-  def self.execute
-    new.execute
+  def self.call
+    new.call
   end
 
-  def execute
+  def call
     puts best_version and return if best_version
 
     puts "No version matching #{read_version}"
@@ -125,4 +125,4 @@ class RubyFromGemfile
 end
 
 puts RubyFromGemfile.new.parse_version
-# RubyFromGemfile.execute
+# RubyFromGemfile.call

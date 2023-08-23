@@ -6,7 +6,7 @@ require_relative "lib/helpers"
 require_relative "lib/git"
 
 class DeleteBranch < Git::Command
-  def execute
+  def call
     pull_main_with_prune &&
       rebase_over_main &&
       switch_to_main &&
@@ -14,4 +14,4 @@ class DeleteBranch < Git::Command
   end
 end
 
-DeleteBranch.execute
+DeleteBranch.call

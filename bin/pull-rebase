@@ -6,9 +6,9 @@ require_relative "lib/helpers"
 require_relative "lib/git"
 
 class PullRebase < Git::Command
-  def execute
+  def call
     pull_main && rebase_over_main
   end
 end
 
-PullRebase.execute
+PullRebase.call
