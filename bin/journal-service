@@ -11,9 +11,9 @@ class JournalService
 
   def call
     if has_journalfmt?
-      command("journalctl --output=json #{additional_args} --unit=#{service_name} | #{journalfmt}")
+      command("journalctl -f --output=json #{additional_args} --unit=#{service_name} | #{journalfmt}")
     else
-      command("journalctl #{additional_args} #{service_name}")
+      command("journalctl -f #{additional_args} #{service_name}")
     end
   end
 
@@ -30,9 +30,10 @@ class JournalService
   end
 
   def service_name
-    name_found? ?
-      "proc-shopify--#{input_name}@server.service" :
-      "proc-shopify--shopify@server.service"
+    return default_service_name unless first_arg_is_service?
+    return default_service_name unless name_found?
+
+    "proc-shopify--#{input_name}@server.service"
   end
 
   def name_found?
@@ -46,11 +47,20 @@ class JournalService
   end
 
   def input_name
-    @argv.first
+    @argv.first if first_arg_is_service?
+  end
+
+  def default_service_name
+    debug("Unable to determine service name, tailing 'shopify'")
+    "proc-shopify--shopify@server.service"
   end
 
   def additional_args
-    @argv.drop(1).join(" ")
+    first_arg_is_service? ? @argv.drop(1).join(" ") : @argv
+  end
+
+  def first_arg_is_service?
+    !@argv.first.start_with?("-")
   end
 
   def has_journalfmt?
