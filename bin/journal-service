@@ -35,6 +35,10 @@ class JournalService
     return default_service_name unless first_arg_is_service?
     return default_service_name unless name_found?
 
+    proc_name("shopify")
+  end
+
+  def proc_name(service)
     "proc-shopify--#{input_name}@server.service"
   end
 
@@ -42,10 +46,8 @@ class JournalService
     input_name && matching_names(input_name).any?
   end
 
-  def matching_names(name)
-    command_output("systemctl status \"*#{name}*\"")
-      .split("\n")
-      .filter { |line| line.match("●")}
+  def matching_names(service)
+    command("systemctl status #{proc_name(service)}")
   end
 
   def input_name
@@ -53,13 +55,13 @@ class JournalService
   end
 
   def default_service_name
-    return found_from_dir if found_from_dir
+    return dir_name if found_from_dir?
 
     debug("Unable to determine service name, tailing 'shopify'")
-    "proc-shopify--shopify@server.service"
+    proc_name("shopify")
   end
 
-  def found_from_dir
+  def found_from_dir?
     @found_from_dir ||= matching_names(dir_name)
   end
 
