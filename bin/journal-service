@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
-require_relative "lib/helpers"
+require 'pathname'
+
+require_relative 'lib/helpers'
 
 class JournalService
   def self.call = new(ARGV).call
@@ -37,11 +39,11 @@ class JournalService
   end
 
   def name_found?
-    input_name && matching_names.any?
+    input_name && matching_names(input_name).any?
   end
 
-  def matching_names
-    command_output("systemctl status \"*#{input_name}*\"")
+  def matching_names(name)
+    command_output("systemctl status \"*#{name}*\"")
       .split("\n")
       .filter { |line| line.match("●")}
   end
@@ -51,12 +53,26 @@ class JournalService
   end
 
   def default_service_name
+    return found_from_dir if found_from_dir
+
     debug("Unable to determine service name, tailing 'shopify'")
     "proc-shopify--shopify@server.service"
   end
 
+  def found_from_dir
+    @found_from_dir ||= matching_names(dir_name)
+  end
+
+  def dir_name
+    Pathname.new(ENV["PWD"]).basename
+  end
+
   def additional_args
-    first_arg_is_service? ? @argv.drop(1).join(" ") : @argv
+    additional_arg_list.join(" ")
+  end
+
+  def additional_arg_list
+    first_arg_is_service? ? @argv.drop(1) : @argv
   end
 
   def first_arg_is_service?
