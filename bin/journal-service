@@ -33,7 +33,7 @@ class JournalService
   end
 
   def proc_name(service)
-    "proc-shopify--#{input_name}@server.service"
+    "proc-shopify--#{service}@server.service"
   end
 
   def name_found?
