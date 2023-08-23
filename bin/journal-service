@@ -19,48 +19,34 @@ class JournalService
     end
   end
 
-  # private
-
-  def command(cmd)
-    debug("-- Running command: #{cmd}")
-    system(cmd)
-  end
+  private
 
   def service_name
-    return proc_name(input_name) if first_arg_is_service? && name_found?
+    return input_name if found_from_input?
+    return dir_name if found_from_dir?
 
     default_service_name
   end
 
-  def proc_name(service)
-    "proc-shopify--#{service}@server.service"
-  end
-
-  def name_found?
-    input_name && service_exists?(input_name)
-  end
-
-  def service_exists?(service)
-    command("SYSTEMD_PAGER='' systemctl status #{proc_name(service)}")
-  end
-
   def input_name
-    @argv.first if first_arg_is_service?
+    proc_name(@argv.first)
   end
 
-  def default_service_name
-    return proc_name(dir_name) if found_from_dir?
-
-    debug("Unable to determine service name, tailing 'shopify'")
-    proc_name("shopify")
-  end
-
-  def found_from_dir?
-    @found_from_dir ||= service_exists?(dir_name)
+  def found_from_input?
+    first_arg_is_service? && service_exists?(input_name)
   end
 
   def dir_name
-    Pathname.new(ENV["PWD"]).basename
+    @dir_name ||= proc_name(Pathname.new(ENV["PWD"]).basename)
+  end
+
+  def found_from_dir?
+    service_exists?(dir_name)
+  end
+
+  def default_service_name
+    debug("Unable to determine service name, tailing 'shopify'")
+    proc_name("shopify")
   end
 
   def additional_args
@@ -75,12 +61,25 @@ class JournalService
     @argv.first && !@argv.first.start_with?("-")
   end
 
+  def service_exists?(proc_name)
+    command("SYSTEMD_PAGER='' systemctl status #{proc_name}")
+  end
+
+  def proc_name(service)
+    "proc-shopify--#{service}@server.service"
+  end
+
   def has_journalfmt?
     command("ls #{journalfmt}")
   end
 
   def journalfmt
     "/opt/spin/bin/journalfmt"
+  end
+
+  def command(cmd)
+    debug("-- Running command: #{cmd}")
+    system(cmd)
   end
 end
 
