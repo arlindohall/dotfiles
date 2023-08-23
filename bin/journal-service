@@ -26,11 +26,6 @@ class JournalService
     system(cmd)
   end
 
-  def command_output(cmd)
-    debug("-- Running command (capturing output): #{cmd}")
-    `#{cmd}`
-  end
-
   def service_name
     return default_service_name unless first_arg_is_service?
     return default_service_name unless name_found?
@@ -43,15 +38,15 @@ class JournalService
   end
 
   def name_found?
-    input_name && matching_names(input_name)
+    input_name && service_exists?(input_name)
   end
 
-  def matching_names(service)
+  def service_exists?(service)
     command("systemctl status #{proc_name(service)}")
   end
 
   def input_name
-    @argv.first if first_arg_is_service?
+    @argv.first if @argv.fist && first_arg_is_service?
   end
 
   def default_service_name
@@ -62,7 +57,7 @@ class JournalService
   end
 
   def found_from_dir?
-    @found_from_dir ||= matching_names(dir_name)
+    @found_from_dir ||= service_exists?(dir_name)
   end
 
   def dir_name
