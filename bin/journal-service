@@ -27,10 +27,9 @@ class JournalService
   end
 
   def service_name
-    return default_service_name unless first_arg_is_service?
-    return default_service_name unless name_found?
+    return proc_name(input_name) if first_arg_is_service? && name_found?
 
-    proc_name("shopify")
+    default_service_name
   end
 
   def proc_name(service)
@@ -46,11 +45,11 @@ class JournalService
   end
 
   def input_name
-    @argv.first if @argv.fist && first_arg_is_service?
+    @argv.first if first_arg_is_service?
   end
 
   def default_service_name
-    return dir_name if found_from_dir?
+    return proc_name(dir_name) if found_from_dir?
 
     debug("Unable to determine service name, tailing 'shopify'")
     proc_name("shopify")
