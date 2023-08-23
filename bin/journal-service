@@ -60,7 +60,7 @@ class JournalService
   end
 
   def first_arg_is_service?
-    !@argv.first.start_with?("-")
+    @argv.first && !@argv.first.start_with?("-")
   end
 
   def has_journalfmt?
