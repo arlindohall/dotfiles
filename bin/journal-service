@@ -43,7 +43,7 @@ class JournalService
   end
 
   def name_found?
-    input_name && matching_names(input_name).any?
+    input_name && matching_names(input_name)
   end
 
   def matching_names(service)
