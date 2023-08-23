@@ -1,4 +1,6 @@
 
+require_relative "helpers"
+
 module Git
   class BranchException < StandardError; end
 
