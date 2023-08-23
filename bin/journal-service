@@ -41,7 +41,7 @@ class JournalService
   end
 
   def service_exists?(service)
-    command("systemctl status #{proc_name(service)}")
+    command("SYSTEMD_PAGER='' systemctl status #{proc_name(service)}")
   end
 
   def input_name
