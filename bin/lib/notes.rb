@@ -24,13 +24,26 @@ class Notes
     end
 
     def flag
-      @text.split(":").last.gsub(";", "")
+      sentiment ? flag_part[1..] : flag_part
+    end
+
+    def sentiment
+      case flag_part.chars.first
+      when "-"
+        :negative
+      when "+"
+        :positive
+      end
     end
 
     private
 
     def date
       @text.scan(/(\d{4})\/(\d{2})(\d{2})/).flatten.map(&:to_i)
+    end
+
+    def flag_part
+      @text.split(":").last.gsub(";", "")
     end
   end
 

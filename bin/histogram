@@ -15,12 +15,16 @@ class Histogram
   end
 
   def call
-    flag_counts.each do |flag, count|
-      puts "#{flag.ljust(padding)}: #{hashes(count)}"
+    flag_counts.first(limit || 10).each do |flag, count|
+      puts "#{"#{flag}:".ljust(padding)} #{hashes(count)}"
     end
   end
 
   private
+
+  def limit
+    args[:limit]
+  end
 
   def flag_counts
     Notes.flags.transform_values { |flags| flags.count }
@@ -60,6 +64,21 @@ class Histogram
 
   def max_count
     @max_count ||= flag_counts.map(&:last).max
+  end
+
+  def args
+    return @args if @args
+
+    @args = {}
+
+    until @argv.empty?
+      case @argv.shift
+      when "--limit", "-l"
+        @args[:limit] = @argv.shift.to_i
+      end
+    end
+
+    @args
   end
 end
 

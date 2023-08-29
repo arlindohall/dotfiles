@@ -42,6 +42,7 @@ class Manners
 
   def initialize
     @args = ArgParser.new(ARGV)
+    @stdin = $stdin
   end
 
   def call
@@ -63,13 +64,49 @@ class Manners
   end
 
   def search_for_swear_words
-    if @args.has_files?
-      debug("Searching for #{@swear_words.size} swear words in files=#{@args.files}...")
-      system("rg -w '#{@swear_words.join("|")}' #{@args.files.join(" ")}")
+    if !@stdin.tty?
+      search_stdin
+    elsif @args.has_files?
+      search_files
     else
-      debug("Searching for #{@swear_words.size} swear words in current directory...")
-      system("rg -w '#{@swear_words.join("|")}'")
+      search_directory
     end
+  end
+
+  def search_files
+    debug("Searching for #{@swear_words.size} swear words in files=#{@args.files}...")
+    status = system("rg -w '#{@swear_words.join("|")}' #{@args.files.join(" ")}")
+
+    exit(1) unless status
+  end
+
+  def search_directory
+      debug("Searching for #{@swear_words.size} swear words in current directory...")
+      status = system("rg -w '#{@swear_words.join("|")}'")
+
+      exit(1) unless status
+  end
+
+  def search_stdin
+    debug("Searching for #{@swear_words.size} swear words in standard in...")
+    @stdin.each_line.each_with_index do |line, line_number|
+      check_line(line, line_number)
+    end
+  end
+
+  def check_line(line, line_number)
+    if (word = @swear_words.find { |swear_word| matches(swear_word, line) })
+      debug("Found swear word in line: #{line_number}:#{line.index(word)}")
+      exit(1)
+    end
+  end
+
+  def matches(swear_word, line)
+    line.match(regex_for(swear_word))
+  end
+
+  def regex_for(swear_word)
+    /\b#{swear_word}\b/i
   end
 end
 

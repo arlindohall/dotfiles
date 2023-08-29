@@ -13,10 +13,18 @@ class Flag
   end
 
   def call
+    return all_flags unless name
+
     debug("-- Showing flags matching name '#{matching_name}'")
     flags_found.each do |flag|
       output(flag.file)
     end
+  end
+
+  private
+
+  def all_flags
+    puts Notes.flags.keys.join(" ")
   end
 
   def flags_found
