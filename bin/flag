@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require_relative 'lib/helpers'
+require_relative 'lib/notes'
+
+class Flag
+  def self.call
+    new(ARGV).call
+  end
+
+  def initialize(argv)
+    @argv = argv
+  end
+
+  def call
+    debug("-- Showing flags matching name '#{matching_name}'")
+    flags_found.each do |flag|
+      output(flag.file)
+    end
+  end
+
+  def flags_found
+    flags_for_name.sort_by(&:file)
+  end
+
+  def flags_for_name
+    @flags_for_name ||= flags_for_matching_name
+  end
+
+  def flags_for_matching_name
+    matching_name ? Notes.flags[matching_name] : []
+  end
+
+  def matching_name
+    @matching_name ||= find_matching_name
+  end
+
+  def find_matching_name
+    return name if Notes.flags[name]
+
+    Notes.flags
+      .keys
+      .sort
+      .find { |bigger_name| bigger_name.match(name) }
+  end
+
+  def name
+    @argv.first
+  end
+end
+
+Flag.call

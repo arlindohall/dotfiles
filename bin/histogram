@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+
+require 'io/console'
+
+require_relative 'lib/notes'
+
+class Histogram
+  def self.call
+    new(ARGV, $stdout).call
+  end
+
+  def initialize(argv, stdout)
+    @argv = argv
+    @stdout = stdout
+  end
+
+  def call
+    flag_counts.each do |flag, count|
+      puts "#{flag.ljust(padding)}: #{hashes(count)}"
+    end
+  end
+
+  private
+
+  def flag_counts
+    Notes.flags.transform_values { |flags| flags.count }
+      .sort_by { |_flag, count| count }
+      .reject { |flag, _count| flag == "flag" }
+      .reverse
+  end
+
+  def hashes(count)
+    "#" * (count.to_f * hash_width / max_count).to_i
+  end
+
+  def padding
+    space_for_words
+  end
+
+  def hash_width
+    0.8 * space_for_hash
+  end
+
+  def space_for_hash
+    term_width - space_for_words
+  end
+
+  def space_for_words
+    max_word_length + 2
+  end
+
+  def max_word_length
+    @max_word_length ||= Notes.flags.keys.map(&:size).max
+  end
+
+  def term_width
+    _y, x = @stdout.winsize
+    x
+  end
+
+  def max_count
+    @max_count ||= flag_counts.map(&:last).max
+  end
+end
+
+Histogram.call
