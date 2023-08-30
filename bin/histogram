@@ -29,12 +29,14 @@ class Histogram
   end
 
   def year
-    args[:year]
+    return if args[:no_year]
+
+    args[:year] || Time.now.year
   end
 
   def flag_counts
     Notes.flags
-      .transform_values { |flags| only_this_year(flags) if year }
+      .then { |flags| year ? flags.transform_values { |flags| only_this_year(flags) } : flags }
       .transform_values { |flags| flags.count }
       .reject { |flags, count| count == 0 }
       .sort_by { |_flag, count| count }
@@ -90,6 +92,8 @@ class Histogram
         @args[:limit] = @argv.shift.to_i
       when "--year", "-y"
         @args[:year] = @argv.shift.to_i
+      when "--no-year", "-ny"
+        @args[:no_year] = true
       end
     end
 
