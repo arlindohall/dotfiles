@@ -1,87 +1,8 @@
 #!/usr/bin/env ruby
 
+require_relative "lib/version_string"
+
 class RubyFromGemfile
-  OPERATIONS = [
-    GREATER_THAN_EQUAL = ">=",
-    PESSIMISTIC_GREATER = "~>",
-    GREATER_THAN = ">",
-    LESS_THAN_EQUAL = "<=",
-    PESSIMISTIC_LESS = "<~",
-    LESS_THAN = "<",
-    EQUAL = "=",
-    NOT_EQUAL = "!=",
-  ]
-
-  VERSION_MATCHERS = {
-    GREATER_THAN_EQUAL => GreaterThanEqual,
-    PESSIMISTIC_GREATER => PessimisticGreater,
-    GREATER_THAN => GreaterThan,
-    LESS_THAN_EQUAL => LessThanEqual,
-    PESSIMISTIC_LESS => PessimisticLess,
-    LESS_THAN => LessThan,
-    EQUAL => Equal,
-    NOT_EQUAL => NotEqual,
-  }
-
-  class Comparison
-    def valid_versions
-      versions.select { |version| is_valid_version?(version) }
-    end
-
-    def versions
-    end
-
-    def is_valid_version?(version)
-      raise NotImplementedError, "Subclass must implement #is_valid_version?"
-    end
-  end
-
-  class Version
-    attr_reader :engine, :major, :minor, :patch, :suffix
-    def initialize(engine: nil, major: nil, minor: nil, patch: nil, suffix: nil)
-      @engine = engine
-      @major = major
-      @minor = minor
-      @patch = patch
-      @suffix = suffix
-    end
-  end
-
-  class VersionList
-    def latest
-      @versions.sort_by(&:patch)
-        .sort_by(&:minor)
-        .sort_by(&:major)
-        .last
-    end
-  end
-
-  class GreaterThanEqual < Comparison
-    def valid_versions
-    end
-  end
-
-  class GreaterThan < Comparison
-  end
-
-  class PessimisticGreater < Comparison
-  end
-
-  class LessThanEqual < Comparison
-  end
-
-  class LessThan < Comparison
-  end
-
-  class PessimisticLess < Comparison
-  end
-
-  class Equal < Comparison
-  end
-
-  class NotEqual < Comparison
-  end
-
   def self.call
     new.call
   end
@@ -92,7 +13,7 @@ class RubyFromGemfile
     puts "No version matching #{read_version}"
   end
 
-  # private
+  private
 
   def best_version
     @best_version ||= compute_best_version
@@ -103,15 +24,7 @@ class RubyFromGemfile
   end
 
   def compute_best_version
-    version_matcher.valid_versions.latest
-  end
-
-  def version_matcher
-    VERSION_MATCHERS[parse_version]
-  end
-
-  def parse_version
-    OPERATIONS.find { |op| read_version.match(op) }
+    version_string.valid_versions(available_versions).latest
   end
 
   def read_version_from_gemfile
@@ -124,5 +37,4 @@ class RubyFromGemfile
   end
 end
 
-puts RubyFromGemfile.new.parse_version
-# RubyFromGemfile.call
+RubyFromGemfile.call
