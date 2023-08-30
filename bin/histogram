@@ -15,9 +15,11 @@ class Histogram
   end
 
   def call
-    flag_counts.first(limit || 10).each do |flag, count|
-      puts "#{"#{flag}:".ljust(padding)} #{hashes(count)}"
-    end
+    flag_counts
+      .first(limit || 10)
+      .each do |flag, count|
+        puts "#{"#{flag}:".ljust(padding)} #{hashes(count)}"
+      end
   end
 
   private
@@ -26,11 +28,22 @@ class Histogram
     args[:limit]
   end
 
+  def year
+    args[:year]
+  end
+
   def flag_counts
-    Notes.flags.transform_values { |flags| flags.count }
+    Notes.flags
+      .transform_values { |flags| only_this_year(flags) if year }
+      .transform_values { |flags| flags.count }
+      .reject { |flags, count| count == 0 }
       .sort_by { |_flag, count| count }
       .reject { |flag, _count| flag == "flag" }
       .reverse
+  end
+
+  def only_this_year(flags)
+    flags.select { |flag| flag.year == year }
   end
 
   def hashes(count)
@@ -75,6 +88,8 @@ class Histogram
       case @argv.shift
       when "--limit", "-l"
         @args[:limit] = @argv.shift.to_i
+      when "--year", "-y"
+        @args[:year] = @argv.shift.to_i
       end
     end
 

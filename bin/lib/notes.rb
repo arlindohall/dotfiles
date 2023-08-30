@@ -24,6 +24,10 @@ class Notes
     end
 
     def flag
+      unnormalized_flag.downcase.gsub("-", "_")
+    end
+
+    def unnormalized_flag
       sentiment ? flag_part[1..] : flag_part
     end
 
