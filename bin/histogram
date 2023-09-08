@@ -109,13 +109,13 @@ class Histogram
         @args[:help] = true
       when "--limit", "-l"
         @args[:limit] = @argv.shift.to_i
-      when /-l.*/
+      when /^-l/
         @args[:limit] = arg.sub(/-l/, "").to_i
       when "--no-limit", "-nl"
         @args[:limit] = nil
       when "--year", "-y"
         @args[:year] = @argv.shift.to_i
-      when /-y.*/
+      when /^-y/
         @args[:year] = arg.sub(/-y/, "").to_i
       when "--no-year", "-ny"
         @args[:no_year] = true

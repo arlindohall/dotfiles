@@ -91,7 +91,7 @@ class Flag
         args[:help] = true
       when "-y", "--year"
         args[:year] = @argv.shift.to_i
-      when /-y/
+      when /^-y/
         args[:year] = arg.sub(/-y/, "").to_i
       else
         help
