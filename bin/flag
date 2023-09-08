@@ -13,6 +13,7 @@ class Flag
   end
 
   def call
+    return help if args[:help]
     return all_flags unless name
 
     debug("-- Showing flags matching name '#{matching_name}'")
@@ -25,6 +26,14 @@ class Flag
 
   def all_flags
     puts Notes.flags.keys.join(" ")
+  end
+
+  def help
+    puts <<~HELP
+      Usage: flag             show list of all flags
+             flag [name]      show list of files matching flag
+             flag -h          show help
+    HELP
   end
 
   def flags_found
@@ -53,7 +62,27 @@ class Flag
   end
 
   def name
-    @argv.first
+    args[:name]
+  end
+
+  def args
+    @args ||= parse_args
+  end
+
+  def parse_args
+    args = {}
+    return args if @argv.empty?
+
+    args[:name] = @argv.shift unless @argv.first.start_with?("-")
+
+    until @argv.empty?
+      case @argv.shift
+      when "-h", "--help"
+        args[:help] = true
+      end
+    end
+
+    args
   end
 end
 

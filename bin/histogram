@@ -15,8 +15,10 @@ class Histogram
   end
 
   def call
+    return help if args[:help]
+
     flag_counts
-      .first(limit || 10)
+      .first(limit)
       .each do |flag, count|
         puts "#{"#{flag}:".ljust(padding)} #{hashes(count)}"
       end
@@ -24,8 +26,23 @@ class Histogram
 
   private
 
+  def help
+    puts <<~HELP
+      Usage: histogram [OPTIONS]        show histogram of flags
+
+      Options:
+        --help, -h                     show help
+        --limit, -l [NUMBER]           limit to NUMBER of flags
+        --no-limit, -nl                show all flags
+        --year, -y [YEAR]              limit to YEAR
+        --no-year, -ny                 limit to this year
+    HELP
+  end
+
   def limit
-    args[:limit]
+    return flag_counts.size if args[:no_limit]
+
+    args[:limit] || 10
   end
 
   def year
@@ -35,7 +52,7 @@ class Histogram
   end
 
   def flag_counts
-    Notes.flags
+    @_flag_counts ||= Notes.flags
       .then { |flags| year ? flags.transform_values { |flags| only_this_year(flags) } : flags }
       .transform_values { |flags| flags.count }
       .reject { |flags, count| count == 0 }
@@ -87,11 +104,19 @@ class Histogram
     @args = {}
 
     until @argv.empty?
-      case @argv.shift
+      case (arg = @argv.shift)
+      when "--help", "-h"
+        @args[:help] = true
       when "--limit", "-l"
         @args[:limit] = @argv.shift.to_i
+      when /-l.*/
+        @args[:limit] = arg.sub(/-l/, "").to_i
+      when "--no-limit", "-nl"
+        @args[:limit] = nil
       when "--year", "-y"
         @args[:year] = @argv.shift.to_i
+      when /-y.*/
+        @args[:year] = arg.sub(/-y/, "").to_i
       when "--no-year", "-ny"
         @args[:no_year] = true
       end
