@@ -119,6 +119,9 @@ class Histogram
         @args[:year] = arg.sub(/-y/, "").to_i
       when "--no-year", "-ny"
         @args[:no_year] = true
+      else
+        help
+        exit
       end
     end
 

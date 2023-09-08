@@ -25,7 +25,13 @@ class Flag
   private
 
   def all_flags
-    puts Notes.flags.keys.join(" ")
+    puts Notes.flags
+      .values
+      .flatten
+      .filter { |flag| args[:year] ? flag.year == args[:year] : true }
+      .map { |flag| flag.flag }
+      .uniq
+      .join(" ")
   end
 
   def help
@@ -33,6 +39,10 @@ class Flag
       Usage: flag             show list of all flags
              flag [name]      show list of files matching flag
              flag -h          show help
+
+      Options:
+        --help, -h           show help
+        --year, -y [YEAR]    limit to YEAR (only works for list all flags)
     HELP
   end
 
@@ -76,9 +86,16 @@ class Flag
     args[:name] = @argv.shift unless @argv.first.start_with?("-")
 
     until @argv.empty?
-      case @argv.shift
+      case (arg = @argv.shift)
       when "-h", "--help"
         args[:help] = true
+      when "-y", "--year"
+        args[:year] = @argv.shift.to_i
+      when /-y/
+        args[:year] = arg.sub(/-y/, "").to_i
+      else
+        help
+        exit
       end
     end
 
