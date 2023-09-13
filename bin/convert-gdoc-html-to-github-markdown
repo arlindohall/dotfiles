@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+
+class ConvertGdocHtmlToGithubFlavoredMarkdown
+  def self.perform
+    new(ARGF).perform
+  end
+
+  def initialize(argf)
+    @argf = argf
+  end
+
+  def perform
+    File.write(tmpfile_name, stripped_html)
+    system("pandoc -t gfm #{tmpfile_name}")
+  end
+
+  def tmpfile_name
+    Pathname.new("/tmp/gdoc.html")
+  end
+
+  def stripped_html
+    @argf.read
+    .gsub(/class="[\w .-]+"/, "")
+    .gsub(/id="[\w .-]+"/, "")
+  end
+end
+
+ConvertGdocHtmlToGithubFlavoredMarkdown.perform
