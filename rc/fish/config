@@ -22,8 +22,6 @@ function disk-usage --argument-names dir
     end
 end
 
-alias tree "tree | bat"
-
 ## Use local path first
 fish_add_path -p    $HOME/bin
 fish_add_path -p    $HOME/pybin/bin

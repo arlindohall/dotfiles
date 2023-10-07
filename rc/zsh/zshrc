@@ -3,7 +3,6 @@ source /etc/zsh/zshrc.default.inc.zsh
 PATH=$PATH:$HOME/bin
 
 alias bat=batcat
-alias tree='tree | bat'
 alias dependencies-install="tmux new -d $HOME/dotfiles/dependencies-install.sh"
 
 bindkey -v
