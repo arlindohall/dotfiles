@@ -13,7 +13,7 @@ class ConvertGdocHtmlToGithubFlavoredMarkdown
 
   def perform
     File.write(tmpfile_name, stripped_html)
-    system("pandoc -t gfm #{tmpfile_name}")
+    system("pandoc --wrap=none -t gfm #{tmpfile_name}")
   end
 
   def tmpfile_name

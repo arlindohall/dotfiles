@@ -25,7 +25,7 @@ class PullRequest
   private
 
   def command
-    "open #{remote}/pull/new/#{branch}"
+    "open #{remote}/compare/#{branch}"
   end
 
   def remote
