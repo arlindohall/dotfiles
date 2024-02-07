@@ -99,6 +99,7 @@ function install_homebrew_tools {
     brew install \
         bat \
         fish \
+        jj \
         graphviz \
         node \
         pandoc \
@@ -150,6 +151,18 @@ function install_git {
     else
         xcode-select --install
     fi
+}
+
+function install_jj {
+    if which jj ; then
+      return
+    fi
+
+    if !is_linux ; then
+      return
+    fi
+
+    cargo install jj
 }
 
 function install_openjdk {

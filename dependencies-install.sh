@@ -48,6 +48,7 @@ function install_home_linux {
     install_pybin
     install_git
     install_git_delta
+    install_jj
 
     install_apt_tools
 
@@ -74,6 +75,7 @@ function install_work_linux {
     rustup default stable
     install_rust # not actually used, but I don't have time to clean up
     install_git_delta
+    install_jj
 
     install_apt_tools
 }
