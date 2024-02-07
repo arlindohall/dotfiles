@@ -33,6 +33,7 @@ function install_home_mac {
     rc_install fish/home_mac_config     .config/fish/conf.d/home_mac_config.fish
     rc_install gitconfig/home           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
+    rc_install jj/home_config           "Library/Application Support/jj/config.toml"
     rc_install sh/inputrc               .inputrc
     rc_install sh/profile               .profile
     rc_install tmux/conf                .tmux.conf
@@ -50,6 +51,7 @@ function install_home_linux {
     rc_install fish/linux_config        .config/fish/conf.d/linux_config.fish
     rc_install gitconfig/home           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
+    rc_install jj/home_config           .config/jj/config.toml
     rc_install sh/inputrc               .inputrc
     rc_install sh/profile               .profile
     rc_install tmux/conf                .tmux.conf
@@ -68,6 +70,7 @@ function install_work_mac {
     rc_install gitconfig/work           .gitconfig
     rc_install gitconfig/work-dev       .config/dev/gitconfig
     rc_install gitconfig/gitignore      .gitignore
+    rc_install jj/work_config           "Library/Application Support/jj/config.toml"
     rc_install sh/inputrc               .inputrc
     rc_install sh/profile               .profile
     rc_install tmux/conf                .tmux.conf
@@ -85,6 +88,7 @@ function install_work_linux {
     rc_install fish/work_linux_config   .config/fish/conf.d/work_linux_config.fish
     rc_install gitconfig/work           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
+    rc_install jj/work_config           .config/jj/config.toml
     rc_install sh/inputrc               .inputrc
     rc_install sh/profile               .profile
     rc_install tmux/conf                .tmux.conf

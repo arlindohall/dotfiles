@@ -158,7 +158,7 @@ function install_jj {
       return
     fi
 
-    if !is_linux ; then
+    if ! is_linux ; then
       return
     fi
 
