@@ -2,3 +2,7 @@ function dcd
     set workspace $argv[1]
     cd (dev cd -n $workspace)
 end
+
+. /opt/dev/dev.fish
+
+chruby 3.3.0
