@@ -1,14 +1,35 @@
 #!/usr/bin/env ruby
 
+require 'cgi'
 require 'pathname'
+require 'uri'
 
 class ConvertGdocHtmlToGithubFlavoredMarkdown
-  def self.perform
-    new(ARGF).perform
+  class GoogleUrl
+    def self.regex
+      /
+        https:\/\/
+          www.google.com
+          \/url
+          \?q=
+          [^"]*
+      /x
+    end
+
+    def self.replacement(string)
+      CGI.parse(URI.parse(string).query)["q"].first
+    rescue
+      STDERR.puts("Failed to parse URL:\n#{string}")
+      raise
+    end
   end
 
-  def initialize(argf)
-    @argf = argf
+  def self.perform
+    new(ARGF.read).perform
+  end
+
+  def initialize(string)
+    @string = string
   end
 
   def perform
@@ -21,10 +42,15 @@ class ConvertGdocHtmlToGithubFlavoredMarkdown
   end
 
   def stripped_html
-    @argf.read
-    .gsub(/class="[\w .-]+"/, "")
-    .gsub(/id="[\w .-]+"/, "")
+    @string
+      .gsub(/class="[\w .-]+"/, "")
+      .gsub(/id="[\w .-]+"/, "")
+      .gsub(GoogleUrl.regex) do |str|
+        GoogleUrl.replacement(str)
+      end
   end
 end
 
+# require 'irb'
+# IRB.start
 ConvertGdocHtmlToGithubFlavoredMarkdown.perform
