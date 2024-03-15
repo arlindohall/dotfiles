@@ -58,7 +58,6 @@ function install_home_linux {
 function install_work_mac {
     install_homebrew
     install_rust
-    install_rbenv
     install_pybin
     install_git
     install_git_delta
