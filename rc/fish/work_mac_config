@@ -6,3 +6,5 @@ end
 . /opt/dev/dev.fish
 
 chruby 3.3.0
+
+alias kk kubectl

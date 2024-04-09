@@ -1,22 +1,24 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Miller's changes
+" => Miller's Vim RC File
 "    working on _Learn VimScript the Hard Way_
-"    http://learnvimscriptthehardway.stevelosh.com/chapters/01.html
+"    http://learnvimscriptthehardway.stevelosh.com
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" Ch 3
+" Ch 3, 5
 :nnoremap - ddp
-:nnoremap _ ddkkp
+:nnoremap _ ddkP
 
-" Ch 4
+" Ch 4-5
 " Note that this mapping works for the 2nd-last character of a word
 :inoremap <c-u> <esc>viwUea
 :inoremap <c-l> <esc>viwuea
 :nnoremap <c-u> viwUe
 :nnoremap <c-l> viwue
 
-" Ch 5
-" converted the above mappings to *noremap*
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => The rest is taken from a blog post that doesn't
+"    exist anymore. :/
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => General
