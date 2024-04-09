@@ -2,20 +2,6 @@
 fish_add_path       /usr/local/bin
 fish_add_path       /opt/homebrew/bin
 
-## Aliases for notes
-alias 'todays-date'         'echo (date +%Y/%m%d.md)'
-alias 'todays-year'         'echo (date +%Y)'
-alias 'todays-note'         'echo ~/var/notes/src/(todays-date)'
-alias 'last-note'           "find ~/var/notes/src | rg '\d{4}/\d{4}.md' | sort | tail -1"
-alias 'time-right-now'      'echo (date +%H:%M)'
-
-alias notecat               'cat (todays-note)'
-alias notego                'cd ~/var/notes/src'
-alias 'note-index'          'notego && index && cd -'
-
-alias 'note-preview'        'cd ~/var/notes ; fish build.fish ; cd -'
-alias yearcat               'cat ~/var/notes/src/(todays-year)/*.md'
-
 alias docker                podman
 
 function mermaid
@@ -25,19 +11,5 @@ function mermaid
 
   echo "Writing the output of mermaid-cli to $HOME/var/scratch/"
   open "$HOME/var/scratch/mermaid/diagram.png"
-end
-
-function note
-    if test ! -f (todays-note)
-        mkdir -p ~/var/notes/src/(todays-year)
-        date +'# %B %d %Y' > (todays-note)
-    end
-    echo >> (todays-note)
-    echo (time-right-now) >> (todays-note)
-    echo >> (todays-note)
-    echo >> (todays-note)
-    vim (todays-note)
-    pandoc (todays-note) -o (todays-note)
-    note-index
 end
 
