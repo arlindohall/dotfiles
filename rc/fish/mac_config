@@ -2,6 +2,21 @@
 fish_add_path       /usr/local/bin
 fish_add_path       /opt/homebrew/bin
 
+## Notes Shortcuts
+alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
+
+function note-backup
+  echo "Going to notes directory $HOME/var/notes"
+  cd "$HOME/var/notes"
+
+  git add .
+  git commit -m "Note archive through $(todays-date)"
+
+  echo "Going back"
+  cd -
+  pwd
+end
+
 alias docker                podman
 
 function mermaid
