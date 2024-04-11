@@ -4,13 +4,16 @@ fish_add_path       /opt/homebrew/bin
 
 ## Notes Shortcuts
 alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
+alias 'notego'              'cd "$HOME/var/notes"'
 
 function note-backup
   echo "Going to notes directory $HOME/var/notes"
-  cd "$HOME/var/notes"
+  notego
 
+  pull-rebase
   git add .
   git commit -m "Note archive through $(todays-date)"
+  git push
 
   echo "Going back"
   cd -
