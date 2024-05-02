@@ -72,7 +72,6 @@ function install_work_mac {
 
 function install_work_linux {
     rustup default stable
-    install_rust # not actually used, but I don't have time to clean up
     install_git_delta
     install_jj
 

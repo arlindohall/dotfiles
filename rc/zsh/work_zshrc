@@ -16,7 +16,6 @@ fi
 # Installed under `.rust/bin` because that's where instances
 # come with Rust installed when I use zsh, but leave `.cargo/bin`
 # because that's where things are installed
-export PATH="$PATH:$HOME/.rust/bin"
 export PATH="$PATH:$HOME/.cargo/bin"
 
 function dl {

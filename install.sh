@@ -94,7 +94,7 @@ function install_work_linux {
     rc_install tmux/conf                .tmux.conf
     rc_install tmux/conf_local          .tmux.conf.local
     rc_install vim/vimrc                .vimrc
-    rc_install zsh/zshrc                .zshrc
+    rc_install zsh/work_zshrc           .zshrc
 }
 
 function install_personal_bin {
