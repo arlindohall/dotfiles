@@ -71,6 +71,7 @@ function install_work_mac {
 }
 
 function install_work_linux {
+    install_rust
     rustup default stable
     install_git_delta
     install_jj
