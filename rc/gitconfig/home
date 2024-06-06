@@ -24,7 +24,7 @@
 	change-commits = "!f() { VAR=$1; OLD=$2; NEW=$3; shift 3; git filter-branch --env-filter \"if [[ \\\"$`echo $VAR`\\\" = '$OLD' ]]; then export $VAR='$NEW'; fi\" $@; }; f "
 	dag = log --graph --format='format:%C(yellow)%h%C(reset) %C(blue)\"%an\" <%ae>%C(reset) %C(magenta)%cr%C(reset)%C(auto)%d%C(reset)%n%s' --date-order --all
 	goal = log --graph --oneline --all --decorate
-	ll = log --oneline --decorate
+	ll = log --oneline --decorate -n 10
 	history = log -a --full-diff -p .
 	wistory = log -wa --full-diff -p .
 [init]
