@@ -60,7 +60,7 @@ function install_rust {
         rustup \
         https://sh.rustup.rs  \
         sh \
-        baf397601a78f37584a80e6c66f83f503bc42839c1362c8e2ccb719f5bb74e00801d74940fcf559dcc35d06c9b4124866017f85ba8766e545a2ef30068637839
+        bece2dfa6889f3ac4de782e51543cf18112130092d50d270c86ffcd5f6e62636d39077dffd71ed7df59e7fa8123f5746d0558783f86246ca2cee8c24ecb07545
 }
 
 function install_rbenv {
