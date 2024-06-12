@@ -21,3 +21,7 @@ export PATH="$PATH:$HOME/.cargo/bin"
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
+
+function open-spin {
+    open https://$SPIN_FQDN
+}
