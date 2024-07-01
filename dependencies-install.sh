@@ -70,7 +70,10 @@ function install_work_mac {
 }
 
 function install_work_linux {
-    install_rust
+    curl -sSf https://sh.rustup.rs > /tmp/rustup.sh
+    chmod u+x /tmp/rustup.sh
+    /tmp/rustup.sh -y
+
     rustup default stable
     install_git_delta
 
