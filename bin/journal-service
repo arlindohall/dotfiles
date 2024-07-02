@@ -66,7 +66,7 @@ class JournalService
   end
 
   def proc_name(service)
-    "proc-shopify--#{service}@server.service"
+    "proc--shopify--#{service}--server.service"
   end
 
   def has_journalfmt?
