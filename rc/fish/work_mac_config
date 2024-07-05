@@ -24,3 +24,5 @@ end
 chruby 3.3.0
 
 alias kk kubectl
+
+alias spin "caffeinate -d spin"
