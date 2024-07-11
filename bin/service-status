@@ -11,9 +11,9 @@ class ServiceStatus
 
   def call
     if grep
-      command("systemctl | grep #{service_name_pattern} | grep #{grep}")
+      command("SYSTEMD_COLORS=1 systemctl | grep #{service_name_pattern} | grep #{grep}")
     else
-      command("systemctl | grep #{service_name_pattern}")
+      command("SYSTEMD_COLORS=1 systemctl | grep #{service_name_pattern}")
     end
   end
 
