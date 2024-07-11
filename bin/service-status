@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+require_relative 'lib/helpers'
+
+class ServiceStatus
+  def self.call = new(ARGV).call
+
+  def initialize(argv)
+    @argv = argv
+  end
+
+  def call
+    if grep
+      command("systemctl | grep #{service_name_pattern} | grep #{grep}")
+    else
+      command("systemctl | grep #{service_name_pattern}")
+    end
+  end
+
+  private
+
+  def service_name_pattern
+    "shopify--#{service_name}.service"
+  end
+
+  def service_name
+    File.basename(Dir.pwd)
+  end
+
+  def command(cmd)
+    debug(" -- Running command #{cmd}")
+    system(cmd)
+  end
+
+  def grep
+    return if @argv.empty?
+
+    @argv.join(" ")
+  end
+end
+
+ServiceStatus.call
+
