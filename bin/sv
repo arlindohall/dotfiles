@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+
+require_relative 'lib/helpers'
+
+class CommandRunner
+  def run(cmd)
+    system(cmd)
+  end
+end
+
+class Service
+  attr_reader :argv, :command_runner
+
+  def self.call = new(ARGV).call
+
+  def initialize(argv, command_runner: CommandRunner.new)
+    @argv = argv
+    @command_runner = command_runner
+  end
+
+  def call
+    operation = argv.shift || "status"
+    service_name = Pathname.new(Dir.pwd).basename.to_s
+
+    if operation == "journal"
+      command("journalctl -f --output=json --unit=proc--shopify--#{service_name}--server.service | /opt/spin/bin/journalfmt")
+    elsif operation == "status"
+      command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{service_name}")
+    else
+      raise ArgumentError, "Unknown operation: #{operation}"
+    end
+  end
+
+  def command(cmd)
+    debug("-- Running command: #{cmd}")
+    command_runner.run(cmd)
+  end
+
+  def debug(text)
+    STDERR.puts(text)
+  end
+end
+
+Service.call
