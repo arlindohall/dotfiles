@@ -35,11 +35,11 @@ class Service
     operation = argv.shift || "status"
     name = service_name.call
 
-    if operation == "journal"
+    if "journal".match(operation)
       command(
         "journalctl -f --output=json --unit=proc--shopify--#{name}--server.service | /opt/spin/bin/journalfmt"
       )
-    elsif operation == "status"
+    elsif "status".match(operation)
       command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{name}")
     else
       raise ArgumentError, "Unknown operation: #{operation}"
@@ -135,5 +135,25 @@ command_runner.expects(
 )
 Service.new([], command_runner: command_runner, service_name: service_name).call
 command_runner.assert
+
+puts "### Test: Can take the abbreviated verb name"
+command_runner.expects(
+  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+)
+Service.new(
+  ["s"],
+  command_runner: command_runner,
+  service_name: service_name
+).call
+command_runner.assert
+
+command_runner.expects(
+  "journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt"
+)
+Service.new(
+  ["j"],
+  command_runner: command_runner,
+  service_name: service_name
+).call
 
 puts "All tests passed!"
