@@ -1,22 +1,25 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    language_server-protocol (3.17.0.2)
-    prettier_print (1.2.0)
-    ruby-lsp (0.3.7)
+    language_server-protocol (3.17.0.3)
+    prettier_print (1.2.1)
+    ruby-lsp (0.3.8)
       language_server-protocol (~> 3.17.0)
       sorbet-runtime
-      syntax_tree (>= 4.0.2, < 5.0.0)
-    sorbet (0.5.10634)
-      sorbet-static (= 0.5.10634)
-    sorbet-runtime (0.5.10610)
-    sorbet-static (0.5.10634-universal-darwin-21)
-    syntax_tree (4.3.0)
-      prettier_print (>= 1.0.2)
+      syntax_tree (>= 5.0.0, < 6)
+    sorbet (0.5.11481)
+      sorbet-static (= 0.5.11481)
+    sorbet-runtime (0.5.11481)
+    sorbet-static (0.5.11481-aarch64-linux)
+    sorbet-static (0.5.11481-universal-darwin)
+    sorbet-static (0.5.11481-x86_64-linux)
+    syntax_tree (5.3.0)
+      prettier_print (>= 1.2.0)
 
 PLATFORMS
-  arm64-darwin-23
-  x86_64-darwin-21
+  aarch64-linux
+  universal-darwin
+  x86_64-linux
 
 DEPENDENCIES
   ruby-lsp (~> 0.3.7)
