@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require 'pathname'
+require "pathname"
 
-require_relative 'lib/helpers'
+require_relative "lib/helpers"
 
 class CommandRunner
   def run(cmd)
@@ -10,37 +10,130 @@ class CommandRunner
   end
 end
 
+class ServiceName
+  def call
+    Pathname.new(Dir.pwd).basename.to_s
+  end
+end
+
 class Service
-  attr_reader :argv, :command_runner
+  attr_reader :argv, :command_runner, :service_name
 
   def self.call = new(ARGV).call
 
-  def initialize(argv, command_runner: CommandRunner.new)
+  def initialize(
+    argv,
+    command_runner: CommandRunner.new,
+    service_name: ServiceName.new
+  )
     @argv = argv
     @command_runner = command_runner
+    @service_name = service_name
   end
 
   def call
     operation = argv.shift || "status"
-    service_name = Pathname.new(Dir.pwd).basename.to_s
+    name = service_name.call
 
     if operation == "journal"
-      command("journalctl -f --output=json --unit=proc--shopify--#{service_name}--server.service | /opt/spin/bin/journalfmt")
+      command(
+        "journalctl -f --output=json --unit=proc--shopify--#{name}--server.service | /opt/spin/bin/journalfmt"
+      )
     elsif operation == "status"
-      command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{service_name}")
+      command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{name}")
     else
       raise ArgumentError, "Unknown operation: #{operation}"
     end
   end
 
   def command(cmd)
-    debug("-- Running command: #{cmd}")
+    STDERR.puts("-- Running command: #{cmd}")
     command_runner.run(cmd)
-  end
-
-  def debug(text)
-    STDERR.puts(text)
   end
 end
 
-Service.call
+unless ENV["RUN_TEST"]
+  Service.call
+  exit(0)
+end
+
+class CommandTester
+  attr_reader :expected, :called
+  def run(cmd)
+    raise "No expectation set" unless expected && called
+    unless expected == cmd
+      raise "Expectation not fulfilled:\n #{expected}\n #{cmd}"
+    end
+
+    @called += 1
+    STDERR.puts "Skipping for test: #{cmd}"
+  end
+
+  def expects(command)
+    @called = 0
+    @expected = command
+  end
+
+  def assert(times = 1)
+    raise "Expectation not fulfilled:\n#{expected}" unless called == times
+  end
+end
+
+class ServiceNameTester
+  def call = "some-service"
+end
+
+def expect_exception(&block)
+  begin
+    block.call
+  rescue StandardError
+    return
+  end
+
+  raise "Expected exception"
+end
+
+puts "Running tests..."
+
+command_runner = CommandTester.new
+service_name = ServiceNameTester.new
+
+puts "### Test: Service will run journal command"
+command_runner.expects(
+  "journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt"
+)
+Service.new(
+  ["journal"],
+  command_runner: command_runner,
+  service_name: service_name
+).call
+command_runner.assert
+
+puts "### Test: Service will run status command"
+command_runner.expects(
+  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+)
+Service.new(
+  ["status"],
+  command_runner: command_runner,
+  service_name: service_name
+).call
+command_runner.assert
+
+puts "### Test: Service will raise an error for unknown operation"
+expect_exception do
+  Service.new(
+    ["unknown"],
+    command_runner: command_runner,
+    service_name: service_name
+  ).call
+end
+
+puts "### Test: Defaults to status command"
+command_runner.expects(
+  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+)
+Service.new([], command_runner: command_runner, service_name: service_name).call
+command_runner.assert
+
+puts "All tests passed!"
