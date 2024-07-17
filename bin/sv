@@ -32,7 +32,7 @@ class Service
   end
 
   def call
-    operation = argv.shift || "status"
+    operation = argv.shift || "short-status"
     name = service_name.call
 
     if "journal".match(operation)
@@ -40,6 +40,8 @@ class Service
         "journalctl -f --output=json --unit=proc--shopify--#{name}--server.service | /opt/spin/bin/journalfmt"
       )
     elsif "status".match(operation)
+      command("SYSTEMD_COLORS=1 systemctl status '*shopify--#{name}*'")
+    elsif "short-status".match(operation)
       command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{name}")
     else
       raise ArgumentError, "Unknown operation: #{operation}"
@@ -111,7 +113,7 @@ command_runner.assert
 
 puts "### Test: Service will run status command"
 command_runner.expects(
-  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+  "SYSTEMD_COLORS=1 systemctl status '*shopify--some-service*'"
 )
 Service.new(
   ["status"],
@@ -138,7 +140,7 @@ command_runner.assert
 
 puts "### Test: Can take the abbreviated verb name"
 command_runner.expects(
-  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+  "SYSTEMD_COLORS=1 systemctl status '*shopify--some-service*'"
 )
 Service.new(
   ["s"],
