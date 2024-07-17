@@ -17,6 +17,20 @@ function note-backup
   echo "Backups can be found at ~/var/"
   cd -
   pwd
+
+  echo "Moving to notes folder $HOME/var/notes"
+  cd "$HOME/var/notes"
+  pull-rebase
+
+  echo "Copying to notes folder $HOME/var/notes/engineering-journal"
+  cp -r "$HOME/Documents/Logseq" "$HOME/var/notes/engineering-journal"
+  git add .
+  git commit -m "Note archive through (todays-date)"
+  git push
+
+  echo "Moving to original directory"
+  cd -
+  pwd
 end
 
 . /opt/dev/dev.fish
