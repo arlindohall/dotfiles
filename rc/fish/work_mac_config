@@ -40,3 +40,9 @@ chruby 3.3.0
 alias kk kubectl
 
 alias spin "caffeinate -d spin"
+
+alias servers "tmux new -d -s web-server 'dev cd web && dev server' &&
+  tmux new -d -s shopify-server 'dev cd shopify && dev server'"
+alias servers-with-up "tmux new -d -s web-server 'dev cd web && dev up && dev server' &&
+  tmux new -d -s shopify-server 'dev cd shopify && dev up && dev server'"
+alias servers-kill-all "tmux kill-session -t web-server && tmux kill-session -t shopify-server"
