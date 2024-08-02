@@ -23,9 +23,9 @@ function note-backup
   pull-rebase
 
   echo "Copying to notes folder $HOME/var/notes/engineering-journal"
-  cp -r "$HOME/Documents/Logseq" "$HOME/var/notes/engineering-journal"
+  cp -r "$HOME/Documents/Logseq/"* "$HOME/var/notes/engineering-journal"
   git add .
-  git commit -m "Note archive through (todays-date)"
+  git commit -m "Note archive through $(todays-date)"
   git push
 
   echo "Moving to original directory"
