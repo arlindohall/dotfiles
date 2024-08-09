@@ -35,4 +35,6 @@
 	wistory = log -wa --full-diff -p .
 [init]
 	defaultBranch = main
+[remote "origin"]
+  fetch = +refs/heads/miller/*:refs/remotes/origin/miller/*
 
