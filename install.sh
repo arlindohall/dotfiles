@@ -26,6 +26,7 @@ use_helper rc_helpers.sh
 function install_home_mac {
     set_up_directory_structure
     install_personal_bin
+    create_notes_symlink_if_home
 
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
