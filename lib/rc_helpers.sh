@@ -31,10 +31,6 @@ function set_up_directory_structure {
 }
 
 function create_notes_symlink_if_home {
-    if ! home_mac ; then
-      return
-    fi
-
     if ! test -d ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ; then
       return
     fi
@@ -43,5 +39,5 @@ function create_notes_symlink_if_home {
       return
     fi
 
-    ln -s ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ~/notes-symlink^C
+    ln -s ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ~/notes-symlink
 }
