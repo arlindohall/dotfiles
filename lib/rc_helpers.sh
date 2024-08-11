@@ -28,4 +28,14 @@ function set_up_directory_structure {
     mkdir -p "$HOME"/.rm-trash-can
     mkdir -p "$HOME"/var
     mkdir -p "$HOME"/workspace
+
+    if ! test -d ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ; then
+      return
+    fi
+
+    if test -L ~/notes-symlink/ ; then
+      return
+    fi
+
+    ln -s ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ~/notes-symlink^C
 }
