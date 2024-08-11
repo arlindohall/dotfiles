@@ -35,7 +35,7 @@ function create_notes_symlink_if_home {
       return
     fi
 
-    if test -L ~/notes-symlink/ ; then
+    if test -L ~/notes-symlink ; then
       return
     fi
 
