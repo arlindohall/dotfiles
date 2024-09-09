@@ -4,19 +4,18 @@ function dcd
 end
 
 function note-backup
+  set --local start_dir "$(pwd)"
   echo "Moving to $HOME/Documents"
-  cd $HOME/Documents
+  cd "$HOME/Documents"
 
   echo "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
-  tar -cvzf $HOME/var/logseq-backup.tar.gz Logseq/
+  tar -cvzf "$HOME/var/logseq-backup.tar.gz" Logseq/
 
   echo "Creating tar file at $HOME/var/ ~/var/excalidraw-backup.tar.gz"
-  tar -cvzf $HOME/var/excalidraw-backup.tar.gz ExcalidraW
+  tar -cvzf "$HOME/var/excalidraw-backup.tar.gz" ExcalidraW
 
   echo "Moving to original directory"
   echo "Backups can be found at ~/var/"
-  cd -
-  pwd
 
   echo "Moving to notes folder $HOME/var/notes"
   cd "$HOME/var/notes"
@@ -26,10 +25,9 @@ function note-backup
   cp -r "$HOME/Documents/Logseq/"* "$HOME/var/notes/engineering-journal"
   git add .
   git commit -m "Note archive through $(todays-date)"
-  git push
 
   echo "Moving to original directory"
-  cd -
+  cd "$start_dir"
   pwd
 end
 
