@@ -37,5 +37,5 @@ set fish_greeting
 fish_vi_key_bindings
 
 function git-changed --wraps='git diff' --description 'calls git-changed ls (git diff [ARGS_GO_HERE] --name-only) 2>/dev/null'
-  test (git diff $argv --name-only) && ls (git diff $argv --name-only) 2>/dev/null || printf ""
+  test "$(git diff $argv --name-only)" && ls (git diff $argv --name-only) 2>/dev/null || printf ""
 end
