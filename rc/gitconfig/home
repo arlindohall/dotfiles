@@ -25,8 +25,8 @@
 	dag = log --graph --format='format:%C(yellow)%h%C(reset) %C(blue)\"%an\" <%ae>%C(reset) %C(magenta)%cr%C(reset)%C(auto)%d%C(reset)%n%s' --date-order --all
 	goal = log --graph --oneline --all --decorate
 	ll = log --oneline --decorate -n 10
-	history = log -a --full-diff -p .
-	wistory = log -wa --full-diff -p .
+	history = log -a main~1.. --full-diff -p
+	wistory = log -wa main~1.. --full-diff -p
 [init]
 	defaultBranch = main
 [commit]
