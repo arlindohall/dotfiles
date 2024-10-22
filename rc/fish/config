@@ -37,9 +37,9 @@ set fish_greeting
 fish_vi_key_bindings
 
 function git-changed --wraps='git diff' --description 'calls git-changed ls (git diff [ARGS_GO_HERE] --name-only) 2>/dev/null'
-  if ! test "$(git diff $argv --name-only)"
+  if ! test "$(git diff $argv --name-only --relative)"
     return -1
   end
 
-  ls (git diff $argv --name-only) 2>/dev/null
+  ls (git diff $argv --name-only --relative) 2>/dev/null
 end
