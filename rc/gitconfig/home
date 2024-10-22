@@ -21,8 +21,9 @@
 	default = simple
     autoSetupRemote = true
 [alias]
-	ll = log --graph --oneline --decorate --branches main..
-  lt = log --graph --oneline --decorate --branches -n 10
+	la = log --graph --oneline --decorate --branches main..
+	ll = log --graph --oneline --decorate main..
+  lt = log --graph --oneline --decorate -n 10
 	history = log -a main.. --full-diff -p
 	wistory = log -wa main.. --full-diff -p
 [init]
