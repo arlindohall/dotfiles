@@ -10,8 +10,6 @@ function note-backup
   echo "Going to notes directory $HOME/var/notes"
   notego
 
-  cp -r ~/notes-symlink/* ./logseq/
-
   pull-rebase
   git add .
   git commit -m "Note archive through $(todays-date)"
