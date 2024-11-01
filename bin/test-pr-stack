@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+
+$END_BRANCH = ARGV[0]
+$START_BRANCH = ARGV[1] || "main"
+
+raise "Must provide branch" unless $END_BRANCH
+
+system "git switch #{$END_BRANCH}"
+
+branches = `git ll #{$START_BRANCH}^..`
+  .scan(/\((miller[-\/\w]+)\)|HEAD -> (miller[-\/\w]+)/)
+  .flatten
+  .compact
+  .reverse
+
+def try_to_run(command, git_changed = nil)
+  current_branch = `git branch --show-current`.strip
+
+  puts <<~COMMAND_MESSAGE
+    Running command from branch
+    ----------
+    #{current_branch}
+    ----------
+
+    Running command
+    ----------
+    #{command}
+    ----------
+  COMMAND_MESSAGE
+
+  system command
+  return if $?.exitstatus == 0
+
+  puts <<~CLOSE_MESSAGE
+
+    Exiting due to failure...
+
+    Failed trying to run
+    ----------
+    #{command}
+    ----------
+
+    Please fix the issue and run the script again.
+    This may be a test or type error; you have to fix the code.
+
+    Failed running on branch
+    ----------
+    #{current_branch}
+    ----------
+
+    Started from branch
+    ----------
+    #{$END_BRANCH}
+    ----------
+
+    To go back to the begining, please run:
+    git switch #{$END_BRANCH}
+
+    To run this program again from the failed branch, please run:
+    ----------
+    #{$0} #{$END_BRANCH} #{current_branch}
+    ----------
+  CLOSE_MESSAGE
+
+  abort unless git_changed
+
+  puts <<~LINT_WARN
+
+    This is a lint error, try running the following to fix it:
+    pnpm eslint --fix #{git_changed}
+  LINT_WARN
+
+  abort
+end
+
+for branch in branches do
+  puts "branch: #{branch}"
+  system "git switch #{branch}"
+  branch_expression = $START_BRANCH == "main" ? "main" : "#{$START_BRANCH}^"
+  git_all = `git diff #{branch_expression} --name-only --relative`.split.join(" ")
+  git_changed = `ls #{git_all} 2>/dev/null`.split.join(" ")
+
+  try_to_run %(/opt/dev/bin/dev test #{git_changed})
+  try_to_run %(/opt/dev/bin/dev type-check)
+  try_to_run %(pnpm eslint #{git_changed} --quiet), git_changed
+end
