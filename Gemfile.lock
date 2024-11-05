@@ -75,7 +75,8 @@ PLATFORMS
 DEPENDENCIES
   rubocop (~> 1.68)
   ruby-lsp (~> 0.3.7)
-  sorbet
+  sorbet (~> 0.5.11481)
+  sorbet-runtime (~> 0.5.11481)
   tapioca (~> 0.16.3)
 
 BUNDLED WITH
