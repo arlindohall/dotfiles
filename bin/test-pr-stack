@@ -1,87 +1,183 @@
 #!/usr/bin/env ruby
 
-$END_BRANCH = ARGV[0]
-$START_BRANCH = ARGV[1] || "main"
+class Args
+  def self.end_branch
+    raise "Must provide branch" unless ARGV[0]
+    ARGV[0]
+  end
 
-raise "Must provide branch" unless $END_BRANCH
-
-system "git switch #{$END_BRANCH}"
-
-branches = `git ll #{$START_BRANCH}^..`
-  .scan(/\((miller[-\/\w]+)\)|HEAD -> (miller[-\/\w]+)/)
-  .flatten
-  .compact
-  .reverse
-
-def try_to_run(command, git_changed = nil)
-  current_branch = `git branch --show-current`.strip
-
-  puts <<~COMMAND_MESSAGE
-    Running command from branch
-    ----------
-    #{current_branch}
-    ----------
-
-    Running command
-    ----------
-    #{command}
-    ----------
-  COMMAND_MESSAGE
-
-  system command
-  return if $?.exitstatus == 0
-
-  puts <<~CLOSE_MESSAGE
-
-    Exiting due to failure...
-
-    Failed trying to run
-    ----------
-    #{command}
-    ----------
-
-    Please fix the issue and run the script again.
-    This may be a test or type error; you have to fix the code.
-
-    Failed running on branch
-    ----------
-    #{current_branch}
-    ----------
-
-    Started from branch
-    ----------
-    #{$END_BRANCH}
-    ----------
-
-    To go back to the begining, please run:
-    git switch #{$END_BRANCH}
-
-    To run this program again from the failed branch, please run:
-    ----------
-    #{$0} #{$END_BRANCH} #{current_branch}
-    ----------
-  CLOSE_MESSAGE
-
-  abort unless git_changed
-
-  puts <<~LINT_WARN
-
-    This is a lint error, try running the following to fix it:
-    pnpm eslint --fix #{git_changed}
-  LINT_WARN
-
-  abort
+  def self.start_branch = ARGV[1] || "main"
 end
 
-for branch in branches do
-  puts "branch: #{branch}"
-  system "git switch #{branch}"
-  branch_expression = $START_BRANCH == "main" ? "main" : "#{$START_BRANCH}^"
-  git_all = `git diff #{branch_expression} --name-only --relative`.split.join(" ")
-  git_changed = `ls #{git_all} 2>/dev/null`.split.join(" ")
-  changed_tests = git_changed.split.filter { |fn| fn.include?("test") }.join(" ")
+class Command
+  COMMAND_TO_GET_CHANGED_FILES =
+    "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null"
 
-  try_to_run %(/opt/dev/bin/dev test #{changed_tests}) unless changed_tests.empty?
-  try_to_run %(/opt/dev/bin/dev type-check)
-  try_to_run %(pnpm eslint #{git_changed} --quiet), git_changed
+  class TestCommand
+    def name = :test
+    def fix_command
+      "dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
+    end
+  end
+
+  class LintCommand
+    def name = :lint
+    def fix_command
+      "pnpm eslint (#{COMMAND_TO_GET_CHANGED_FILES}) --quiet --fix"
+    end
+  end
+
+  class TypeCheckCommand
+    def name = :type_check
+    def fix_command
+      "dev type-check"
+    end
+  end
+
+  attr_reader :command_type
+  def initialize(command_type)
+    @command_type = command_type
+  end
+
+  def run_message(current_branch, command)
+    <<~COMMAND_MESSAGE
+      Running command from branch
+      ----------
+      #{current_branch}
+      ----------
+
+      Running command
+      ----------
+      #{command}
+      ----------
+    COMMAND_MESSAGE
+  end
+
+  def error_message
+    <<~CLOSE_MESSAGE
+
+      Exiting due to failure...
+
+      Failed trying to run
+      ----------
+      #{command}
+      ----------
+
+      Failed running on branch
+      ----------
+      #{current_branch}
+      ----------
+
+      Started from branch
+      ----------
+      #{Args.end_branch}
+      ----------
+
+      To go back to the begining, please run:
+      git switch #{Args.end_branch}
+
+      To run this program again from the failed branch, please run:
+      ----------
+      #{$0} #{Args.end_branch} #{current_branch}
+      ----------
+
+      This is a #{command_type.name} error, try running the following to debug/ fix it:
+      ----------
+      #{command_type.fix_command}
+      ----------
+    CLOSE_MESSAGE
+  end
 end
+
+class Runner
+  attr_reader :command, :git_changed, :command_type
+  def initialize(command:, git_changed:, command_type:)
+    @command = command
+    @git_changed = git_changed
+    @command_type = command_type
+  end
+
+  def run
+    current_branch = `git branch --show-current`.strip
+
+    puts command_type.run_message(current_branch, command)
+
+    system command.gsub("CHANGESET", git_changed.join(" "))
+    return if $?.exitstatus == 0
+
+    puts command_type.error_message
+    abort
+  end
+end
+
+class Main
+  def self.memoize(method_name)
+    method = instance_method(method_name)
+    define_method(method_name) do |*args|
+      @memo ||= {}
+      @memo[method_name] ||= {}
+      @memo[method_name][args] ||= method.bind(self).call(*args)
+    end
+  end
+
+  def self.call = new.call
+
+  def call
+    branch(Args.end_branch)
+
+    for branch in branches
+      puts "branch: #{branch}"
+      system "git switch #{branch}"
+      git_changed = `ls #{git_all} 2>/dev/null`.split
+      changed_tests = git_changed.filter { |fn| fn.include?("test") }
+
+      try_to_run "/opt/dev/bin/dev test CHANGESET",
+                 changed_tests,
+                 Command::TestCommand
+      try_to_run "ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET",
+                 changed_tests,
+                 Command::TestCommand
+      try_to_run "/opt/dev/bin/dev type-check",
+                 git_changed,
+                 Command::TypeCheckCommand
+      try_to_run "pnpm eslint CHANGESET --quiet",
+                 git_changed,
+                 Command::LintCommand
+    end
+  end
+
+  def branch(name)
+    system "git switch #{Args.end_branch}"
+    abort unless $?.exitstatus == 0
+  end
+
+  def try_to_run(command, git_changed, command_type)
+    return unless git_changed.any?
+
+    Runner.new(
+      command: command,
+      git_changed: git_changed,
+      command_type: Command.new(command_type)
+    ).run
+  end
+
+  memoize def branches
+    `git ll #{Args.start_branch}^..`.scan(
+      %r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)}
+    )
+      .flatten
+      .compact
+      .reverse
+  end
+
+  memoize def git_all
+    branch_expression =
+      Args.start_branch == "main" ? "main" : "#{Args.start_branch}^"
+    files =
+      `git diff #{branch_expression}..#{Args.end_branch} --name-only --relative`
+
+    files.split.join(" ")
+  end
+end
+
+Main.call
