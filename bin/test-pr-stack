@@ -12,6 +12,8 @@ end
 class Command
   COMMAND_TO_GET_CHANGED_FILES =
     "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null"
+  COMMAND_TO_GET_CHANGED_SO_FAR_FILES =
+    "ls (git diff #{Args.start_branch}..#{`git branch --show-current`.strip} --name-only --relative) 2>/dev/null"
 
   class TestCommand
     def name = :test
@@ -23,7 +25,7 @@ class Command
   class LintCommand
     def name = :lint
     def fix_command
-      "pnpm eslint (#{COMMAND_TO_GET_CHANGED_FILES}) --quiet --fix"
+      "pnpm eslint (#{COMMAND_TO_GET_CHANGED_SO_FAR_FILES}) --quiet --fix"
     end
   end
 
@@ -34,12 +36,22 @@ class Command
     end
   end
 
-  attr_reader :command_type
-  def initialize(command_type)
+  attr_reader :command, :command_type, :changeset
+  def initialize(command, command_type, changeset)
+    @command = command
     @command_type = command_type
+    @changeset = changeset
   end
 
-  def run_message(current_branch, command)
+  def current_branch
+    `git branch --show-current`.strip
+  end
+
+  def execute
+    system command.gsub("CHANGESET", changeset.join(" "))
+  end
+
+  def run_message
     <<~COMMAND_MESSAGE
       Running command from branch
       ----------
@@ -49,6 +61,11 @@ class Command
       Running command
       ----------
       #{command}
+      ----------
+
+      Including changeset
+      ----------
+      #{changeset.join(" ")}
       ----------
     COMMAND_MESSAGE
   end
@@ -90,22 +107,18 @@ class Command
 end
 
 class Runner
-  attr_reader :command, :git_changed, :command_type
-  def initialize(command:, git_changed:, command_type:)
+  attr_reader :command
+  def initialize(command:)
     @command = command
-    @git_changed = git_changed
-    @command_type = command_type
   end
 
   def run
-    current_branch = `git branch --show-current`.strip
+    puts command.run_message
 
-    puts command_type.run_message(current_branch, command)
-
-    system command.gsub("CHANGESET", git_changed.join(" "))
+    command.execute
     return if $?.exitstatus == 0
 
-    puts command_type.error_message
+    puts command.error_message
     abort
   end
 end
@@ -123,14 +136,12 @@ class Main
   def self.call = new.call
 
   def call
-    branch(Args.end_branch)
+    for target in branches
+      branch(target)
 
-    for branch in branches
-      puts "branch: #{branch}"
-      system "git switch #{branch}"
-      git_changed = `ls #{git_all} 2>/dev/null`.split
-      changed_tests = git_changed.filter { |fn| fn.include?("test") }
-
+      try_to_run "pnpm eslint CHANGESET --quiet",
+                 git_changed_so_far,
+                 Command::LintCommand
       try_to_run "/opt/dev/bin/dev test CHANGESET",
                  changed_tests,
                  Command::TestCommand
@@ -140,29 +151,23 @@ class Main
       try_to_run "/opt/dev/bin/dev type-check",
                  git_changed,
                  Command::TypeCheckCommand
-      try_to_run "pnpm eslint CHANGESET --quiet",
-                 git_changed,
-                 Command::LintCommand
     end
   end
 
   def branch(name)
-    system "git switch #{Args.end_branch}"
+    puts "branch: #{name}"
+    system "git switch #{name}"
     abort unless $?.exitstatus == 0
   end
 
-  def try_to_run(command, git_changed, command_type)
-    return unless git_changed.any?
+  def try_to_run(command, changeset, command_type)
+    return unless changeset.any?
 
-    Runner.new(
-      command: command,
-      git_changed: git_changed,
-      command_type: Command.new(command_type)
-    ).run
+    Runner.new(command: Command.new(command, command_type.new, changeset)).run
   end
 
   memoize def branches
-    `git ll #{Args.start_branch}^..`.scan(
+    `git ll #{Args.start_branch}^..#{Args.end_branch}`.scan(
       %r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)}
     )
       .flatten
@@ -170,13 +175,28 @@ class Main
       .reverse
   end
 
-  memoize def git_all
-    branch_expression =
-      Args.start_branch == "main" ? "main" : "#{Args.start_branch}^"
-    files =
-      `git diff #{branch_expression}..#{Args.end_branch} --name-only --relative`
+  def git_changed_so_far
+    filter_exists(`git branch --show-current`.strip)
+  end
 
-    files.split.join(" ")
+  def git_changed
+    filter_exists(Args.end_branch)
+  end
+
+  def filter_exists(files)
+    `ls #{git_all(files).join(" ")} 2>/dev/null`.split
+  end
+
+  def git_all(to_branch)
+    `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
+  end
+
+  def changed_tests
+    git_changed.filter { |fn| fn.include?("test") }
+  end
+
+  def branch_expression
+    Args.start_branch == "main" ? "main" : "#{Args.start_branch}^"
   end
 end
 
