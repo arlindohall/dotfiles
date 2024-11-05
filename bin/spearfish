@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 class Spearfish
   class << self
@@ -10,7 +11,7 @@ class Spearfish
   def initialize(argv)
     @argv = argv
 
-    raise ArgumentError, "Cannot process additional args" if @argv.size > 1
+    raise ArgumentError, 'Cannot process additional args' if @argv.size > 1
   end
 
   def call
@@ -21,10 +22,10 @@ class Spearfish
 
   def fish_ssh
     if hostname
-      $stderr.puts "SSH to #{hostname}"
+      warn "SSH to #{hostname}"
       system("ssh #{hostname} -t fish -li")
     else
-      $stderr.puts "No host given, opening search"
+      warn 'No host given, opening search'
       try_finding_host_and_ssh
     end
   end
@@ -43,18 +44,18 @@ class Spearfish
     if (name = input_hostname)
       system("ssh #{name} -t fish -li")
     else
-      $stderr.puts "No host selected..."
+      warn 'No host selected...'
     end
   end
 
   def input_hostname
-    match_hostname("spin show")
+    match_hostname('spin show')
   end
 
   def match_hostname(command)
     line = `#{command}`
-      .lines
-      .find { |line| line.match(/^fqdn:/) }
+           .lines
+           .find { |line| line.match(/^fqdn:/) }
     return unless line
 
     line.split.last

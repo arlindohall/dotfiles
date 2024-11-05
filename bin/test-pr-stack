@@ -1,22 +1,27 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+# typed: true
 
+require 'English'
 class Args
   def self.end_branch
-    raise "Must provide branch" unless ARGV[0]
+    raise 'Must provide branch' unless ARGV[0]
+
     ARGV[0]
   end
 
-  def self.start_branch = ARGV[1] || "main"
+  def self.start_branch = ARGV[1] || 'main'
 end
 
 class Command
   COMMAND_TO_GET_CHANGED_FILES =
-    "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null"
+    "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null".freeze
   COMMAND_TO_GET_CHANGED_SO_FAR_FILES =
-    "ls (git diff #{Args.start_branch}..#{`git branch --show-current`.strip} --name-only --relative) 2>/dev/null"
+    "ls (git diff #{Args.start_branch}..#{`git branch --show-current`.strip} --name-only --relative) 2>/dev/null".freeze
 
   class TestCommand
     def name = :test
+
     def fix_command
       "dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
     end
@@ -24,6 +29,7 @@ class Command
 
   class LintCommand
     def name = :lint
+
     def fix_command
       "pnpm eslint (#{COMMAND_TO_GET_CHANGED_SO_FAR_FILES}) --quiet --fix"
     end
@@ -31,12 +37,14 @@ class Command
 
   class TypeCheckCommand
     def name = :type_check
+
     def fix_command
-      "dev type-check"
+      'dev type-check'
     end
   end
 
   attr_reader :command, :command_type, :changeset
+
   def initialize(command, command_type, changeset)
     @command = command
     @command_type = command_type
@@ -48,7 +56,7 @@ class Command
   end
 
   def execute
-    system command.gsub("CHANGESET", changeset.join(" "))
+    system command.gsub('CHANGESET', changeset.join(' '))
   end
 
   def run_message
@@ -65,7 +73,7 @@ class Command
 
       Including changeset
       ----------
-      #{changeset.join(" ")}
+      #{changeset.join(' ')}
       ----------
     COMMAND_MESSAGE
   end
@@ -95,7 +103,7 @@ class Command
 
       To run this program again from the failed branch, please run:
       ----------
-      #{$0} #{Args.end_branch} #{current_branch}
+      #{$PROGRAM_NAME} #{Args.end_branch} #{current_branch}
       ----------
 
       This is a #{command_type.name} error, try running the following to debug/ fix it:
@@ -108,6 +116,7 @@ end
 
 class Runner
   attr_reader :command
+
   def initialize(command:)
     @command = command
   end
@@ -116,7 +125,7 @@ class Runner
     puts command.run_message
 
     command.execute
-    return if $?.exitstatus == 0
+    return if $CHILD_STATUS.exitstatus.zero?
 
     puts command.error_message
     abort
@@ -136,19 +145,19 @@ class Main
   def self.call = new.call
 
   def call
-    for target in branches
+    branches.each do |target|
       branch(target)
 
-      try_to_run "pnpm eslint CHANGESET --quiet",
+      try_to_run 'pnpm eslint CHANGESET --quiet',
                  git_changed_so_far,
                  Command::LintCommand
-      try_to_run "/opt/dev/bin/dev test CHANGESET",
+      try_to_run '/opt/dev/bin/dev test CHANGESET',
                  changed_tests,
                  Command::TestCommand
-      try_to_run "ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET",
+      try_to_run 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET',
                  changed_tests,
                  Command::TestCommand
-      try_to_run "/opt/dev/bin/dev type-check",
+      try_to_run '/opt/dev/bin/dev type-check',
                  git_changed,
                  Command::TypeCheckCommand
     end
@@ -157,7 +166,7 @@ class Main
   def branch(name)
     puts "branch: #{name}"
     system "git switch #{name}"
-    abort unless $?.exitstatus == 0
+    abort unless $CHILD_STATUS.exitstatus.zero?
   end
 
   def try_to_run(command, changeset, command_type)
@@ -170,9 +179,9 @@ class Main
     `git ll #{Args.start_branch}^..#{Args.end_branch}`.scan(
       %r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)}
     )
-      .flatten
-      .compact
-      .reverse
+                                                      .flatten
+                                                      .compact
+                                                      .reverse
   end
 
   def git_changed_so_far
@@ -184,7 +193,7 @@ class Main
   end
 
   def filter_exists(files)
-    `ls #{git_all(files).join(" ")} 2>/dev/null`.split
+    `ls #{git_all(files).join(' ')} 2>/dev/null`.split
   end
 
   def git_all(to_branch)
@@ -192,11 +201,11 @@ class Main
   end
 
   def changed_tests
-    git_changed.filter { |fn| fn.include?("test") }
+    git_changed.filter { |fn| fn.include?('test') }
   end
 
   def branch_expression
-    Args.start_branch == "main" ? "main" : "#{Args.start_branch}^"
+    Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
   end
 end
 

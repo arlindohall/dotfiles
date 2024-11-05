@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'io/console'
 
@@ -52,13 +53,13 @@ class Histogram
   end
 
   def flag_counts
-    @_flag_counts ||= Notes.flags
-      .then { |flags| year ? flags.transform_values { |flags| only_this_year(flags) } : flags }
-      .transform_values { |flags| flags.count }
-      .reject { |flags, count| count == 0 }
-      .sort_by { |_flag, count| count }
-      .reject { |flag, _count| flag == "flag" }
-      .reverse
+    @flag_counts ||= Notes.flags
+                          .then { |flags| year ? flags.transform_values { |flags| only_this_year(flags) } : flags }
+                          .transform_values(&:count)
+                          .reject { |_flags, count| count.zero? }
+                          .sort_by { |_flag, count| count }
+                          .reject { |flag, _count| flag == 'flag' }
+                          .reverse
   end
 
   def only_this_year(flags)
@@ -66,7 +67,7 @@ class Histogram
   end
 
   def hashes(count)
-    "#" * (count.to_f * hash_width / max_count).to_i
+    '#' * (count.to_f * hash_width / max_count).to_i
   end
 
   def padding
@@ -105,19 +106,19 @@ class Histogram
 
     until @argv.empty?
       case (arg = @argv.shift)
-      when "--help", "-h"
+      when '--help', '-h'
         @args[:help] = true
-      when "--limit", "-l"
+      when '--limit', '-l'
         @args[:limit] = @argv.shift.to_i
       when /^-l/
-        @args[:limit] = arg.sub(/-l/, "").to_i
-      when "--no-limit", "-nl"
+        @args[:limit] = arg.sub(/-l/, '').to_i
+      when '--no-limit', '-nl'
         @args[:limit] = nil
-      when "--year", "-y"
+      when '--year', '-y'
         @args[:year] = @argv.shift.to_i
       when /^-y/
-        @args[:year] = arg.sub(/-y/, "").to_i
-      when "--no-year", "-ny"
+        @args[:year] = arg.sub(/-y/, '').to_i
+      when '--no-year', '-ny'
         @args[:no_year] = true
       else
         help

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 $debug = false
 
@@ -33,11 +34,10 @@ class LinesChanged
   end
 
   def command
-    return "git diff" unless @args && @args.any?
+    return 'git diff' unless @args&.any?
 
-    @args.join(" ")
+    @args.join(' ')
   end
 end
 
 LinesChanged.new(ARGV).show
-

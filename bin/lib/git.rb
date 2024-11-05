@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 
-require_relative "helpers"
+require_relative 'helpers'
 
 module Git
   class BranchException < StandardError; end
@@ -47,17 +48,17 @@ module Git
     end
 
     def call
-      raise NotImplementedError, "Git Commands must implement the call method"
+      raise NotImplementedError, 'Git Commands must implement the call method'
     end
 
     private
 
     def pull_main
-      switch_to_main && command("git pull")
+      switch_to_main && command('git pull')
     end
 
     def pull_main_with_prune
-      switch_to_main && command("git pull --prune")
+      switch_to_main && command('git pull --prune')
     end
 
     def switch_to_main
@@ -92,7 +93,7 @@ module Git
       when /master/
         'master'
       else
-        raise BranchException, "Cannot find main branch"
+        raise BranchException, 'Cannot find main branch'
       end
     end
 

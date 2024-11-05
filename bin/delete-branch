@@ -2,8 +2,8 @@
 # typed: true
 # frozen_string_literal: true
 
-require_relative "lib/helpers"
-require_relative "lib/git"
+require_relative 'lib/helpers'
+require_relative 'lib/git'
 
 class DeleteBranch < Git::Command
   def call

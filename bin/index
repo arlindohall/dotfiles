@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # code: language=ruby
 
-require "pathname"
+require 'pathname'
 
 class Index
   def initialize(base)
@@ -28,21 +30,21 @@ class Index
 
     build_index
 
-    @base.join("INDEX.md").write index
+    @base.join('INDEX.md').write index
   end
 
   private
 
   def index
-    <<~index_file
-                # Index\n
-                ## Directories\n
-                #{directory_entries}\n
-                ## Files\n
-                #{file_entries}\n\n
-                [Return to Parent...](../INDEX.md)
+    <<~INDEX_FILE
+      # Index\n
+      ## Directories\n
+      #{directory_entries}\n
+      ## Files\n
+      #{file_entries}\n\n
+      [Return to Parent...](../INDEX.md)
 
-            index_file
+    INDEX_FILE
   end
 
   def directory_entries
@@ -58,15 +60,15 @@ class Index
     @files
       .map(&:basename)
       .map(&:to_s)
-      .filter { |name| !name.eql? "INDEX.md" }
+      .filter { |name| !name.eql? 'INDEX.md' }
       .sort
       .map { |name| "- [#{name}](#{name})" }
       .join("\n")
   end
 
   def is_git?
-    @base.basename.to_s.eql? ".git"
+    @base.basename.to_s.eql? '.git'
   end
 end
 
-Index.new(Pathname.new(".")).build_index
+Index.new(Pathname.new('.')).build_index

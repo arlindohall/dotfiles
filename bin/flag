@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require_relative 'lib/helpers'
 require_relative 'lib/notes'
@@ -26,12 +27,12 @@ class Flag
 
   def all_flags
     puts Notes.flags
-      .values
-      .flatten
-      .filter { |flag| args[:year] ? flag.year == args[:year] : true }
-      .map { |flag| flag.flag }
-      .uniq
-      .join(" ")
+              .values
+              .flatten
+              .filter { |flag| args[:year] ? flag.year == args[:year] : true }
+              .map(&:flag)
+              .uniq
+              .join(' ')
   end
 
   def help
@@ -66,9 +67,9 @@ class Flag
     return name if Notes.flags[name]
 
     Notes.flags
-      .keys
-      .sort
-      .find { |bigger_name| bigger_name.match(name) }
+         .keys
+         .sort
+         .find { |bigger_name| bigger_name.match(name) }
   end
 
   def name
@@ -83,16 +84,16 @@ class Flag
     args = {}
     return args if @argv.empty?
 
-    args[:name] = @argv.shift unless @argv.first.start_with?("-")
+    args[:name] = @argv.shift unless @argv.first.start_with?('-')
 
     until @argv.empty?
       case (arg = @argv.shift)
-      when "-h", "--help"
+      when '-h', '--help'
         args[:help] = true
-      when "-y", "--year"
+      when '-y', '--year'
         args[:year] = @argv.shift.to_i
       when /^-y/
-        args[:year] = arg.sub(/-y/, "").to_i
+        args[:year] = arg.sub(/-y/, '').to_i
       else
         help
         exit

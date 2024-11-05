@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require 'pathname'
 
@@ -20,11 +21,11 @@ class Notes
     end
 
     def file
-      Pathname.new(Notes.notes_dir).join(@text.split(":").first)
+      Pathname.new(Notes.notes_dir).join(@text.split(':').first)
     end
 
     def flag
-      unnormalized_flag.downcase.gsub("-", "_")
+      unnormalized_flag.downcase.gsub('-', '_')
     end
 
     def unnormalized_flag
@@ -33,9 +34,9 @@ class Notes
 
     def sentiment
       case flag_part.chars.first
-      when "-"
+      when '-'
         :negative
-      when "+"
+      when '+'
         :positive
       end
     end
@@ -43,11 +44,11 @@ class Notes
     private
 
     def date
-      @text.scan(/(\d{4})\/(\d{2})(\d{2})/).flatten.map(&:to_i)
+      @text.scan(%r{(\d{4})/(\d{2})(\d{2})}).flatten.map(&:to_i)
     end
 
     def flag_part
-      @text.split(":").last.gsub(";", "")
+      @text.split(':').last.gsub(';', '')
     end
   end
 
@@ -56,7 +57,7 @@ class Notes
   end
 
   def self.notes_dir
-    Pathname.new(ENV["HOME"]).join("var/notes/src")
+    Pathname.new(ENV['HOME']).join('var/notes/src')
   end
 
   def flags
@@ -67,9 +68,9 @@ class Notes
 
   def parse_flags
     @parse_flags ||= `#{flags_grep_command}`
-      .split("\n")
-      .map { |flag| Flag.new(flag) }
-      .group_by { |flag| flag.flag }
+                     .split("\n")
+                     .map { |flag| Flag.new(flag) }
+                     .group_by(&:flag)
   end
 
   def from_notes_dir(&block)

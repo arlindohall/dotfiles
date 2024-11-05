@@ -54,13 +54,13 @@ class Manners
 
   def download_swear_words
     debug("Downloading swear words from #{swear_words_uri}")
-    @swear_words ||= Net::HTTP.get(swear_words_uri)
-      .gsub("\r", "")
-      .split("\n")
+    @download_swear_words ||= Net::HTTP.get(swear_words_uri)
+                                       .gsub("\r", '')
+                                       .split("\n")
   end
 
   def swear_words_uri
-    URI("http://www.bannedwordlist.com/lists/swearWords.txt")
+    URI('http://www.bannedwordlist.com/lists/swearWords.txt')
   end
 
   def search_for_swear_words
@@ -75,16 +75,16 @@ class Manners
 
   def search_files
     debug("Searching for #{@swear_words.size} swear words in files=#{@args.files}...")
-    status = system("rg -w '#{@swear_words.join("|")}' #{@args.files.join(" ")}")
+    status = system("rg -w '#{@swear_words.join('|')}' #{@args.files.join(' ')}")
 
     exit(1) unless status
   end
 
   def search_directory
-      debug("Searching for #{@swear_words.size} swear words in current directory...")
-      status = system("rg -w '#{@swear_words.join("|")}'")
+    debug("Searching for #{@swear_words.size} swear words in current directory...")
+    status = system("rg -w '#{@swear_words.join('|')}'")
 
-      exit(1) unless status
+    exit(1) unless status
   end
 
   def search_stdin

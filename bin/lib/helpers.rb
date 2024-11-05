@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 
 class Object
   def debug(message)
-    $stderr.puts message
+    warn message
   end
 
   def output(message)

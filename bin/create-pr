@@ -1,25 +1,25 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # code: language=ruby
 
 class PullRequest
   def create!
-    if branch == "main"
-      usage("Must be called with a branch (not main) checked out")
-    end
-    usage("No arguments allowed") unless ARGV.empty?
+    usage('Must be called with a branch (not main) checked out') if branch == 'main'
+    usage('No arguments allowed') unless ARGV.empty?
 
     system command
   end
 
   def usage(*messages)
-    puts "Usage: create-pr"
+    puts 'Usage: create-pr'
 
     messages.each do |message|
-      print " - "
+      print ' - '
       puts message
     end
 
-    exit -1
+    exit(-1)
   end
 
   private
@@ -34,13 +34,13 @@ class PullRequest
 
   def non_git_url
     push_target
-      .gsub(".git", "")
-      .gsub("ssh://", "https://")
-      .gsub("http://", "https://")
+      .gsub('.git', '')
+      .gsub('ssh://', 'https://')
+      .gsub('http://', 'https://')
   end
 
   def push_target
-    `git remote -v`.lines.find { |line| line.include?("push") }
+    `git remote -v`.lines.find { |line| line.include?('push') }
   end
 
   def branch

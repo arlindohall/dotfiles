@@ -1,15 +1,13 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # code: language=ruby
 
-require "pathname"
+require 'pathname'
 
-require_relative "lib/workspace_each"
+require_relative 'lib/workspace_each'
 
 class WorkspaceStatus < WorkspaceEach
-  def initialize(path)
-    super(path)
-  end
-
   def act(child)
     inspect_git_repo(child)
   end
@@ -22,8 +20,8 @@ class WorkspaceStatus < WorkspaceEach
   private
 
   def dump_git(child)
-    within_child(child, "git status")
+    within_child(child, 'git status')
   end
 end
 
-WorkspaceStatus.new(".").act_git_repos
+WorkspaceStatus.new('.').act_git_repos

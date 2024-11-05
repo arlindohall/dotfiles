@@ -1,14 +1,16 @@
+# frozen_string_literal: true
 # typed: false
-require "erb"
-require "pathname"
 
-$debug = !__FILE__.match?("/opt/rbin/")
+require 'erb'
+require 'pathname'
+
+$debug = !__FILE__.match?('/opt/rbin/')
 
 ####################################################################################################
 ########################################## String Extensions #######################################
 ####################################################################################################
 class String
-  def indent(prefix = "  ")
+  def indent(prefix = '  ')
     prefix + gsub("\n", "\n#{prefix}")
   end
 end
@@ -33,7 +35,7 @@ module Servers
 
     def command_output(command)
       puts "> #{command}"
-      "fake_command_output"
+      'fake_command_output'
     end
 
     def check_output(command, expected, debug_value = true)
@@ -42,12 +44,12 @@ module Servers
     end
 
     def write_file(pathname, string)
-      puts "Writing to file #{pathname}\n#{string.indent("######  ")}"
+      puts "Writing to file #{pathname}\n#{string.indent('######  ')}"
     end
 
     def read_file(pathname)
       puts "Reading from file #{pathname}"
-      "fake_file_contents"
+      'fake_file_contents'
     end
 
     def touch(pathname)
@@ -67,7 +69,7 @@ module Servers
     end
 
     def assets_path
-      rbin_dir.join("assets")
+      rbin_dir.join('assets')
     end
   end
 
@@ -97,14 +99,14 @@ module Servers
     end
 
     def check_output(command, expected)
-      puts "# Checking output of command against:\n#{expected.indent(">>  ")}"
+      puts "# Checking output of command against:\n#{expected.indent('>>  ')}"
       command_output(command)
-        .tap { |out| puts out.indent("<<  ") }
+        .tap { |out| puts out.indent('<<  ') }
         .match?(expected)
     end
 
     def write_file(pathname, string)
-      puts "Writing to file #{pathname}\n#{string.indent("######  ")}"
+      puts "Writing to file #{pathname}\n#{string.indent('######  ')}"
       pathname.write(string)
     end
 
@@ -130,11 +132,11 @@ module Servers
     end
 
     def rbin_dir
-      Pathname.new("/opt/rbin")
+      Pathname.new('/opt/rbin')
     end
 
     def assets_path
-      rbin_dir.join("assets")
+      rbin_dir.join('assets')
     end
   end
 
@@ -174,17 +176,19 @@ module Servers
     end
 
     def host
-      return "<no-host>" unless host_prefix
+      return '<no-host>' unless host_prefix
+
       "#{host_prefix}.hallhouse.link"
     end
 
     def port
-      return "<no-port>" unless @port
+      return '<no-port>' unless @port
+
       @port
     end
 
     def optional_includes
-      ""
+      ''
     end
   end
 
@@ -193,7 +197,7 @@ module Servers
   ####################################################################################################
   class StaticHomesite < BaseServer
     def initialize
-      super(name: "Static Homesite")
+      super(name: 'Static Homesite')
     end
 
     def install
@@ -202,8 +206,8 @@ module Servers
       io.run_commands(
         "rm -rf #{dest_path}",
         "mkdir -p #{dest_path}",
-        "cp -r #{source_path.join("build")}/* #{dest_path}",
-        "systemctl restart nginx"
+        "cp -r #{source_path.join('build')}/* #{dest_path}",
+        'systemctl restart nginx'
       )
     end
 
@@ -212,11 +216,11 @@ module Servers
     end
 
     def start
-      puts "Homesite start is managed by nginx"
+      puts 'Homesite start is managed by nginx'
     end
 
     def stop
-      puts "Homesite is managed by nginx, nothing to stop"
+      puts 'Homesite is managed by nginx, nothing to stop'
     end
 
     private
@@ -234,11 +238,11 @@ module Servers
     end
 
     def source_path
-      io.assets_path.join("static-homesite")
+      io.assets_path.join('static-homesite')
     end
 
     def dest_path
-      Pathname.new("/var/hall-house/www/")
+      Pathname.new('/var/hall-house/www/')
     end
 
     def checksum(path)
@@ -255,35 +259,36 @@ module Servers
   ####################################################################################################
   class Pihole < BaseServer
     def initialize
-      super(host_prefix: "pihole", port: 2080, name: "PiHole")
+      super(host_prefix: 'pihole', port: 2080, name: 'PiHole')
     end
 
     def nginx? = true
 
     def start
       update_port
-      io.run_command("pihole restartdns")
+      io.run_command('pihole restartdns')
     end
 
     def stop
-      puts "Pihole start is automated by setup, nothing to stop, if you need to stop pihole, use:"
-      puts "pihole stop"
+      puts 'Pihole start is automated by setup, nothing to stop, if you need to stop pihole, use:'
+      puts 'pihole stop'
     end
 
     def install
       return if installed?
-      io.run_command("curl -sSL https://install.pi-hole.net | bash")
+
+      io.run_command('curl -sSL https://install.pi-hole.net | bash')
     end
 
     def uninstall
-      puts "Please uninstall pihole manually with:"
-      puts "pihole uninstall"
+      puts 'Please uninstall pihole manually with:'
+      puts 'pihole uninstall'
     end
 
     private
 
     def installed?
-      io.run_command("which pihole")
+      io.run_command('which pihole')
     end
 
     def update_port
@@ -292,24 +297,24 @@ module Servers
     end
 
     def start_or_restart_lighttpd
-      return io.run_command("systemctl restart lighttpd") if lighttpd_running?
+      return io.run_command('systemctl restart lighttpd') if lighttpd_running?
 
-      io.run_command("systemctl start lighttpd")
+      io.run_command('systemctl start lighttpd')
     end
 
     def lighttpd_running?
-      io.check_output("systemctl status lighttpd", "running")
+      io.check_output('systemctl status lighttpd', 'running')
     end
 
     def config
-      <<~config
+      <<~CONFIG
         server.port := #{port}
         setenv.add-environment = ( "VIRTUAL_HOST" => "#{host}" )
-      config
+      CONFIG
     end
 
     def config_path
-      Pathname.new("/etc/lighttpd/external.conf")
+      Pathname.new('/etc/lighttpd/external.conf')
     end
   end
 
@@ -318,7 +323,7 @@ module Servers
   ####################################################################################################
   class BabyBuddy < BaseServer
     def initialize
-      super(host_prefix: "baby", port: 3080, name: "BabyBuddy")
+      super(host_prefix: 'baby', port: 3080, name: 'BabyBuddy')
     end
 
     def nginx? = true
@@ -328,7 +333,7 @@ module Servers
     end
 
     def uninstall
-      puts "BabyBuddy is run using docker, you can remove it by killing the docker process"
+      puts 'BabyBuddy is run using docker, you can remove it by killing the docker process'
     end
 
     def start
@@ -348,11 +353,11 @@ module Servers
     private
 
     def running?
-      io.check_output("docker ps", name.downcase)
+      io.check_output('docker ps', name.downcase)
     end
 
     def present?
-      io.check_output("docker ps -a", name.downcase)
+      io.check_output('docker ps -a', name.downcase)
     end
 
     def make_directory
@@ -360,7 +365,7 @@ module Servers
     end
 
     def start_command
-      <<~start
+      <<~START
         docker run -d \
           --name=#{name.downcase} \
           -e PUID=1000 \
@@ -371,7 +376,7 @@ module Servers
           -v "#{appdata_directory}:/config" \
           --restart unless-stopped \
           lscr.io/linuxserver/babybuddy:latest
-      start
+      START
     end
 
     def stop_command
@@ -391,7 +396,7 @@ module Servers
     end
 
     def appdata_directory
-      directory.join("appdata")
+      directory.join('appdata')
     end
   end
 
@@ -400,13 +405,13 @@ module Servers
   ####################################################################################################
   class HomeLibrary < BaseServer
     def initialize
-      super(host_prefix: "books", port: 4080, name: "Home Library")
+      super(host_prefix: 'books', port: 4080, name: 'Home Library')
     end
 
     def nginx? = true
 
     def optional_includes
-      "include mime.types;"
+      'include mime.types;'
     end
 
     def install
@@ -444,11 +449,11 @@ module Servers
     private
 
     def present?
-      io.check_output("docker ps -a", snake_case_name)
+      io.check_output('docker ps -a', snake_case_name)
     end
 
     def running?
-      io.check_output("docker ps", snake_case_name)
+      io.check_output('docker ps', snake_case_name)
     end
 
     def make_directory
@@ -465,13 +470,13 @@ module Servers
     end
 
     def build_docker_image
-      from_directory(src_directory) { io.run_command("./docker-build.rb") }
+      from_directory(src_directory) { io.run_command('./docker-build.rb') }
     end
 
     def clean_docker_images
       io.run_command("docker image rm #{snake_case_name}")
       from_directory(src_directory) do
-        io.run_command("./docker-clean-orphaned-images.rb")
+        io.run_command('./docker-clean-orphaned-images.rb')
       end
     end
 
@@ -480,7 +485,7 @@ module Servers
     end
 
     def start_command
-      <<-bash
+      <<-BASH
         docker run -d                         \
           --name home-library                 \
           --restart=unless-stopped            \
@@ -488,7 +493,7 @@ module Servers
           -e RAILS_MASTER_KEY=#{master_key}   \
           -p #{port}:3000                     \
           home-library:latest
-      bash
+      BASH
     end
 
     def stop_command
@@ -500,7 +505,7 @@ module Servers
     end
 
     def repo
-      "https://github.com/arlindohall/home-library"
+      'https://github.com/arlindohall/home-library'
     end
 
     def from_directory(directory)
@@ -513,7 +518,7 @@ module Servers
     end
 
     def master_key_file
-      Pathname.new("/etc/home-library/master.key")
+      Pathname.new('/etc/home-library/master.key')
     end
 
     def backup_task
@@ -521,7 +526,7 @@ module Servers
     end
 
     def snake_case_name
-      name.downcase.split.join("-")
+      name.downcase.split.join('-')
     end
 
     def app_directory
@@ -529,7 +534,7 @@ module Servers
     end
 
     def database_file
-      app_directory.join("db").join("production.sqlite3")
+      app_directory.join('db').join('production.sqlite3')
     end
 
     def src_directory
@@ -555,7 +560,7 @@ module Servers
     end
 
     def uninstall
-      puts "Will not uninstall nginx"
+      puts 'Will not uninstall nginx'
     end
 
     private
@@ -563,18 +568,18 @@ module Servers
     def setup_network
       return if network_setup?
 
-      puts "Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect..."
+      puts 'Warning: This will reset the network to use IP 192.168.0.200, you will need to reconnect...'
       io.run_commands(
-        "! ls /etc/netplan/00-installer-config-wifi.yaml || mv /etc/netplan/00-installer-config-wifi.yaml /var/",
+        '! ls /etc/netplan/00-installer-config-wifi.yaml || mv /etc/netplan/00-installer-config-wifi.yaml /var/',
         "cp #{netplan_file} /etc/netplan/00-installer-config.yaml",
-        "netplan apply"
+        'netplan apply'
       )
     end
 
     def install_nginx
       return if installed?
 
-      io.run_commands("apt-get update", "apt-get install nginx -y")
+      io.run_commands('apt-get update', 'apt-get install nginx -y')
     end
 
     def place_config_file
@@ -582,27 +587,27 @@ module Servers
     end
 
     def restart_nginx
-      io.run_command("systemctl restart nginx")
+      io.run_command('systemctl restart nginx')
     end
 
     def installed?
-      io.run_command("which nginx")
+      io.run_command('which nginx')
     end
 
     def network_setup?
-      io.check_output("hostname -I", "192.168.0.200")
+      io.check_output('hostname -I', '192.168.0.200')
     end
 
     def netplan_file
       io
         .rbin_dir
-        .join("assets")
-        .join("netplan")
-        .join("home_server_netplan_installer")
+        .join('assets')
+        .join('netplan')
+        .join('home_server_netplan_installer')
     end
 
     def config_destination
-      Pathname.new("/etc/nginx/nginx.conf")
+      Pathname.new('/etc/nginx/nginx.conf')
     end
 
     def config
@@ -610,7 +615,7 @@ module Servers
     end
 
     def config_erb
-      io.rbin_dir.join("assets").join("nginx").join("home_server.erb").read
+      io.rbin_dir.join('assets').join('nginx').join('home_server.erb').read
     end
 
     def servers
@@ -654,11 +659,11 @@ module Servers
     end
 
     def old_backup
-      backup_path.join("previous.tar.gz")
+      backup_path.join('previous.tar.gz')
     end
 
     def new_backup
-      backup_path.join("current.tar.gz")
+      backup_path.join('current.tar.gz')
     end
   end
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # code: language=ruby
 
 require 'pathname'
@@ -19,9 +21,9 @@ class WorkspaceDo < WorkspaceEach
 
   private
 
-    def command
-      @cmd.join(" ")
-    end
+  def command
+    @cmd.join(' ')
+  end
 end
 
 WorkspaceDo.new('.', ARGV).act_git_repos

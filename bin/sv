@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
-require_relative "lib/helpers"
+require_relative 'lib/helpers'
 
 class CommandRunner
   def run(cmd)
@@ -32,16 +33,16 @@ class Service
   end
 
   def call
-    operation = argv.shift || "short-status"
+    operation = argv.shift || 'short-status'
     name = service_name.call
 
-    if "journal".match(operation)
+    if 'journal'.match(operation)
       command(
         "journalctl -f --output=json --unit=proc--shopify--#{name}--server.service | /opt/spin/bin/journalfmt"
       )
-    elsif "status".match(operation)
+    elsif 'status'.match(operation)
       command("SYSTEMD_COLORS=1 systemctl status '*shopify--#{name}*'")
-    elsif "short-status".match(operation)
+    elsif 'short-status'.match(operation)
       command("SYSTEMD_COLORS=1 systemctl | grep shopify--#{name}")
     else
       raise ArgumentError, "Unknown operation: #{operation}"
@@ -49,26 +50,25 @@ class Service
   end
 
   def command(cmd)
-    STDERR.puts("-- Running command: #{cmd}")
+    warn("-- Running command: #{cmd}")
     command_runner.run(cmd)
   end
 end
 
-unless ENV["RUN_TEST"]
+unless ENV['RUN_TEST']
   Service.call
   exit(0)
 end
 
 class CommandTester
   attr_reader :expected, :called
+
   def run(cmd)
-    raise "No expectation set" unless expected && called
-    unless expected == cmd
-      raise "Expectation not fulfilled:\n #{expected}\n #{cmd}"
-    end
+    raise 'No expectation set' unless expected && called
+    raise "Expectation not fulfilled:\n #{expected}\n #{cmd}" unless expected == cmd
 
     @called += 1
-    STDERR.puts "Skipping for test: #{cmd}"
+    warn "Skipping for test: #{cmd}"
   end
 
   def expects(command)
@@ -82,7 +82,7 @@ class CommandTester
 end
 
 class ServiceNameTester
-  def call = "some-service"
+  def call = 'some-service'
 end
 
 def expect_exception(&block)
@@ -92,70 +92,70 @@ def expect_exception(&block)
     return
   end
 
-  raise "Expected exception"
+  raise 'Expected exception'
 end
 
-puts "Running tests..."
+puts 'Running tests...'
 
 command_runner = CommandTester.new
 service_name = ServiceNameTester.new
 
-puts "### Test: Service will run journal command"
+puts '### Test: Service will run journal command'
 command_runner.expects(
-  "journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt"
+  'journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt'
 )
 Service.new(
-  ["journal"],
+  ['journal'],
   command_runner: command_runner,
   service_name: service_name
 ).call
 command_runner.assert
 
-puts "### Test: Service will run status command"
+puts '### Test: Service will run status command'
 command_runner.expects(
   "SYSTEMD_COLORS=1 systemctl status '*shopify--some-service*'"
 )
 Service.new(
-  ["status"],
+  ['status'],
   command_runner: command_runner,
   service_name: service_name
 ).call
 command_runner.assert
 
-puts "### Test: Service will raise an error for unknown operation"
+puts '### Test: Service will raise an error for unknown operation'
 expect_exception do
   Service.new(
-    ["unknown"],
+    ['unknown'],
     command_runner: command_runner,
     service_name: service_name
   ).call
 end
 
-puts "### Test: Defaults to status command"
+puts '### Test: Defaults to status command'
 command_runner.expects(
-  "SYSTEMD_COLORS=1 systemctl | grep shopify--some-service"
+  'SYSTEMD_COLORS=1 systemctl | grep shopify--some-service'
 )
 Service.new([], command_runner: command_runner, service_name: service_name).call
 command_runner.assert
 
-puts "### Test: Can take the abbreviated verb name"
+puts '### Test: Can take the abbreviated verb name'
 command_runner.expects(
   "SYSTEMD_COLORS=1 systemctl status '*shopify--some-service*'"
 )
 Service.new(
-  ["s"],
+  ['s'],
   command_runner: command_runner,
   service_name: service_name
 ).call
 command_runner.assert
 
 command_runner.expects(
-  "journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt"
+  'journalctl -f --output=json --unit=proc--shopify--some-service--server.service | /opt/spin/bin/journalfmt'
 )
 Service.new(
-  ["j"],
+  ['j'],
   command_runner: command_runner,
   service_name: service_name
 ).call
 
-puts "All tests passed!"
+puts 'All tests passed!'
