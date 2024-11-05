@@ -5,12 +5,41 @@
 require 'English'
 class Args
   def self.end_branch
-    raise 'Must provide branch' unless ARGV[0]
+    raise 'Must provide branch' unless instance.end_branch
 
-    ARGV[0]
+    instance.end_branch
   end
 
-  def self.start_branch = ARGV[1] || 'main'
+  def self.start_branch = instance.start_branch
+  def self.run_step = instance.run_step
+
+  def self.instance
+    @instance ||= new(ARGV).tap(&:parse!)
+  end
+
+  attr_reader :argv, :start_branch, :end_branch, :run_step
+
+  def initialize(argv)
+    @argv = argv
+  end
+
+  def parse! # rubocop:disable Metrics/MethodLength
+    args = @argv.to_a.dup
+    until args.empty?
+      case (arg = args.shift)
+      when '--start'
+        @start_branch = args.shift
+      when '--end'
+        @end_branch = args.shift
+      when '--run'
+        @run_step = args.shift
+      else
+        puts "Unknown argument: #{arg} {full_args=#{@argv}}"
+        puts "Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch> --run <run_step>]"
+        abort
+      end
+    end
+  end
 end
 
 class Command
@@ -51,7 +80,7 @@ class Command
 
   attr_reader :command, :command_type, :changeset
 
-  def initialize(command, command_type, changeset)
+  def initialize(command:, command_type:, changeset:)
     @command = command
     @command_type = command_type
     @changeset = changeset
@@ -121,24 +150,47 @@ class Command
 end
 
 class Runner
-  attr_reader :command
+  attr_reader :command, :changeset, :command_type
 
-  def initialize(command:)
-    @command = command
+  def self.try(command:, changeset:, command_type:)
+    new(command:, changeset:, command_type:).try
   end
 
-  def run
-    puts command.run_message
+  def initialize(command:, changeset:, command_type:)
+    @command = command
+    @changeset = changeset
+    @command_type = command_type
+  end
 
-    command.execute
+  def try
+    return unless changeset.any?
+
+    run(
+      Command.new(
+        command: command,
+        command_type: command_type,
+        changeset: changeset
+      )
+    )
+  end
+
+  def run(actual_command)
+    puts actual_command.run_message
+
+    actual_command.execute
     return if $CHILD_STATUS.exitstatus.zero?
 
-    puts command.error_message
+    puts actual_command.error_message
     abort
   end
 end
 
 class Main
+  LINT = 'pnpm eslint CHANGESET --quiet'
+  TEST = '/opt/dev/bin/dev test CHANGESET'
+  TEST_UNIFIED = 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET'
+  TYPE_CHECK = '/opt/dev/bin/dev type-check'
+
   def self.memoize(method_name)
     method = instance_method(method_name)
     define_method(method_name) do |*args|
@@ -150,20 +202,20 @@ class Main
 
   def self.call = new.call
 
-  def call
+  def call # rubocop:disable Metrics/MethodLength
     branches.each do |target|
       branch(target)
 
-      try_to_run 'pnpm eslint CHANGESET --quiet',
+      try_to_run LINT,
                  git_changed_so_far,
                  Command::LintCommand.new
-      try_to_run '/opt/dev/bin/dev test CHANGESET',
+      try_to_run TEST,
                  changed_tests,
                  Command::TestCommand.new
-      try_to_run 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET',
+      try_to_run TEST_UNIFIED,
                  changed_tests,
-                 Command::TestCommand.new("ADMIN_SETUP=unified")
-      try_to_run '/opt/dev/bin/dev type-check',
+                 Command::TestCommand.new('ADMIN_SETUP=unified')
+      try_to_run TYPE_CHECK,
                  git_changed,
                  Command::TypeCheckCommand.new
     end
@@ -176,18 +228,15 @@ class Main
   end
 
   def try_to_run(command, changeset, command_type)
-    return unless changeset.any?
-
-    Runner.new(command: Command.new(command, command_type, changeset)).run
+    Runner.try(command: command, changeset: changeset, command_type: command_type)
   end
 
   memoize def branches
-    `git ll #{Args.start_branch}^..#{Args.end_branch}`.scan(
-      %r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)}
-    )
-                                                      .flatten
-                                                      .compact
-                                                      .reverse
+    `git ll #{Args.start_branch}^..#{Args.end_branch}`
+      .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
+      .flatten
+      .compact
+      .reverse
   end
 
   def git_changed_so_far
@@ -215,4 +264,14 @@ class Main
   end
 end
 
-Main.call
+case Args.run_step
+when 'test'
+  Runner.try(command: Main::TEST, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+  Runner.try(command: Main::TEST_UNIFIED, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+when 'lint'
+  Runner.try(command: Main::LINT, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+when 'type_check'
+  Runner.try(command: Main::TYPE_CHECK, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+else
+  Main.call
+end
