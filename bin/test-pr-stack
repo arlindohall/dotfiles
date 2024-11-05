@@ -22,8 +22,14 @@ class Command
   class TestCommand
     def name = :test
 
+    def initialize(env = nil)
+      @env = env
+    end
+
     def fix_command
-      "dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
+      return "test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch" unless @env
+
+      "#{@env} test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
     end
   end
 
@@ -150,16 +156,16 @@ class Main
 
       try_to_run 'pnpm eslint CHANGESET --quiet',
                  git_changed_so_far,
-                 Command::LintCommand
+                 Command::LintCommand.new
       try_to_run '/opt/dev/bin/dev test CHANGESET',
                  changed_tests,
-                 Command::TestCommand
+                 Command::TestCommand.new
       try_to_run 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET',
                  changed_tests,
-                 Command::TestCommand
+                 Command::TestCommand.new("ADMIN_SETUP=unified")
       try_to_run '/opt/dev/bin/dev type-check',
                  git_changed,
-                 Command::TypeCheckCommand
+                 Command::TypeCheckCommand.new
     end
   end
 
@@ -172,7 +178,7 @@ class Main
   def try_to_run(command, changeset, command_type)
     return unless changeset.any?
 
-    Runner.new(command: Command.new(command, command_type.new, changeset)).run
+    Runner.new(command: Command.new(command, command_type, changeset)).run
   end
 
   memoize def branches
