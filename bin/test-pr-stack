@@ -72,6 +72,7 @@ class Args
   def self.run_step = instance.run_step
   def self.continue? = instance.continue
   def self.include_step?(step) = instance.steps.include?(step)
+  def self.steps = instance.steps.join(',')
 
   def self.instance
     @instance ||= new(ARGV).tap(&:parse!)
@@ -83,7 +84,7 @@ class Args
     @argv = argv
   end
 
-  def parse! # rubocop:disable Metrics/MethodLength,Metrics/AbcSize,Metrics/CyclomaticComplexity
+  def parse! # rubocop:disable all
     args = @argv.to_a.dup
     until args.empty?
       case (arg = args.shift)
@@ -116,6 +117,17 @@ class Args
     [steps].flatten.each do |step|
       raise "Invalid step [#{step}]" unless VALID_STEPS.include?(step)
     end
+  end
+
+  def self.recreate_command
+    [
+      'git switch', branch_at_run,
+      '&&', $PROGRAM_NAME,
+      '--start', start_branch,
+      '---end', end_branch,
+      '--steps', steps,
+      '--continue'
+    ].join(' ')
   end
 end
 
@@ -228,7 +240,7 @@ class CommandIo
 
       To run this program again from the failed branch, please run:
       ----------
-      #{$PROGRAM_NAME} #{Args.end_branch} #{GitBranch.current_branch}
+      #{Args.recreate_command}
       ----------
 
       This is a #{command_type.name} error, try running the following to debug/ fix it:
