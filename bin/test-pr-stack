@@ -2,7 +2,12 @@
 # frozen_string_literal: true
 # typed: true
 
+# Used for the $CHILD_STATUS variable
+require 'English'
+
 class Args
+  VALID_STEPS = %w[test test_unified test_no_unified lint type_check].freeze
+
   def self.end_branch
     raise 'Must provide branch' unless instance.end_branch
 
@@ -13,18 +18,19 @@ class Args
   def self.branch_at_run = instance.branch_at_run
   def self.run_step = instance.run_step
   def self.continue? = instance.continue
+  def self.include_step?(step) = instance.steps.include?(step)
 
   def self.instance
     @instance ||= new(ARGV).tap(&:parse!)
   end
 
-  attr_reader :argv, :start_branch, :end_branch, :run_step, :continue
+  attr_reader :argv, :start_branch, :end_branch, :run_step, :continue, :steps, :branch_at_run
 
   def initialize(argv)
     @argv = argv
   end
 
-  def parse! # rubocop:disable Metrics/MethodLength
+  def parse! # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
     args = @argv.to_a.dup
     until args.empty?
       case (arg = args.shift)
@@ -34,8 +40,12 @@ class Args
         @end_branch = args.shift
       when '--run'
         @run_step = args.shift
+        validate_steps(@run_step)
       when '--continue'
         @continue = true
+      when '--steps'
+        @steps = args.shift.split(',')
+        validate_steps(@steps)
       else
         puts "Unknown argument: #{arg} {full_args=#{@argv}}"
         puts "Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch> --run <run_step>]"
@@ -43,17 +53,23 @@ class Args
       end
     end
 
-    @branch_at_run = `git branch --show-current`.strip
+    @branch_at_run = GitBranch.current_branch
+  end
+
+  def validate_steps(steps)
+    [steps].flatten.each do |step|
+      raise "Invalid step [#{step}]" unless VALID_STEPS.include?(step)
+    end
   end
 end
 
-class Command
+class CommandIo
   COMMAND_TO_GET_CHANGED_FILES =
     "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null".freeze
   COMMAND_TO_GET_CHANGED_SO_FAR_FILES =
-    "ls (git diff #{Args.start_branch}..#{`git branch --show-current`.strip} --name-only --relative) 2>/dev/null".freeze
+    "ls (git diff #{Args.start_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null".freeze
 
-  class TestCommand
+  class Test
     def name = :test
 
     def initialize(env = nil)
@@ -67,7 +83,7 @@ class Command
     end
   end
 
-  class LintCommand
+  class Lint
     def name = :lint
 
     def fix_command
@@ -75,7 +91,7 @@ class Command
     end
   end
 
-  class TypeCheckCommand
+  class TypeCheck
     def name = :type_check
 
     def fix_command
@@ -91,29 +107,42 @@ class Command
     @changeset = changeset
   end
 
-  def current_branch
-    `git branch --show-current`.strip
-  end
-
   def execute
     system command.gsub('CHANGESET', changeset.join(' '))
   end
 
+  def changeset_string
+    changeset.join(' ')
+  end
+
+  def changeset_filename
+    name = Digest::MD5.hexdigest(changeset_string)
+    filename = "/tmp/changeset-#{name}.txt"
+
+    File.write(filename, changeset_string)
+    filename
+  end
+
   def run_message
     <<~COMMAND_MESSAGE
+      Including changeset
+      ----------
+      #{changeset_string[0...72]}#{' ...' if changeset_string.length > 72}
+      ----------
+
+      To see the changeset, run:
+      ----------
+      cat #{changeset_filename}
+      ----------
+
       Running command from branch
       ----------
-      #{current_branch}
+      #{GitBranch.current_branch}
       ----------
 
       Running command
       ----------
       #{command}
-      ----------
-
-      Including changeset
-      ----------
-      #{changeset.join(' ')}
       ----------
     COMMAND_MESSAGE
   end
@@ -130,7 +159,7 @@ class Command
 
       Failed running on branch
       ----------
-      #{current_branch}
+      #{GitBranch.current_branch}
       ----------
 
       Started from branch
@@ -143,7 +172,7 @@ class Command
 
       To run this program again from the failed branch, please run:
       ----------
-      #{$PROGRAM_NAME} #{Args.end_branch} #{current_branch}
+      #{$PROGRAM_NAME} #{Args.end_branch} #{GitBranch.current_branch}
       ----------
 
       This is a #{command_type.name} error, try running the following to debug/ fix it:
@@ -151,6 +180,45 @@ class Command
       #{command_type.fix_command}
       ----------
     CLOSE_MESSAGE
+  end
+end
+
+class Commands
+  LINT = 'pnpm eslint CHANGESET --quiet'
+  TEST = '/opt/dev/bin/dev test CHANGESET'
+  TEST_UNIFIED = 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET'
+  TYPE_CHECK = '/opt/dev/bin/dev type-check'
+
+  def self.test
+    Runner.try(
+      command: TEST,
+      changeset: GitBranch.changed_tests,
+      command_type: CommandIo::Test.new
+    )
+  end
+
+  def self.test_unified
+    Runner.try(
+      command: TEST_UNIFIED,
+      changeset: GitBranch.changed_tests,
+      command_type: CommandIo::Test.new('ADMIN_SETUP=unified')
+    )
+  end
+
+  def self.lint
+    Runner.try(
+      command: LINT,
+      changeset: GitBranch.git_changed_so_far,
+      command_type: CommandIo::Lint.new
+    )
+  end
+
+  def self.type_check
+    Runner.try(
+      command: TYPE_CHECK,
+      changeset: GitBranch.git_changed,
+      command_type: CommandIo::TypeCheck.new
+    )
   end
 end
 
@@ -171,7 +239,7 @@ class Runner
     return unless changeset.any?
 
     run(
-      Command.new(
+      CommandIo.new(
         command: command,
         command_type: command_type,
         changeset: changeset
@@ -179,50 +247,28 @@ class Runner
     )
   end
 
-  def run(actual_command)
-    puts actual_command.run_message
+  def run(command_io)
+    puts command_io.run_message
 
-    actual_command.execute
+    command_io.execute
     return if $CHILD_STATUS.exitstatus.zero?
 
-    puts actual_command.error_message
+    puts command_io.error_message
     abort
   end
 end
 
 class Main
-  LINT = 'pnpm eslint CHANGESET --quiet'
-  TEST = '/opt/dev/bin/dev test CHANGESET'
-  TEST_UNIFIED = 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET'
-  TYPE_CHECK = '/opt/dev/bin/dev type-check'
-
-  def self.memoize(method_name)
-    method = instance_method(method_name)
-    define_method(method_name) do |*args|
-      @memo ||= {}
-      @memo[method_name] ||= {}
-      @memo[method_name][args] ||= method.bind(self).call(*args)
-    end
-  end
-
   def self.call = new.call
 
-  def call # rubocop:disable Metrics/MethodLength
-    branches.each do |target|
+  def call
+    GitBranch.branches.each do |target|
       branch(target)
 
-      try_to_run LINT,
-                 git_changed_so_far,
-                 Command::LintCommand.new
-      try_to_run TEST,
-                 changed_tests,
-                 Command::TestCommand.new
-      try_to_run TEST_UNIFIED,
-                 changed_tests,
-                 Command::TestCommand.new('ADMIN_SETUP=unified')
-      try_to_run TYPE_CHECK,
-                 git_changed,
-                 Command::TypeCheckCommand.new
+      Commands.lint if Args.include_step?('lint')
+      Commands.test if Args.include_step?('test')
+      Commands.test_unified if Args.include_step?('test')
+      Commands.type_check if Args.include_step?('type_check')
     end
   end
 
@@ -235,56 +281,66 @@ class Main
   def try_to_run(command, changeset, command_type)
     Runner.try(command: command, changeset: changeset, command_type: command_type)
   end
+end
 
-  memoize def branches
-    branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
-               .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
-               .flatten
-               .compact
-               .reverse
+class GitBranch
+  class << self
+    def branches
+      branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
+                 .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
+                 .flatten
+                 .compact
+                 .reverse
 
-    return branches unless Args.continue?
+      return branches unless Args.continue?
 
-    branches.drop_while { |br| br != Args.branch_at_run }
-  end
+      branches.drop_while { |br| br != Args.branch_at_run }
+    end
 
-  def git_changed_so_far
-    filter_exists(`git branch --show-current`.strip)
-  end
+    def git_changed_so_far
+      filter_exists(GitBranch.current_branch)
+    end
 
-  def git_changed
-    filter_exists(Args.end_branch)
-  end
+    def git_changed
+      filter_exists(Args.end_branch)
+    end
 
-  def filter_exists(files)
-    `ls #{git_all(files).join(' ')} 2>/dev/null`.split
-  end
+    def filter_exists(branch)
+      `ls #{git_all(branch).join(' ')} 2>/dev/null`.split
+    end
 
-  def git_all(to_branch)
-    `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
-  end
+    def git_all(to_branch)
+      `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
+    end
 
-  def changed_tests
-    git_changed.filter { |fn| fn.include?('test') }
-  end
+    def changed_tests
+      git_changed.filter { |fn| fn.include?('test') }
+    end
 
-  def branch_expression
-    Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
+    def branch_expression
+      Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
+    end
+
+    def current_branch
+      `git branch --show-current`.strip
+    end
   end
 end
 
+Args.instance # initialize args before running anything
+
 case Args.run_step
 when 'test'
-  Runner.try(command: Main::TEST, changeset: Main.new.git_changed, command_type: Command::TestCommand.new)
-  Runner.try(
-    command: Main::TEST_UNIFIED,
-    changeset: Main.new.git_changed,
-    command_type: Command::TestCommand.new('ADMIN_SETUP=unified')
-  )
+  Commands.test
+  Commands.test_unified
+when 'test_unified'
+  Commands.test_unified
+when 'test_no_unified'
+  Commands.test
 when 'lint'
-  Runner.try(command: Main::LINT, changeset: Main.new.git_changed, command_type: Command::LintCommand.new)
+  Commands.lint
 when 'type_check'
-  Runner.try(command: Main::TYPE_CHECK, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+  Commands.type_check
 else
   Main.call
 end
