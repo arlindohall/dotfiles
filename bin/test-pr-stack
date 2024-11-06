@@ -6,6 +6,15 @@
 require 'English'
 require 'digest'
 
+# Begin holding the screen so that it doesn't sleep and stop tests
+# The thread will be collected on exit
+Thread.new do
+  warn 'Opening caffeinate command'
+  system 'caffeinate -d'
+ensure
+  warn 'Closing caffeinate command'
+end
+
 class GitBranch
   class << self
     def branches
