@@ -360,6 +360,7 @@ class Main
     end
 
     branch(Args.branch_at_run)
+    puts 'Successfully ran all steps on all branches!'
   end
 
   def branch(name)
