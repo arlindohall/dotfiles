@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 # typed: true
 
-require 'English'
 class Args
   def self.end_branch
     raise 'Must provide branch' unless instance.end_branch
@@ -10,14 +9,16 @@ class Args
     instance.end_branch
   end
 
-  def self.start_branch = instance.start_branch
+  def self.start_branch = instance.start_branch || 'main'
+  def self.branch_at_run = instance.branch_at_run
   def self.run_step = instance.run_step
+  def self.continue? = instance.continue
 
   def self.instance
     @instance ||= new(ARGV).tap(&:parse!)
   end
 
-  attr_reader :argv, :start_branch, :end_branch, :run_step
+  attr_reader :argv, :start_branch, :end_branch, :run_step, :continue
 
   def initialize(argv)
     @argv = argv
@@ -33,12 +34,16 @@ class Args
         @end_branch = args.shift
       when '--run'
         @run_step = args.shift
+      when '--continue'
+        @continue = true
       else
         puts "Unknown argument: #{arg} {full_args=#{@argv}}"
         puts "Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch> --run <run_step>]"
         abort
       end
     end
+
+    @branch_at_run = `git branch --show-current`.strip
   end
 end
 
@@ -232,11 +237,15 @@ class Main
   end
 
   memoize def branches
-    `git ll #{Args.start_branch}^..#{Args.end_branch}`
-      .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
-      .flatten
-      .compact
-      .reverse
+    branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
+               .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
+               .flatten
+               .compact
+               .reverse
+
+    return branches unless Args.continue?
+
+    branches.drop_while { |br| br != Args.branch_at_run }
   end
 
   def git_changed_so_far
