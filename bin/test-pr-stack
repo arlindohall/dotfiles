@@ -53,13 +53,8 @@ end
 class Args
   VALID_STEPS = %w[test test_unified test_no_unified lint type_check].freeze
 
-  def self.end_branch
-    raise 'Must provide branch' unless instance.end_branch
-
-    instance.end_branch
-  end
-
-  def self.start_branch = instance.start_branch || 'main'
+  def self.end_branch = instance.end_branch
+  def self.start_branch = instance.start_branch
   def self.branch_at_run = instance.branch_at_run
   def self.run_step = instance.run_step
   def self.continue? = instance.continue
@@ -75,7 +70,7 @@ class Args
     @argv = argv
   end
 
-  def parse! # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
+  def parse! # rubocop:disable Metrics/MethodLength,Metrics/AbcSize,Metrics/CyclomaticComplexity
     args = @argv.to_a.dup
     until args.empty?
       case (arg = args.shift)
@@ -98,6 +93,8 @@ class Args
       end
     end
 
+    @start_branch ||= 'main'
+    @end_branch ||= GitBranch.current_branch
     @branch_at_run = GitBranch.current_branch
   end
 
