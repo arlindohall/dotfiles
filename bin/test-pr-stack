@@ -19,7 +19,7 @@ class GitBranch
     end
 
     def find_branches # rubocop:disable all
-      `git log --format="%H %D" #{branch_expression}..#{Args.end_branch}`
+      `git log --format="%H %D" #{base_rev_list_branch}..#{Args.end_branch}`
         .lines
         .map { |line| line.split[1..] }
         .filter { |line| line&.size&.positive? }
@@ -45,14 +45,14 @@ class GitBranch
     end
 
     def git_all(to_branch)
-      `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
+      `git diff #{base_rev_list_branch}..#{to_branch} --name-only --relative`.split
     end
 
     def changed_tests
       git_changed.filter { |fn| fn.include?('test') }
     end
 
-    def branch_expression
+    def base_rev_list_branch
       Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
     end
 
@@ -138,13 +138,13 @@ end
 class CommandIo
   class CommandToGetChangedFiles
     def self.call
-      "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null"
+      "ls (git diff #{GitBranch.base_rev_list_branch}..#{Args.end_branch} --name-only --relative) 2>/dev/null"
     end
   end
 
   class CommandToGetChangedSoFarFiles
     def self.call
-      "ls (git diff #{Args.start_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null"
+      "ls (git diff #{GitBranch.base_rev_list_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null"
     end
   end
 
