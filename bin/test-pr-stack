@@ -9,15 +9,27 @@ require 'digest'
 class GitBranch
   class << self
     def branches
-      branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
-                 .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
-                 .flatten
-                 .compact
-                 .reverse
+      return @branches if @branches
 
-      return branches unless Args.continue?
+      @branches = find_branches
 
-      branches.drop_while { |br| br != Args.branch_at_run }
+      return @branches unless Args.continue?
+
+      @branches = @branches.drop_while { |br| br != Args.branch_at_run }
+    end
+
+    def find_branches # rubocop:disable all
+      `git log --format="%H %D" #{branch_expression}..#{Args.end_branch}`
+        .lines
+        .map { |line| line.split[1..] }
+        .filter { |line| line&.size&.positive? }
+        .compact
+        .map { |line| line.join(' ') }
+        .map { |line| line.gsub('HEAD -> ', '') }
+        .map { |line| line.split(', ').filter { |name| !name.start_with?('origin/') } }
+        .flatten
+        .compact
+        .reverse
     end
 
     def git_changed_so_far
@@ -51,6 +63,7 @@ class GitBranch
 end
 
 class Args
+  DEFAULT_STEPS = %w[test lint type_check].freeze
   VALID_STEPS = %w[test test_unified test_no_unified lint type_check].freeze
 
   def self.end_branch = instance.end_branch
@@ -93,6 +106,7 @@ class Args
       end
     end
 
+    @steps ||= DEFAULT_STEPS
     @start_branch ||= 'main'
     @end_branch ||= GitBranch.current_branch
     @branch_at_run = GitBranch.current_branch
