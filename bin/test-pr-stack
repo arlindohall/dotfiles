@@ -349,6 +349,8 @@ class Main
       Commands.test_unified if Args.include_step?('test')
       Commands.type_check if Args.include_step?('type_check')
     end
+
+    branch(Args.branch_at_run)
   end
 
   def branch(name)
