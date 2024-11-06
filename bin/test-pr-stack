@@ -137,10 +137,17 @@ class Args
 end
 
 class CommandIo
-  COMMAND_TO_GET_CHANGED_FILES =
-    "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null".freeze
-  COMMAND_TO_GET_CHANGED_SO_FAR_FILES =
-    "ls (git diff #{Args.start_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null".freeze
+  class CommandToGetChangedFiles
+    def self.call
+      "ls (git diff #{Args.start_branch} #{Args.end_branch} --name-only --relative) 2>/dev/null"
+    end
+  end
+
+  class CommandToGetChangedSoFarFiles
+    def self.call
+      "ls (git diff #{Args.start_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null"
+    end
+  end
 
   class Test
     def name = :test
@@ -150,9 +157,9 @@ class CommandIo
     end
 
     def fix_command
-      return "dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch" unless @env
+      return "dev test (#{CommandToGetChangedFiles.call}) --watch" unless @env
 
-      "#{@env} dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
+      "#{@env} dev test (#{CommandToGetChangedFiles.call}) --watch"
     end
   end
 
@@ -160,7 +167,7 @@ class CommandIo
     def name = :lint
 
     def fix_command
-      "pnpm eslint (#{COMMAND_TO_GET_CHANGED_SO_FAR_FILES}) --quiet --fix"
+      "pnpm eslint (#{CommandToGetChangedSoFarFiles.call}) --quiet --fix"
     end
   end
 
