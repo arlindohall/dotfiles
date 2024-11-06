@@ -121,8 +121,7 @@ class Args
 
   def self.recreate_command
     [
-      'git switch', branch_at_run,
-      '&&', $PROGRAM_NAME,
+      $PROGRAM_NAME,
       optional_arg('--start', start_branch),
       optional_arg('--end', end_branch),
       optional_arg('--run', run_step),
