@@ -56,9 +56,9 @@ class Command
     end
 
     def fix_command
-      return "test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch" unless @env
+      return "dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch" unless @env
 
-      "#{@env} test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
+      "#{@env} dev test (#{COMMAND_TO_GET_CHANGED_FILES}) --watch"
     end
   end
 
@@ -266,10 +266,14 @@ end
 
 case Args.run_step
 when 'test'
-  Runner.try(command: Main::TEST, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
-  Runner.try(command: Main::TEST_UNIFIED, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+  Runner.try(command: Main::TEST, changeset: Main.new.git_changed, command_type: Command::TestCommand.new)
+  Runner.try(
+    command: Main::TEST_UNIFIED,
+    changeset: Main.new.git_changed,
+    command_type: Command::TestCommand.new('ADMIN_SETUP=unified')
+  )
 when 'lint'
-  Runner.try(command: Main::LINT, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
+  Runner.try(command: Main::LINT, changeset: Main.new.git_changed, command_type: Command::LintCommand.new)
 when 'type_check'
   Runner.try(command: Main::TYPE_CHECK, changeset: Main.new.git_changed, command_type: Command::TypeCheckCommand.new)
 else
