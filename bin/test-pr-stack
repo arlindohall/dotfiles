@@ -4,6 +4,51 @@
 
 # Used for the $CHILD_STATUS variable
 require 'English'
+require 'digest'
+
+class GitBranch
+  class << self
+    def branches
+      branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
+                 .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
+                 .flatten
+                 .compact
+                 .reverse
+
+      return branches unless Args.continue?
+
+      branches.drop_while { |br| br != Args.branch_at_run }
+    end
+
+    def git_changed_so_far
+      filter_exists(GitBranch.current_branch)
+    end
+
+    def git_changed
+      filter_exists(Args.end_branch)
+    end
+
+    def filter_exists(branch)
+      `ls #{git_all(branch).join(' ')} 2>/dev/null`.split
+    end
+
+    def git_all(to_branch)
+      `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
+    end
+
+    def changed_tests
+      git_changed.filter { |fn| fn.include?('test') }
+    end
+
+    def branch_expression
+      Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
+    end
+
+    def current_branch
+      `git branch --show-current`.strip
+    end
+  end
+end
 
 class Args
   VALID_STEPS = %w[test test_unified test_no_unified lint type_check].freeze
@@ -280,50 +325,6 @@ class Main
 
   def try_to_run(command, changeset, command_type)
     Runner.try(command: command, changeset: changeset, command_type: command_type)
-  end
-end
-
-class GitBranch
-  class << self
-    def branches
-      branches = `git ll #{Args.start_branch}^..#{Args.end_branch}`
-                 .scan(%r{\((miller[-/\w]+)\)|HEAD -> (miller[-/\w]+)})
-                 .flatten
-                 .compact
-                 .reverse
-
-      return branches unless Args.continue?
-
-      branches.drop_while { |br| br != Args.branch_at_run }
-    end
-
-    def git_changed_so_far
-      filter_exists(GitBranch.current_branch)
-    end
-
-    def git_changed
-      filter_exists(Args.end_branch)
-    end
-
-    def filter_exists(branch)
-      `ls #{git_all(branch).join(' ')} 2>/dev/null`.split
-    end
-
-    def git_all(to_branch)
-      `git diff #{branch_expression}..#{to_branch} --name-only --relative`.split
-    end
-
-    def changed_tests
-      git_changed.filter { |fn| fn.include?('test') }
-    end
-
-    def branch_expression
-      Args.start_branch == 'main' ? 'main' : "#{Args.start_branch}^"
-    end
-
-    def current_branch
-      `git branch --show-current`.strip
-    end
   end
 end
 
