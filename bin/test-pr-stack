@@ -73,12 +73,13 @@ end
 
 class Args
   DEFAULT_STEPS = %w[test lint type_check].freeze
-  VALID_STEPS = %w[test test_unified test_no_unified lint type_check].freeze
+  VALID_STEPS = %w[test test_unified test_no_unified lint lint_unused type_check custom].freeze
 
   def self.end_branch = instance.end_branch
   def self.start_branch = instance.start_branch
   def self.branch_at_run = instance.branch_at_run
   def self.run_step = instance.run_step
+  def self.command_overrides = instance.command_overrides
   def self.continue? = instance.continue
   def self.include_step?(step) = instance.steps.include?(step)
   def self.steps = instance.steps.join(',')
@@ -87,7 +88,7 @@ class Args
     @instance ||= new(ARGV).tap(&:parse!)
   end
 
-  attr_reader :argv, :start_branch, :end_branch, :run_step, :continue, :steps, :branch_at_run
+  attr_reader :argv, :start_branch, :end_branch, :run_step, :command_overrides, :continue, :steps, :branch_at_run
 
   def initialize(argv)
     @argv = argv
@@ -106,6 +107,9 @@ class Args
         validate_steps(@run_step)
       when '--continue'
         @continue = true
+      when '--command'
+        @command_overrides ||= []
+        @command_overrides << args.shift
       when '--steps'
         @steps = args.shift.split(',')
         validate_steps(@steps)
@@ -134,6 +138,7 @@ class Args
       optional_arg('--start', start_branch),
       optional_arg('--end', end_branch),
       optional_arg('--run', run_step),
+      command_overrides.map { |cmd| optional_arg('--command', "'#{cmd}'") },
       optional_arg('--steps', steps),
       '--continue'
     ].flatten.join(' ')
@@ -179,11 +184,32 @@ class CommandIo
     end
   end
 
+  class LintUnused
+    def name = :lint_unused
+
+    def fix_command
+      'pnpm lint:unused-files --production'
+    end
+  end
+
   class TypeCheck
     def name = :type_check
 
     def fix_command
       'dev type-check'
+    end
+  end
+
+  class Custom
+    def initialize(command)
+      @command = command
+    end
+
+    def name = :custom
+
+    def fix_command
+      warn '##### If you try to run this command, you may have issues with quotes' if @command.include?("'")
+      "'#{@command}'"
     end
   end
 
@@ -273,6 +299,7 @@ end
 
 class Commands
   LINT = 'pnpm eslint CHANGESET --quiet'
+  LINT_UNUSED = 'pnpm lint:unused-files --production'
   TEST = '/opt/dev/bin/dev test CHANGESET'
   TEST_UNIFIED = 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET'
   TYPE_CHECK = '/opt/dev/bin/dev type-check'
@@ -301,12 +328,30 @@ class Commands
     )
   end
 
+  def self.lint_unused
+    Runner.try(
+      command: LINT_UNUSED,
+      changeset: GitBranch.git_changed,
+      command_type: CommandIo::LintUnused.new
+    )
+  end
+
   def self.type_check
     Runner.try(
       command: TYPE_CHECK,
       changeset: GitBranch.git_changed,
       command_type: CommandIo::TypeCheck.new
     )
+  end
+
+  def self.all_custom
+    Args.command_overrides&.each do |command|
+      Runner.try(
+        command: command,
+        changeset: GitBranch.git_changed,
+        command_type: CommandIo::Custom.new(command)
+      )
+    end
   end
 end
 
@@ -353,14 +398,27 @@ class Main
     GitBranch.branches.each do |target|
       branch(target)
 
-      Commands.lint if Args.include_step?('lint')
-      Commands.test if Args.include_step?('test')
-      Commands.test_unified if Args.include_step?('test')
-      Commands.type_check if Args.include_step?('type_check')
+      choose_commands
     end
 
     branch(Args.branch_at_run)
     puts 'Successfully ran all steps on all branches!'
+  end
+
+  def choose_commands
+    warn "Deciding whether to run default commands overrides=#{Args.command_overrides}"
+    return run_all_commands unless Args.command_overrides
+
+    warn 'Running override'
+    Commands.all_custom
+  end
+
+  def run_all_commands
+    Commands.lint if Args.include_step?('lint')
+    Commands.lint_unused if Args.include_step?('lint_unused')
+    Commands.test if Args.include_step?('test')
+    Commands.test_unified if Args.include_step?('test')
+    Commands.type_check if Args.include_step?('type_check')
   end
 
   def branch(name)
@@ -386,8 +444,12 @@ when 'test_no_unified'
   Commands.test
 when 'lint'
   Commands.lint
+when 'lint_unused'
+  Commands.lint_unused
 when 'type_check'
   Commands.type_check
+when 'custom'
+  Commands.all_custom
 else
   Main.call
 end
