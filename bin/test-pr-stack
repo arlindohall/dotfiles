@@ -138,10 +138,10 @@ class Args
       optional_arg('--start', start_branch),
       optional_arg('--end', end_branch),
       optional_arg('--run', run_step),
-      command_overrides.map { |cmd| optional_arg('--command', "'#{cmd}'") },
+      command_overrides&.map { |cmd| optional_arg('--command', "'#{cmd}'") },
       optional_arg('--steps', steps),
       '--continue'
-    ].flatten.join(' ')
+    ].flatten.compact.join(' ')
   end
 
   def self.optional_arg(name, value)
