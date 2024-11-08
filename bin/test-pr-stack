@@ -196,7 +196,7 @@ class CommandIo
     def name = :type_check
 
     def fix_command
-      'dev type-check'
+      Commands.command_string_for_type_check
     end
   end
 
@@ -302,7 +302,6 @@ class Commands
   LINT_UNUSED = 'pnpm lint:unused-files --production'
   TEST = '/opt/dev/bin/dev test CHANGESET'
   TEST_UNIFIED = 'ADMIN_SETUP=unified /opt/dev/bin/dev test CHANGESET'
-  TYPE_CHECK = '/opt/dev/bin/dev type-check'
 
   def self.test
     Runner.try(
@@ -338,10 +337,14 @@ class Commands
 
   def self.type_check
     Runner.try(
-      command: TYPE_CHECK,
+      command: command_string_for_type_check,
       changeset: GitBranch.git_changed,
       command_type: CommandIo::TypeCheck.new
     )
+  end
+
+  def self.command_string_for_type_check
+    "pnpm nx affected -t typecheck --base=#{Args.start_branch} --head=#{GitBranch.current_branch} --parallel=8"
   end
 
   def self.all_custom
