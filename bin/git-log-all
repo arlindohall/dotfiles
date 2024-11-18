@@ -42,9 +42,9 @@ class GitLogAll
   def call
     parse!
     if @branch == 'main' && @short
-      'log --graph --oneline --decorate origin/main^..'
+      system 'git log --graph --oneline --decorate origin/main^..'
     elsif @branch != 'main' && @short
-      'log --graph --oneline --decorate main^..'
+      system 'git log --graph --oneline --decorate main^..'
     elsif @branch == 'main'
       system 'git log --graph --oneline --decorate --branches origin/main^..'
     else
