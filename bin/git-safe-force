@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+class GitSafeForce
+  USAGE_STRING = <<~USAGE
+    Usage: git safe-force <branch> <destination>
+
+    Arguments:
+      <branch>      The name of the branch to force push.
+      <destination> The remote destination to force push to.
+
+    Description:
+      This script safely force pushes a specified branch to a specified remote destination.
+      It ensures that the branch and destination are valid and provides a clear usage message
+      if the arguments are incorrect or missing.
+  USAGE
+
+  def self.call
+    new.call
+  end
+
+  def usage
+    puts USAGE_STRING
+    exit
+  end
+
+  def call # rubocop:disable Metrics/MethodLength
+    usage unless ARGV.size == 2
+    usage if `git branch --list '#{ARGV[0]}'`.empty?
+
+    args_space_delim = ARGV.join(' ')
+
+    cmd = "git diff #{args_space_delim} --name-only"
+    warn "Comparing branch to destination: #{args_space_delim}"
+
+    no_diff = `#{cmd}`.empty?
+    warn 'Exiting due to diff' unless no_diff
+    usage unless no_diff
+
+    cmd = "git branch --force #{args_space_delim}"
+    warn "Forcing branch to destination: #{args_space_delim}"
+    system cmd
+  end
+end
+
+GitSafeForce.call

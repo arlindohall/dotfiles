@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+class Changed
+  def self.call
+    new(ARGV).call
+  end
+
+  def initialize(args)
+    @args = args
+  end
+
+  def parse! # rubocop:disable Metrics/MethodLength
+    return if @parsed
+
+    @parsed = true
+    @files = []
+
+    remaining = @args.dup
+    while (arg = remaining.shift)
+      case arg
+      when '-h', '--help', 'help'
+        puts <<~USAGE
+          Usage: git-changed [options]
+
+          Parses command-line arguments and sets instance variables based on the provided options.
+
+          Options:
+            -h, --help, help    Show this help message and exit.
+            lines               Show only the number of lines changed in the git diff.
+        USAGE
+        exit 0
+      when '--lines'
+        @lines = true
+      else
+        # Don't panic, this could be a filename, just try as if it is:
+        @files << arg
+      end
+    end
+  end
+
+  def call
+    parse!
+
+    if @lines
+      puts lines('\+') - lines('\-')
+      exit 0
+    end
+
+    exit 0 if git_diff.empty?
+
+    system "ls #{git_diff} 2>/dev/null"
+  end
+
+  def lines(starts_with)
+    `git diff #{@files.join(' ')} | grep '^#{starts_with}' | wc -l`.strip.to_i
+  end
+
+  def git_diff
+    `git diff #{@files.join(' ')} --name-only --relative`.strip.split.join(' ')
+  end
+end
+
+Changed.call

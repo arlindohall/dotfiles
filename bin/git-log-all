@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+class GitLogAll
+  def self.call
+    new(
+      `git branch --show-current`.chomp,
+      ARGV.dup
+    ).call
+  end
+
+  def initialize(branch, args)
+    @branch = branch
+    @args = args
+  end
+
+  def parse! # rubocop:disable Metrics/MethodLength
+    return if @parsed
+
+    @parsed = true
+
+    remaining = @args.dup
+    while (arg = remaining.shift)
+      case arg
+      when '-h', '--help', 'help'
+        puts <<~HELP
+          Usage: git log-all [options]
+
+          Options:
+            -h, --help, help      Show this message
+            short                 Show only the commits between this branch and <trunk>
+        HELP
+        exit 0
+      when 'short'
+        @short = true
+      else
+        raise "Unknown argument: #{arg}"
+      end
+    end
+  end
+
+  def call
+    parse!
+    if @branch == 'main' && @short
+      'log --graph --oneline --decorate origin/main^..'
+    elsif @branch != 'main' && @short
+      'log --graph --oneline --decorate main^..'
+    elsif @branch == 'main'
+      system 'git log --graph --oneline --decorate --branches origin/main^..'
+    else
+      system 'git log --graph --oneline --decorate --branches main^..'
+    end
+  end
+end
+
+GitLogAll.call
