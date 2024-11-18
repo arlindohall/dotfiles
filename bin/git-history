@@ -37,7 +37,7 @@ class History
       case arg
       when '-h', '--help', 'help'
         usage
-      when '-p'
+      when '-p', '--'
         @path_given = true
         @files, remaining = remaining, @files
       else

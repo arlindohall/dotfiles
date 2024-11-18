@@ -28,6 +28,7 @@ class GitLogAll
     return if @parsed
 
     @parsed = true
+    @files = []
 
     remaining = @args.dup
     while (arg = remaining.shift)
@@ -36,6 +37,8 @@ class GitLogAll
         usage 0
       when 'short'
         @short = true
+      when '-p', '--'
+        @files, remaining = remaining, @files
       else
         raise "Unknown argument: #{arg}"
       end
@@ -45,13 +48,13 @@ class GitLogAll
   def call
     parse!
     if @branch == 'main' && @short
-      system 'git log --graph --oneline --decorate origin/main^..'
+      system %(git log --graph --oneline --decorate origin/main^.. -- #{@files.join(' ')})
     elsif @branch != 'main' && @short
-      system 'git log --graph --oneline --decorate main^..'
+      system %(git log --graph --oneline --decorate main^.. -- #{@files.join(' ')})
     elsif @branch == 'main'
-      system 'git log --graph --oneline --decorate --branches origin/main^..'
+      system %(git log --graph --oneline --decorate --branches origin/main^.. -- #{@files.join(' ')})
     else
-      system 'git log --graph --oneline --decorate --branches main^..'
+      system %(git log --graph --oneline --decorate --branches main^.. -- #{@files.join(' ')})
     end
   end
 end
