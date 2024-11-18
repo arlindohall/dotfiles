@@ -2,16 +2,26 @@
 # frozen_string_literal: true
 
 class GitLogAll
+  USAGE_STRING = <<~HELP
+    Usage: git log-all [options]
+
+    Options:
+      -h, --help, help      Show this message
+      short                 Show only the commits between this branch and <trunk>
+  HELP
+
   def self.call
-    new(
-      `git branch --show-current`.chomp,
-      ARGV.dup
-    ).call
+    new(`git branch --show-current`.chomp, ARGV.dup).call
   end
 
   def initialize(branch, args)
     @branch = branch
     @args = args
+  end
+
+  def usage(err = 0)
+    warn USAGE_STRING
+    exit err
   end
 
   def parse! # rubocop:disable Metrics/MethodLength
@@ -23,14 +33,7 @@ class GitLogAll
     while (arg = remaining.shift)
       case arg
       when '-h', '--help', 'help'
-        puts <<~HELP
-          Usage: git log-all [options]
-
-          Options:
-            -h, --help, help      Show this message
-            short                 Show only the commits between this branch and <trunk>
-        HELP
-        exit 0
+        usage 0
       when 'short'
         @short = true
       else

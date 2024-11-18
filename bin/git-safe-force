@@ -19,14 +19,14 @@ class GitSafeForce
     new.call
   end
 
-  def usage
-    puts USAGE_STRING
-    exit
+  def usage(err = 0)
+    warn USAGE_STRING
+    exit err
   end
 
   def call # rubocop:disable Metrics/MethodLength
-    usage unless ARGV.size == 2
-    usage if `git branch --list '#{ARGV[0]}'`.empty?
+    usage 1 unless ARGV.size == 2
+    usage 2 if `git branch --list '#{ARGV[0]}'`.empty?
 
     args_space_delim = ARGV.join(' ')
 

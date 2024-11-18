@@ -23,8 +23,6 @@
 [alias]
 	la = log-all
 	ll = log-all short
-	history = log -a main.. --full-diff -p
-	wistory = log -wa main.. --full-diff -p
 [init]
 	defaultBranch = main
 [commit]

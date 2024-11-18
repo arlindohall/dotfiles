@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+class History
+  USAGE_STRING = <<~USAGE
+    Usage: git history [options]
+
+    Valid arguments:
+      -h, --help, help:     Displays usage information and exits.
+      -p:                   Indicates that a list of file paths will follow. The script
+                            will show the diff for these files, and only on commits where
+                            the files changed, going back to <trunk>.
+  USAGE
+
+  def self.call
+    new(`git branch --show-current`.chomp, ARGV.dup).call
+  end
+
+  def initialize(branch, args)
+    @branch = branch
+    @args = args
+  end
+
+  def usage(err = 0)
+    warn USAGE_STRING
+    exit err
+  end
+
+  def parse! # rubocop:disable Metrics/MethodLength
+    return if @parsed
+
+    @parsed = true
+    @files = []
+
+    remaining = @args.dup
+    while (arg = remaining.shift)
+      case arg
+      when '-h', '--help', 'help'
+        usage
+      when '-p'
+        @path_given = true
+        @files, remaining = remaining, @files
+      else
+        raise "Unknown argument: #{arg}"
+      end
+    end
+  end
+
+  def call
+    parse!
+
+    if @branch == 'main' && @path_given
+      system "git log origin/main.. --relative -a -p #{@files.join(' ')}"
+    elsif @branch != 'main' && @path_given
+      system "git log main.. --relative -a -p #{@files.join(' ')}"
+    elsif @branch == 'main'
+      system 'git log origin/main.. --relative -a --full-diff -p .'
+    else
+      system 'git log main.. --relative -a --full-diff -p .'
+    end
+  end
+end
+
+History.call

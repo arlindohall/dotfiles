@@ -2,12 +2,27 @@
 # frozen_string_literal: true
 
 class Changed
+  USAGE_STRING = <<~USAGE
+    Usage: git-changed [options]
+
+    Parses command-line arguments and sets instance variables based on the provided options.
+
+    Options:
+      -h, --help, help    Show this help message and exit.
+      lines               Show only the number of lines changed in the git diff.
+  USAGE
+
   def self.call
     new(ARGV).call
   end
 
   def initialize(args)
     @args = args
+  end
+
+  def usage(err = 0)
+    warn USAGE_STRING
+    exit err
   end
 
   def parse! # rubocop:disable Metrics/MethodLength
@@ -20,20 +35,12 @@ class Changed
     while (arg = remaining.shift)
       case arg
       when '-h', '--help', 'help'
-        puts <<~USAGE
-          Usage: git-changed [options]
-
-          Parses command-line arguments and sets instance variables based on the provided options.
-
-          Options:
-            -h, --help, help    Show this help message and exit.
-            lines               Show only the number of lines changed in the git diff.
-        USAGE
-        exit 0
+        usage
       when '--lines'
         @lines = true
       else
         # Don't panic, this could be a filename, just try as if it is:
+        # TODO Allow git branches here
         @files << arg
       end
     end
