@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+exit unless ARGV.size == 2
+exit unless `git branch --list '#{ARGV[0]}'`.size > 0
+
+args_space_delim = ARGV.join(" ")
+
+cmd = "git diff #{args_space_delim} --name-only"
+warn "Comparing branch to destination: #{args_space_delim}"
+
+no_diff = `#{cmd}`.size == 0
+warn "Exiting due to diff" unless no_diff
+exit unless no_diff
+
+cmd = "git branch --force #{args_space_delim}"
+warn "Forcing branch to destination: #{args_space_delim}"
+system cmd
