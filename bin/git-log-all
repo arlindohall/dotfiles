@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+# typed: true
+
+require 'English'
+require 'sorbet-runtime'
 
 class GitLogAll
   USAGE_STRING = <<~HELP
@@ -7,12 +11,16 @@ class GitLogAll
 
     Options:
       -h, --help, help      Show this message
-      short                 Show only the commits between this branch and <trunk>
+      -s, --short, short    Show only the commits between this branch and <trunk>
+      -p, --                Specify files to include in the log
+      --no-trunk            Do not include trunk commits (show history to beginning of time)
+      --trunk <branch>      Specify a trunk branch
+      -n <number>           Limit the number of commits
   HELP
 
   def self.call
     git_branch = `git branch --show-current`.chomp
-    exit $?.exitstatus unless $?.success?
+    exit $CHILD_STATUS.exitstatus unless $CHILD_STATUS.success?
 
     new(git_branch, ARGV.dup).call
   end
@@ -38,12 +46,14 @@ class GitLogAll
       case arg
       when '-h', '--help', 'help'
         usage 0
-      when 'short'
+      when '-s', '--short', 'short'
         @short = true
       when '-p', '--'
         @files, remaining = remaining, @files
       when '--no-trunk'
-        @no_trunk = true
+        @trunk = false
+      when '--trunk'
+        @trunk = remaining.shift
       when '-n'
         @limit = remaining.shift.to_i
       else
@@ -65,11 +75,13 @@ class GitLogAll
   end
 
   def additional_args
-    AdditionalArgs.call(@branch, @limit, @no_trunk, @short)
+    AdditionalArgs.call(@branch, @trunk, @limit, @short == true)
   end
 end
 
 class AdditionalArgs
+  extend T::Sig
+
   class NoTrunk; def call = ''; end
 
   class Limit
@@ -78,32 +90,48 @@ class AdditionalArgs
   end
 
   class Short
-    def initialize(branch) = @branch = branch
-    def call = @branch == 'main' ? 'origin/main^..' : 'main^..'
+    def initialize(trunk) = @trunk = trunk
+    def call = "#{@trunk}^.."
   end
 
   class AllBranches
-    def initialize(branch) = @branch = branch
-    def call = @branch == 'main' ? '--branches origin/main^..' : '--branches main^..'
+    def initialize(trunk) = @trunk = trunk
+    def call = "--branches #{@trunk}^.."
   end
 
   def self.call(branch, limit, no_trunk, short)
     new(branch, limit, no_trunk, short).call
   end
 
-  def initialize(branch, limit, no_trunk, short)
+  sig do
+    params(
+      branch: String,
+      trunk: T.any(FalseClass, T.nilable(String)),
+      limit: T.nilable(Integer),
+      short: T::Boolean
+    ).void
+  end
+  def initialize(branch, trunk, limit, short)
     @branch = branch
+    @trunk = trunk
     @limit = limit
-    @no_trunk = no_trunk
     @short = short
   end
 
   def call
-    return NoTrunk.new.call if @no_trunk
+    return NoTrunk.new.call if trunk == false
     return Limit.new(@limit).call if @limit
-    return Short.new(@branch).call if @short
+    return Short.new(trunk).call if @short
 
-    AllBranches.new(@branch).call
+    AllBranches.new(trunk).call
+  end
+
+  def trunk
+    return 'origin/main' if @trunk.nil? && @branch == 'main'
+    return 'main' if @trunk.nil? && @branch != 'main'
+    return false if @trunk == false
+
+    @trunk
   end
 end
 
