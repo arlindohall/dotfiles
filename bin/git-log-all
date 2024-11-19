@@ -16,6 +16,8 @@ class GitLogAll
       --no-trunk            Do not include trunk commits (show history to beginning of time)
       --trunk <branch>      Specify a trunk branch
       -n <number>           Limit the number of commits
+      -S                    Passthrough to git log -S, searches commits (add/remove only)
+      -G                    Passthrough to git log -S, searches commits (add/remove/change)
   HELP
 
   def self.call
@@ -56,6 +58,10 @@ class GitLogAll
         @trunk = remaining.shift
       when '-n'
         @limit = remaining.shift.to_i
+      when '-S'
+        @hard_search = remaining.shift
+      when '-G'
+        @soft_search = remaining.shift
       else
         raise "Unknown argument: #{arg}"
       end
@@ -65,7 +71,7 @@ class GitLogAll
   def call
     parse!
 
-    system %(git log --graph --oneline --decorate #{additional_args} #{files_args})
+    system %(git log --graph --oneline --decorate #{additional_args} #{files_args} #{search_args})
   end
 
   def files_args
@@ -76,6 +82,13 @@ class GitLogAll
 
   def additional_args
     AdditionalArgs.call(@branch, @trunk, @limit, @short == true)
+  end
+
+  def search_args
+    return "-S #{@hard_search}" if @hard_search
+    return "-G #{@soft_search}" if @soft_search
+
+    nil
   end
 end
 
