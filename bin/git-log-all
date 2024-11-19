@@ -11,7 +11,10 @@ class GitLogAll
   HELP
 
   def self.call
-    new(`git branch --show-current`.chomp, ARGV.dup).call
+    git_branch = `git branch --show-current`.chomp
+    exit $?.exitstatus unless $?.success?
+
+    new(git_branch, ARGV.dup).call
   end
 
   def initialize(branch, args)
