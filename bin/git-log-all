@@ -24,7 +24,7 @@ class GitLogAll
     exit err
   end
 
-  def parse! # rubocop:disable Metrics/MethodLength
+  def parse! # rubocop:disable all
     return if @parsed
 
     @parsed = true
@@ -52,19 +52,55 @@ class GitLogAll
   def call
     parse!
 
-    if @no_trunk
-      system %(git log --graph --oneline --decorate -- #{@files.join(' ')})
-    elsif @limit
-      system %(git log --graph --oneline --decorate -n #{@limit} -- #{@files.join(' ')})
-    elsif @branch == 'main' && @short
-      system %(git log --graph --oneline --decorate origin/main^.. -- #{@files.join(' ')})
-    elsif @branch != 'main' && @short
-      system %(git log --graph --oneline --decorate main^.. -- #{@files.join(' ')})
-    elsif @branch == 'main'
-      system %(git log --graph --oneline --decorate --branches origin/main^.. -- #{@files.join(' ')})
-    else
-      system %(git log --graph --oneline --decorate --branches main^.. -- #{@files.join(' ')})
-    end
+    system %(git log --graph --oneline --decorate #{additional_args} #{files_args})
+  end
+
+  def files_args
+    return unless @files.any?
+
+    "-- #{@files.join(' ')}"
+  end
+
+  def additional_args
+    AdditionalArgs.call(@branch, @limit, @no_trunk, @short)
+  end
+end
+
+class AdditionalArgs
+  class NoTrunk; def call = ''; end
+
+  class Limit
+    def initialize(limit) = @limit = limit
+    def call = "-n #{@limit}"
+  end
+
+  class Short
+    def initialize(branch) = @branch = branch
+    def call = @branch == 'main' ? 'origin/main^..' : 'main^..'
+  end
+
+  class AllBranches
+    def initialize(branch) = @branch = branch
+    def call = @branch == 'main' ? '--branches origin/main^..' : '--branches main^..'
+  end
+
+  def self.call(branch, limit, no_trunk, short)
+    new(branch, limit, no_trunk, short).call
+  end
+
+  def initialize(branch, limit, no_trunk, short)
+    @branch = branch
+    @limit = limit
+    @no_trunk = no_trunk
+    @short = short
+  end
+
+  def call
+    return NoTrunk.new.call if @no_trunk
+    return Limit.new(@limit).call if @limit
+    return Short.new(@branch).call if @short
+
+    AllBranches.new(@branch).call
   end
 end
 
