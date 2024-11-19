@@ -39,6 +39,10 @@ class GitLogAll
         @short = true
       when '-p', '--'
         @files, remaining = remaining, @files
+      when '--no-trunk'
+        @no_trunk = true
+      when '-n'
+        @limit = remaining.shift.to_i
       else
         raise "Unknown argument: #{arg}"
       end
@@ -47,7 +51,12 @@ class GitLogAll
 
   def call
     parse!
-    if @branch == 'main' && @short
+
+    if @no_trunk
+      system %(git log --graph --oneline --decorate -- #{@files.join(' ')})
+    elsif @limit
+      system %(git log --graph --oneline --decorate -n #{@limit} -- #{@files.join(' ')})
+    elsif @branch == 'main' && @short
       system %(git log --graph --oneline --decorate origin/main^.. -- #{@files.join(' ')})
     elsif @branch != 'main' && @short
       system %(git log --graph --oneline --decorate main^.. -- #{@files.join(' ')})
