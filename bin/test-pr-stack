@@ -344,7 +344,8 @@ class Commands
   end
 
   def self.command_string_for_type_check
-    "pnpm nx affected -t typecheck --base=#{Args.start_branch} --head=#{GitBranch.current_branch} --parallel=8"
+    # "pnpm nx affected -t typecheck --base=#{Args.start_branch} --head=#{GitBranch.current_branch} --parallel=8"
+    'dev type-check'
   end
 
   def self.all_custom
