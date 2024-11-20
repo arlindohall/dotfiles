@@ -7,13 +7,8 @@ require 'English'
 require 'digest'
 
 # Kill all the old threads before starting a new one
-`ps -ef | grep caffeinate`
-  .lines
-  .map(&:chomp)
-  .map(&:split)
-  .filter { |line| line[2].to_i == 1 }
-  .map { |line| line[1] }
-  .each { |ps| system "kill #{ps}" }
+warn 'Dangling caffeinate sessions, trying to kill...' if `pgrep -fl "caffeinate -d"`.strip.empty?
+system "pkill -fl 'caffeinate -d'"
 
 # Begin holding the screen so that it doesn't sleep and stop tests
 # The thread will be collected on exit
