@@ -16,8 +16,11 @@ class GitLogAll
       --no-trunk            Do not include trunk commits (show history to beginning of time)
       --trunk <branch>      Specify a trunk branch
       -n <number>           Limit the number of commits
-      -S                    Passthrough to git log -S, searches commits (add/remove only)
-      -G                    Passthrough to git log -S, searches commits (add/remove/change)
+
+    Options passed through to git:
+      If you pass something that's not recognized by the parsing logic, it will be passed through to
+      git in best-effot to keep the semantic order. This sometimes makes wonky things happen, but I
+      figure that's better than having to annoyingly add individual params here...
   HELP
 
   def self.call
@@ -41,6 +44,9 @@ class GitLogAll
     return if @parsed
 
     @parsed = true
+    @trunk = nil
+    @short = false
+    @unknown_args = []
     @files = []
 
     remaining = @args.dup
@@ -58,12 +64,8 @@ class GitLogAll
         @trunk = remaining.shift
       when '-n'
         @limit = remaining.shift.to_i
-      when '-S'
-        @hard_search = remaining.shift
-      when '-G'
-        @soft_search = remaining.shift
       else
-        raise "Unknown argument: #{arg}"
+        @unknown_args, remaining = [arg, remaining], @unknown_args
       end
     end
   end
@@ -71,7 +73,11 @@ class GitLogAll
   def call
     parse!
 
-    system %(git log --graph --oneline --decorate #{additional_args} #{files_args} #{search_args})
+    system %(git log --graph --oneline --decorate #{args})
+  end
+
+  def args
+    [additional_args, unknown_args, files_args].compact.join(' ')
   end
 
   def files_args
@@ -80,15 +86,12 @@ class GitLogAll
     "-- #{@files.join(' ')}"
   end
 
-  def additional_args
-    AdditionalArgs.call(@branch, @trunk, @limit, @short == true)
+  def unknown_args
+    @unknown_args&.join(' ')
   end
 
-  def search_args
-    return "-S #{@hard_search}" if @hard_search
-    return "-G #{@soft_search}" if @soft_search
-
-    nil
+  def additional_args
+    AdditionalArgs.call(@branch, @trunk, @limit, @short == true)
   end
 end
 
