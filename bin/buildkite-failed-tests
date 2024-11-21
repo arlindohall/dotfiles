@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# typed: true
+
+require 'nokogiri'
+
+class BuildkiteFailedTests
+  FAILED_FILE = '/tmp/failed.html'
+
+  attr_reader :contents
+
+  def self.call
+    File.open(FAILED_FILE, 'r') do |file|
+      new(file).call
+    end
+  end
+
+  def initialize(contents)
+    @contents = contents
+  end
+
+  def call
+    html = Nokogiri::HTML(contents)
+    failed = html.search('strong:contains("Test failure")')
+                 .map { |it| it.parent.at('code').children.to_s.split('#').first }
+
+    exit 1 if failed.empty?
+
+    dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
+  end
+
+  def dev(args)
+    if args.include?("'")
+      warn 'Bug: unable to handle single quotes'
+      exit 2
+    end
+
+    warn "dev #{args}"
+    system "bash -c '. /opt/dev/dev.sh; dev #{args}'"
+  end
+end
+
+BuildkiteFailedTests.call
