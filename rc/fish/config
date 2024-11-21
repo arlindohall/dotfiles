@@ -23,6 +23,7 @@ function disk-usage --argument-names dir
 end
 
 alias tree 'tree -C'
+alias vim nvim
 
 ## Use local path first
 fish_add_path -p    $HOME/bin
