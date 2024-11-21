@@ -23,6 +23,7 @@
 [diff]
 	colorMoved = default
 	algorithm = patience
+	relative = true
 [push]
 	default = simple
     autoSetupRemote = true
@@ -35,4 +36,3 @@
   fetch = +refs/heads/miller/*:refs/remotes/origin/miller/*
 [rerere]
   enabled = true
-
