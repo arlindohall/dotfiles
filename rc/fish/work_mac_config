@@ -8,25 +8,26 @@ function note-backup
   echo "Moving to $HOME/Documents"
   cd "$HOME/Documents"
 
-  echo "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
-  tar -cvzf "$HOME/var/logseq-backup.tar.gz" Logseq/
-
   echo "Creating tar file at $HOME/var/ ~/var/excalidraw-backup.tar.gz"
-  tar -cvzf "$HOME/var/excalidraw-backup.tar.gz" ExcalidraW
-
-  echo "Moving to original directory"
-  echo "Backups can be found at ~/var/"
+  tar -cvzf "$HOME/var/excalidraw-backup.tar.gz" Excalidraw
 
   echo "Moving to notes folder $HOME/var/notes"
   cd "$HOME/var/notes"
-  pull-rebase
 
-  echo "Copying to notes folder $HOME/var/notes/engineering-journal"
-  cp -r "$HOME/Documents/Logseq/"* "$HOME/var/notes/engineering-journal"
+  echo "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
+  tar -cvzf "$HOME/var/logseq-backup.tar.gz" engineering-journal/
+
+  git switch -c tmp/rebasing-notes
   git add .
   git commit -m "Note archive through $(todays-date)"
+  pull-rebase
+
+  git switch main
+  git merge tmp/rebasing-notes
+  git branch -d tmp/rebasing-notes
 
   echo "Moving to original directory"
+  echo "Backups can be found at ~/var/"
   cd "$start_dir"
   pwd
 end
