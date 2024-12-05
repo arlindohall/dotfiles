@@ -172,13 +172,13 @@ end
 class CommandIo
   class CommandToGetChangedFiles
     def self.call
-      "ls (git diff #{GitBranch.base_rev_list_branch}..#{Args.end_branch} --name-only --relative) 2>/dev/null"
+      "git changed #{GitBranch.base_rev_list_branch}..#{Args.end_branch}"
     end
   end
 
   class CommandToGetChangedSoFarFiles
     def self.call
-      "ls (git diff #{GitBranch.base_rev_list_branch}..#{GitBranch.current_branch} --name-only --relative) 2>/dev/null"
+      "git changed #{GitBranch.base_rev_list_branch}..#{GitBranch.current_branch}"
     end
   end
 
