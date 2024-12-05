@@ -118,8 +118,24 @@ class Args
         @steps = args.shift.split(',')
         validate_steps(@steps)
       else
-        puts "Unknown argument: #{arg} {full_args=#{@argv}}"
-        puts "Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch> --run <run_step>]"
+        puts "Unknown argument: #{arg} {full_args=#{@argv}}" unless ["--help", "-h", "help"].include?(arg)
+        puts <<~USAGE
+          Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch>]
+
+          Additional args:
+            --run <command>                 Run only one of the commands by name
+            --continue                      Pick up from a previous run where you left off, using this branch as starting point
+            --command <command>             Provide a custom command to run for each step, can be anything
+
+
+          Possible commands:
+            lint:                           Use eslint to find formatting errors
+            test:                           Run unit tests with dev
+            test_unified:                   Run unit tests with dev, turn _on_ the unified ENV variable
+            test_no_unified:                Run unit tests with dev, turn _off_ the unified ENV variable
+            lint_unused:                    Use knip to find unused files or tests
+            type_check:                     Use dev/typescript to find type errors
+        USAGE
         abort
       end
     end
