@@ -76,7 +76,7 @@ class GitBranch
 end
 
 class Args
-  DEFAULT_STEPS = %w[test lint type_check].freeze
+  DEFAULT_STEPS = %w[test lint].freeze
   VALID_STEPS = %w[test test_unified test_no_unified lint lint_unused type_check custom].freeze
 
   def self.end_branch = instance.end_branch
@@ -364,8 +364,7 @@ class Commands
   end
 
   def self.command_string_for_type_check
-    # "pnpm nx affected -t typecheck --base=#{Args.start_branch} --head=#{GitBranch.current_branch} --parallel=8"
-    'dev type-check'
+    "pnpm typecheck"
   end
 
   def self.all_custom
