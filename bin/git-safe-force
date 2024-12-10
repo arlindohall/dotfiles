@@ -1,13 +1,16 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-class GitSafeForce
+require 'io/console'
+
+module Usage
   USAGE_STRING = <<~USAGE
     Usage: git safe-force <branch> <destination>
 
     Arguments:
       <branch>      The name of the branch to force push.
       <destination> The remote destination to force push to.
+      --danger      Skip the [safe] part of [safe]-force
 
     Description:
       This script safely force pushes a specified branch to a specified remote destination.
@@ -15,31 +18,133 @@ class GitSafeForce
       if the arguments are incorrect or missing.
   USAGE
 
+  def usage!(err = 0)
+    warn USAGE_STRING
+    exit err
+  end
+end
+
+class Args
+  include Usage
+
+  def self.branch = instance.branch
+  def self.dest = instance.dest
+  def self.danger? = instance.danger?
+
+  def self.instance
+    @instance ||= new(ARGV).tap(&:parse!)
+  end
+
+  def initialize(argv)
+    @argv = argv
+  end
+
+  attr_reader :branch, :dest
+
+  def danger? = @danger
+
+  def parse!
+    args = @argv.dup
+
+    @danger = false
+    @branch = @dest = nil
+
+    until args.empty?
+      case (arg = args.shift)
+      when '--danger'
+        @danger = true
+      else
+        parse_branches(arg)
+      end
+    end
+
+    usage! 1 unless @branch && @dest
+    usage! 2 if `git branch --list '#{@branch}'`.empty?
+  end
+
+  def parse_branches(arg)
+    unless @branch
+      @branch = arg
+      return
+    end
+
+    unless @dest
+      @dest = arg
+      return
+    end
+
+    usage! 1
+  end
+end
+
+class Forcer
+  def self.for(diff, force)
+    return DangerForcer.new(diff, force) if Args.danger?
+
+    SafeForcer.new(diff, force)
+  end
+end
+
+class SafeForcer
+  include Usage
+
+  attr_reader :diff, :force
+
+  def initialize(diff, force)
+    @diff = diff
+    @force = force
+  end
+
+  def call
+    warn 'Comparing branch to destination...'
+    warn diff
+
+    no_diff = `#{diff}`.empty?
+    warn 'Exiting due to diff' unless no_diff
+    usage! unless no_diff
+
+    warn 'Forcing branch to destination...'
+    warn force
+    system force
+  end
+end
+
+class DangerForcer
+  include Usage
+
+  attr_reader :diff, :force
+
+  def initialize(diff, force)
+    @diff = diff
+    @force = force
+  end
+
+  def call
+    warn 'Comparing branch to destination...'
+    warn diff
+
+    no_diff = `#{diff}`.empty?
+    warn 'Found diff, continue? (y/n)' unless no_diff
+    usage! unless no_diff || $stdin.getch.downcase == 'y'
+
+    warn 'Forcing branch to destination...'
+    warn force
+    system force
+  end
+end
+
+class GitSafeForce
   def self.call
     new.call
   end
 
-  def usage(err = 0)
-    warn USAGE_STRING
-    exit err
-  end
+  def call
+    args_space_delim = "#{Args.branch} #{Args.dest}"
 
-  def call # rubocop:disable Metrics/MethodLength
-    usage 1 unless ARGV.size == 2
-    usage 2 if `git branch --list '#{ARGV[0]}'`.empty?
+    diff_cmd = "git diff #{args_space_delim} --name-only"
+    force_cmd = "git branch --force #{args_space_delim}"
 
-    args_space_delim = ARGV.join(' ')
-
-    cmd = "git diff #{args_space_delim} --name-only"
-    warn "Comparing branch to destination: #{args_space_delim}"
-
-    no_diff = `#{cmd}`.empty?
-    warn 'Exiting due to diff' unless no_diff
-    usage unless no_diff
-
-    cmd = "git branch --force #{args_space_delim}"
-    warn "Forcing branch to destination: #{args_space_delim}"
-    system cmd
+    Forcer.for(diff_cmd, force_cmd).call
   end
 end
 
