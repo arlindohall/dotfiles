@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+FILE_PATH=/opt/dev/var/private/git_credential_store
+DIRECTORY="$(dirname $FILE_PATH)"
+
+mkdir -p "$DIRECTORY"
+touch "$FILE_PATH"
+
+echo -n "https://arlindohall:" > "$FILE_PATH"
+echo -n "$(dev github print-auth | grep Password | ruby -ane 'print $F.last')" >> "$FILE_PATH"
+echo -n "@github.com" >> "$FILE_PATH"
