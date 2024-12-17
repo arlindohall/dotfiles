@@ -1,3 +1,5 @@
+GCLOUD_BIN=(dirname (ls -l (which gcloud) | ruby -ane 'puts $F.last')) fish_add_path $GCLOUD_BIN
+
 function dcd
     set workspace $argv[1]
     cd (dev cd -n $workspace)
