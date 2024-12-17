@@ -30,6 +30,7 @@
 [alias]
 	la = log-all
 	ll = log-all short
+	root = rev-parse --show-toplevel
 [init]
 	defaultBranch = main
 [remote "origin"]
