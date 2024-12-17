@@ -1,6 +1,7 @@
-source /etc/zsh/zshrc.default.inc.zsh
+[ -f /etc/zsh/zshrc.default.inc.zsh ] && source /etc/zsh/zshrc.default.inc.zsh
 
 PATH=$PATH:$HOME/bin
+PATH=$PATH:"$(dirname $(ls -l $(which gcloud) | ruby -ane 'puts $F.last'))"
 
 alias bat=batcat
 alias dependencies-install="tmux new -d $HOME/dotfiles/dependencies-install.sh"

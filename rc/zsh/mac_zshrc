@@ -5,6 +5,8 @@
 
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
 
+[ -f .config/.work_zshrc ] && source .config/.work_zshrc
+
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
