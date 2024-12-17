@@ -65,7 +65,8 @@ class GitLogAll
       when '-n'
         @limit = remaining.shift.to_i
       else
-        @unknown_args, remaining = [arg, remaining], @unknown_args
+        @unknown_args = [arg, remaining]
+        remaining = []
       end
     end
   end

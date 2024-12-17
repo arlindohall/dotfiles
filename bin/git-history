@@ -10,6 +10,11 @@ class History
       -p:                   Indicates that a list of file paths will follow. The script
                             will show the diff for these files, and only on commits where
                             the files changed, going back to <trunk>.
+
+    Options passed through to git:
+      If you pass something that's not recognized by the parsing logic, it will be passed through to
+      git in best-effot to keep the semantic order. This sometimes makes wonky things happen, but I
+      figure that's better than having to annoyingly add individual params here...
   USAGE
 
   def self.call
@@ -41,7 +46,8 @@ class History
         @path_given = true
         @files, remaining = remaining, @files
       else
-        raise "Unknown argument: #{arg}"
+        @unknown_args = [arg, remaining]
+        remaining = []
       end
     end
   end
@@ -49,15 +55,13 @@ class History
   def call
     parse!
 
-    if @branch == 'main' && @path_given
-      system "git log origin/main.. --relative -a -p #{@files.join(' ')}"
-    elsif @branch != 'main' && @path_given
-      system "git log main.. --relative -a -p #{@files.join(' ')}"
-    elsif @branch == 'main'
-      system 'git log origin/main.. --relative -a --full-diff -p .'
-    else
-      system 'git log main.. --relative -a --full-diff -p .'
-    end
+    additional_args = @unknown_args.empty? ? '' : @unknown_args.join(' ')
+    branch_directive = @branch == 'main' ? 'origin/main..' : 'main..'
+    file_directive = @path_given ? "-p #{@files.join(' ')}" : '--full-diff -p .'
+
+    cmd = "git log #{branch_directive} --relative -a #{additional_args} #{file_directive}"
+    warn cmd
+    system cmd
   end
 end
 
