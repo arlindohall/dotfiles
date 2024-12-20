@@ -36,6 +36,7 @@ class History
 
     @parsed = true
     @files = []
+    @unknown_args = []
 
     remaining = @args.dup
     while (arg = remaining.shift)
@@ -60,7 +61,6 @@ class History
     file_directive = @path_given ? "-p #{@files.join(' ')}" : '--full-diff -p .'
 
     cmd = "git log #{branch_directive} --relative -a #{additional_args} #{file_directive}"
-    warn cmd
     system cmd
   end
 end

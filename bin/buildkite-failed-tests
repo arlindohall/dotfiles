@@ -7,11 +7,19 @@ require 'nokogiri'
 class BuildkiteFailedTests
   FAILED_FILE = '/tmp/failed.html'
 
+  NO_FAILURES_FOUND = 1
+  INVALID_SINGLE_QUOTES = 2
+
+  MESSAGES = {
+    NO_FAILURES_FOUND => "No failures in file #{FAILED_FILE}",
+    INVALID_SINGLE_QUOTES => "Invalid args with single quotes: (REPLACE)",
+  }
+
   attr_reader :contents
 
   def self.call
     File.open(FAILED_FILE, 'r') do |file|
-      new(file).call
+      new(file.read).call
     end
   end
 
@@ -20,23 +28,40 @@ class BuildkiteFailedTests
   end
 
   def call
-    html = Nokogiri::HTML(contents)
-    failed = html.search('strong:contains("Test failure")')
-                 .map { |it| it.parent.at('code').children.to_s.split('#').first }
-
-    exit 1 if failed.empty?
+    fatal NO_FAILURES_FOUND if failed.empty?
 
     dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
+  end
+
+  def html
+    Nokogiri::HTML(contents)
+  end
+
+  def failed
+    if html.at('title').text.match('shopify-app-store')
+      html.search('p:contains("Run locally")')
+          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
+          .uniq
+    else
+      html.search('strong:contains("Test failure")')
+          .map { |it| it.parent.at('code').children.to_s.split('#').first }
+          .uniq
+    end
   end
 
   def dev(args)
     if args.include?("'")
       warn 'Bug: unable to handle single quotes'
-      exit 2
+      fatal INVALID_SINGLE_QUOTES, args
     end
 
     warn "dev #{args}"
     system "bash -c '. /opt/dev/dev.sh; dev #{args}'"
+  end
+
+  def fatal(code, replacement = '')
+    warn MESSAGES[code].gsub("REPLACE", replacement)
+    exit code
   end
 end
 
