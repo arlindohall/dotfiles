@@ -28,6 +28,7 @@ function install_home_mac {
     install_personal_bin
     create_notes_symlink_if_home
 
+    rc_install aspell/dictionary.txt    var/dictionary.txt
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
     rc_install fish/mac_config          .config/fish/conf.d/500_mac_config.fish
@@ -47,6 +48,7 @@ function install_home_linux {
     set_up_directory_structure
     install_personal_bin
 
+    rc_install aspell/dictionary.txt    var/dictionary.txt
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
     rc_install fish/linux_config        .config/fish/conf.d/500_linux_config.fish
@@ -64,6 +66,7 @@ function install_work_mac {
     set_up_directory_structure
     install_personal_bin
 
+    rc_install aspell/dictionary.txt    var/dictionary.txt
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
     rc_install fish/mac_config          .config/fish/conf.d/500_mac_config.fish
@@ -86,6 +89,7 @@ function install_work_linux {
     set_up_directory_structure
     install_personal_bin
 
+    rc_install aspell/dictionary.txt    var/dictionary.txt
     rc_install fish/config              .config/fish/config.fish
     rc_install fish/linux_config        .config/fish/conf.d/500_linux_config.fish
     rc_install fish/work_linux_config   .config/fish/conf.d/550_work_linux_config.fish

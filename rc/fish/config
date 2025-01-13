@@ -37,3 +37,4 @@ set fish_greeting
 # Use vim, but remove prompt
 fish_vi_key_bindings
 
+alias aspell 'aspell --personal=$HOME/var/dictionary.txt'
