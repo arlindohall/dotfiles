@@ -33,7 +33,5 @@
 	root = rev-parse --show-toplevel
 [init]
 	defaultBranch = main
-[remote "origin"]
-  fetch = +refs/heads/miller/*:refs/remotes/origin/miller/*
 [rerere]
   enabled = true
