@@ -156,7 +156,7 @@ function install_git {
 }
 
 function install_openjdk {
-    if ls /opt/amazon-corretto-11/ || ls /Library/Java/JavaVirtualMachines/amazon-corretto-11.jdk ; then
+    if ls /opt/amazon-corretto-11/ || ls /Library/Java/JavaVirtualMachines/liberica-jdk-21.jdk ; then
         return
     fi
 
@@ -169,9 +169,9 @@ function install_openjdk {
 
         read -pr "In a new shell, unzip the corretto installation, press any key to continue..."
     elif is_mac ; then
-        echo "Install java from the amazon downloads page: [link should open automatically]"
-        echo "For help see: https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/macos-install.html"
-        open "https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/macos-install.html"
+        echo "Install java from the liberica downloads page: [link should open automatically]"
+        echo "For help see: https://docs.bell-sw.com/liberica-jdk/17b35/general/install-guide/"
+        open "https://bell-sw.com/pages/downloads/#jdk-21-lts"
         read -pr "Press any key to continue"
     fi
 }
