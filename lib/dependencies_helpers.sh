@@ -83,6 +83,7 @@ function homebrew_tools_installed {
         which delta &&
         which fish &&
         which node &&
+        which nvim &&
         which podman &&
         which rg &&
         which shellcheck &&
@@ -102,6 +103,7 @@ function install_homebrew_tools {
         fish \
         graphviz \
         node \
+        nvim \
         pandoc \
         podman \
         ripgrep \
