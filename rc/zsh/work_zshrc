@@ -3,7 +3,6 @@
 PATH=$PATH:$HOME/bin
 PATH=$PATH:"$(dirname $(ls -l $(which gcloud) | ruby -ane 'puts $F.last'))"
 
-alias bat=batcat
 alias dependencies-install="tmux new -d $HOME/dotfiles/dependencies-install.sh"
 
 bindkey -v
