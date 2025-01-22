@@ -30,8 +30,8 @@ function install_home_mac {
 
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
-    rc_install fish/mac_config          .config/fish/conf.d/mac_config.fish
-    rc_install fish/home_mac_config     .config/fish/conf.d/home_mac_config.fish
+    rc_install fish/mac_config          .config/fish/conf.d/500_mac_config.fish
+    rc_install fish/home_mac_config     .config/fish/conf.d/550_home_mac_config.fish
     rc_install gitconfig/home           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
     rc_install sh/inputrc               .inputrc
@@ -49,7 +49,7 @@ function install_home_linux {
 
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
-    rc_install fish/linux_config        .config/fish/conf.d/linux_config.fish
+    rc_install fish/linux_config        .config/fish/conf.d/500_linux_config.fish
     rc_install gitconfig/home           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
     rc_install sh/inputrc               .inputrc
@@ -66,8 +66,9 @@ function install_work_mac {
 
     rc_install bash/bash_profile        .bash_profile
     rc_install fish/config              .config/fish/config.fish
-    rc_install fish/mac_config          .config/fish/conf.d/mac_config.fish
-    rc_install fish/work_mac_config     .config/fish/conf.d/work_mac_config.fish
+    rc_install fish/mac_config          .config/fish/conf.d/500_mac_config.fish
+    rc_install fish/work_mac_config     .config/fish/conf.d/550_work_mac_config.fish
+    rc_install fish/dev_config          .config/fish/conf.d/700_dev_config.fish
     rc_install gitconfig/work           .gitconfig
     rc_install gitconfig/work-dev       .config/dev/gitconfig
     rc_install gitconfig/gitignore      .gitignore
@@ -86,8 +87,8 @@ function install_work_linux {
     install_personal_bin
 
     rc_install fish/config              .config/fish/config.fish
-    rc_install fish/linux_config        .config/fish/conf.d/linux_config.fish
-    rc_install fish/work_linux_config   .config/fish/conf.d/work_linux_config.fish
+    rc_install fish/linux_config        .config/fish/conf.d/500_linux_config.fish
+    rc_install fish/work_linux_config   .config/fish/conf.d/550_work_linux_config.fish
     rc_install gitconfig/work           .gitconfig
     rc_install gitconfig/gitignore      .gitignore
     rc_install sh/inputrc               .inputrc
