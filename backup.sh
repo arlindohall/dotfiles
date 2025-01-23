@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-FOLDER_EXCLUDE_REGEX="^(Library|Support|Google Drive|src|Archive.zip|\.|\.(Trash|gem|rm-trash-can|local|android|pyenv|rvm-old|minikube|nvm|rbenv|gradle|rustup|backup|\.))$"
+FOLDER_EXCLUDE_HIDDEN_REGEX="Trash|gem|rm-trash-can|local|android|pyenv|rvm-old|minikube|nvm|rbenv|gradle|rustup|cargo|npm|cache|dev"
+FOLDER_EXCLUDE_REGEX="^(Library|Movies|Pictures|Support|Google Drive|src|backup|go|\.|\.($FOLDER_EXCLUDE_HIDDEN_REGEX|\.))$"
 
 function files_for_backup() {
   ls -a | rg -v "$FOLDER_EXCLUDE_REGEX"
@@ -16,5 +17,5 @@ function backup() {
   cd
   mkdir -p "backup"
 
-  echo zip -r "backup/Archive.zip" $(files_for_backup)
+  zip -r "backup/Archive.zip" $(files_for_backup)
 }
