@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 
-function copy_files() {
-  folder_name="$1"
-  cp "$HOME/$folder_name" "$HOME/backup/"
+FOLDER_EXCLUDE_REGEX="^(Library|Support|Google Drive|src|Archive.zip|\.|\.(Trash|gem|rm-trash-can|local|android|pyenv|rvm-old|minikube|nvm|rbenv|gradle|rustup|backup|\.))$"
+
+function files_for_backup() {
+  ls -a | rg -v "$FOLDER_EXCLUDE_REGEX"
+}
+
+function file_sizes() {
+  files_for_backup |
+    xargs du -hs |  # Human readable, summary
+    sort -hrb       # Human readable, reverse, ignore leading spaces for sorting
 }
 
 function backup() {
-  mkdir -p "$HOME/backup"
+  cd
+  mkdir -p "backup"
 
-  copy_files var
-  copy_files workspace
-  copy_files Documents
-
-  # shellcheck disable=SC2164
-  cd "$HOME/backup"
-
-  zip -r Archive.zip var workspace Documents
+  echo zip -r "backup/Archive.zip" $(files_for_backup)
 }
