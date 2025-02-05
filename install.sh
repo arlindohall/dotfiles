@@ -40,7 +40,6 @@ function install_home_mac {
     rc_install tmux/conf                .tmux.conf
     rc_install tmux/conf_local          .tmux.conf.local
     rc_install vim/vimrc                .vimrc
-    rc_install vim/nvimrc               .config/nvim/init.vim
     rc_install zsh/mac_zshrc            .zshrc
 }
 
@@ -59,7 +58,6 @@ function install_home_linux {
     rc_install tmux/conf                .tmux.conf
     rc_install tmux/conf_local          .tmux.conf.local
     rc_install vim/vimrc                .vimrc
-    rc_install vim/nvimrc               .config/nvim/init.vim
 }
 
 function install_work_mac {
@@ -80,7 +78,6 @@ function install_work_mac {
     rc_install tmux/conf                .tmux.conf
     rc_install tmux/conf_local          .tmux.conf.local
     rc_install vim/vimrc                .vimrc
-    rc_install vim/nvimrc               .config/nvim/init.vim
     rc_install zsh/work_zshrc		.config/.work_zshrc
     rc_install zsh/mac_zshrc            .zshrc
 }
@@ -100,7 +97,6 @@ function install_work_linux {
     rc_install tmux/conf                .tmux.conf
     rc_install tmux/conf_local          .tmux.conf.local
     rc_install vim/vimrc                .vimrc
-    rc_install vim/nvimrc               .config/nvim/init.vim
     rc_install zsh/work_zshrc           .zshrc
 }
 
