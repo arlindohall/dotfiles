@@ -41,3 +41,16 @@ function create_notes_symlink_if_home {
 
   ln -s ~/Library/Mobile\ Documents/iCloud~com\~logseq\~logseq/Documents/notes/ ~/notes-symlink
 }
+
+function install_lazyvim_config {
+  config_dir="$HOME/.config/nvim"
+  backup_dir="$HOME/.config/nvim.bak"
+
+  if ls "$config_dir"; then
+    rm -rf "$backup_dir"
+    mv -f "$config_dir" "$backup_dir"
+  fi
+
+  mkdir "$config_dir"
+  cp -r lazyvim/* "$config_dir"
+}

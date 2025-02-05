@@ -41,6 +41,8 @@ function install_home_mac {
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
   rc_install zsh/mac_zshrc .zshrc
+
+  install_lazyvim_config
 }
 
 function install_home_linux {
@@ -58,6 +60,8 @@ function install_home_linux {
   rc_install tmux/conf .tmux.conf
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
+
+  install_lazyvim_config
 }
 
 function install_work_mac {
@@ -80,6 +84,8 @@ function install_work_mac {
   rc_install vim/vimrc .vimrc
   rc_install zsh/work_zshrc .config/.work_zshrc
   rc_install zsh/mac_zshrc .zshrc
+
+  install_lazyvim_config
 }
 
 function install_work_linux {
@@ -98,6 +104,8 @@ function install_work_linux {
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
   rc_install zsh/work_zshrc .zshrc
+
+  install_lazyvim_config
 }
 
 function install_personal_bin {
