@@ -2,11 +2,11 @@
 
 #### Specific installations commands ###
 function install_pybin {
-    if ls "$HOME"/pybin ; then
+    if ls "$HOME"/pybin; then
         return
     fi
 
-    if is_linux ; then
+    if is_linux; then
         sudo apt install -y python3.10-venv
     fi
 
@@ -16,7 +16,7 @@ function install_pybin {
 function clone_var_repo {
     repo=$1
 
-    if ls "$HOME"/var/"$repo" ; then
+    if ls "$HOME"/var/"$repo"; then
         return
     fi
 
@@ -24,7 +24,7 @@ function clone_var_repo {
 }
 
 function install_homebrew {
-    if which brew ; then
+    if which brew; then
         return
     fi
 
@@ -40,11 +40,11 @@ function install_clang {
 }
 
 function install_rust {
-    if ls "$HOME"/.cargo/bin/cargo ; then
+    if ls "$HOME"/.cargo/bin/cargo; then
         return
     fi
 
-    if ls "$HOME"/.rust/bin/cargo ; then
+    if ls "$HOME"/.rust/bin/cargo; then
         return
     fi
 
@@ -58,18 +58,18 @@ function install_rust {
 
     install_with_curl \
         rustup \
-        https://sh.rustup.rs  \
+        https://sh.rustup.rs \
         sh \
         bece2dfa6889f3ac4de782e51543cf18112130092d50d270c86ffcd5f6e62636d39077dffd71ed7df59e7fa8123f5746d0558783f86246ca2cee8c24ecb07545
 }
 
 function install_chruby {
-    if which chruby || which ruby-install ; then
-	# Uses either/or because env in shell doesn't quite match, fix later?
+    if which chruby || which ruby-install; then
+        # Uses either/or because env in shell doesn't quite match, fix later?
         return
     fi
 
-    if is_linux ; then
+    if is_linux; then
         apt install ruby-install
         echo "Please install chruby according to https://github.com/postmodern/chruby?tab=readme-ov-file"
         read -pr "When chruby is installed, press any key to continue..."
@@ -93,8 +93,16 @@ function homebrew_tools_installed {
         which watchman
 }
 
+function install_graphite {
+    if which gt; then
+        return
+    fi
+
+    brew install withgraphite/tap/graphite
+}
+
 function install_homebrew_tools {
-    if homebrew_tools_installed ; then
+    if homebrew_tools_installed; then
         return
     fi
 
@@ -115,7 +123,7 @@ function install_homebrew_tools {
 }
 
 function install_apt_tools {
-    if apt_tools_installed ; then
+    if apt_tools_installed; then
         return
     fi
 
@@ -144,11 +152,11 @@ function apt_tools_installed {
 }
 
 function install_git {
-    if which git ; then
+    if which git; then
         return
     fi
 
-    if is_linux ; then
+    if is_linux; then
         sudo apt install -y git
     else
         xcode-select --install
@@ -156,11 +164,11 @@ function install_git {
 }
 
 function install_openjdk {
-    if ls /opt/amazon-corretto-11/ || ls /Library/Java/JavaVirtualMachines/liberica-jdk-21.jdk ; then
+    if ls /opt/amazon-corretto-11/ || ls /Library/Java/JavaVirtualMachines/liberica-jdk-21.jdk; then
         return
     fi
 
-    if is_linux ; then
+    if is_linux; then
         install_with_curl \
             corretto \
             https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.tar.gz \
@@ -168,7 +176,7 @@ function install_openjdk {
             5fd3899788ca447f0b8f572e15e6b02b602be6e08b3413ce1e368886dbab380c4195cd1e6f218304c87fc68297372fca9193fdf3dca88d65649f166768046569
 
         read -pr "In a new shell, unzip the corretto installation, press any key to continue..."
-    elif is_mac ; then
+    elif is_mac; then
         echo "Install java from the liberica downloads page: [link should open automatically]"
         echo "For help see: https://docs.bell-sw.com/liberica-jdk/17b35/general/install-guide/"
         open "https://bell-sw.com/pages/downloads/#jdk-21-lts"
@@ -177,11 +185,11 @@ function install_openjdk {
 }
 
 function install_git_delta {
-    if which delta ; then
+    if which delta; then
         return
     fi
 
-    if ! which cargo ; then
+    if ! which cargo; then
         install_rust
     fi
 
