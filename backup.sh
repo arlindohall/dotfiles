@@ -9,8 +9,8 @@ function files_for_backup() {
 
 function file_sizes() {
   files_for_backup |
-    xargs du -hs |  # Human readable, summary
-    sort -hrb       # Human readable, reverse, ignore leading spaces for sorting
+    xargs du -hs | # Human readable, summary
+    sort -hrb      # Human readable, reverse, ignore leading spaces for sorting
 }
 
 function backup() {

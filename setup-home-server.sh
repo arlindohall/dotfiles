@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function check_root {
-  if ! whoami | grep root ; then
+  if ! whoami | grep root; then
     echo "Run the script as root..."
     exit 1
   fi
@@ -12,7 +12,7 @@ function install_ruby {
 }
 
 function install_systemd_startup_service {
-  if ! ls ./server/opt-rbin ; then
+  if ! ls ./server/opt-rbin; then
     echo "Run this script from the project root..."
     exit 2
   fi
@@ -50,4 +50,5 @@ function setup {
   install_ruby
   install_systemd_startup_service
   install_cron_backup_service
-};setup
+}
+setup
