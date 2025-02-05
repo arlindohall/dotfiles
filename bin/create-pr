@@ -3,10 +3,34 @@
 
 # code: language=ruby
 
+class Args
+  attr_reader :branch
+
+  def self.instance
+    @instance ||= new(ARGV).tap { |it| it.parse! }
+  end
+
+  def self.branch = instance.branch
+
+  def initialize(argv)
+    @argv = argv.dup
+  end
+
+  def parse!
+    until @argv.empty?
+      case (arg = @argv.shift)
+      when "--branch"
+        @branch = @argv.shift
+      else
+        raise "Unexpected arg #{arg}"
+      end
+    end
+  end
+end
+
 class PullRequest
   def create!
     usage('Must be called with a branch (not main) checked out') if branch == 'main'
-    usage('No arguments allowed') unless ARGV.empty?
 
     system command
   end
@@ -44,11 +68,18 @@ class PullRequest
   end
 
   def branch
-    branch_output.split.last
+    return Args.branch if Args.branch
+    return branch_output if branch_output
+
+    raise "Unknown branch"
   end
 
   def branch_output
-    `git branch --show-current`.chomp
+    @branch_output ||= `git branch --show-current`.chomp
+
+    return unless @branch_output&.size > 0
+
+    @branch_output
   end
 end
 
