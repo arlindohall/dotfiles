@@ -7,7 +7,9 @@ alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
 alias 'notego'              'cd "$HOME/var/notes"'
 
 function note-backup
-  set -l ICLOUD_DIRECTORY "/Users/millerhall/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/"
+  set --local start_dir "$(pwd)"
+  set --local icloud_directory "/Users/millerhall/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/"
+
   echo "Going to notes directory $HOME/var/notes"
   notego
 
@@ -26,7 +28,7 @@ function note-backup
 
   echo "Pulling in changes from mobile..."
   git switch mobile
-  cp -r "$ICLOUD_DIRECTORY"* logseq/
+  cp -r "$icloud_directory"* logseq/
   git add .
   git commit -m "Mobile note sync through $(todays-date)"
 
@@ -40,8 +42,8 @@ function note-backup
   git push origin mobile main
 
   echo "Moving to original directory"
-  echo "Going back"
-  cd -
+  echo "Backups can be found at ~/var/"
+  cd "$start_dir"
   pwd
 end
 
