@@ -22,9 +22,12 @@ function note-backup
   git switch -c tmp/rebasing-notes
   git add .
   git commit -m "Note archive through $(todays-date)"
-  pull-rebase
 
   git switch main
+  git pull
+
+  echo "Initiating merge..."
+  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
   git merge tmp/rebasing-notes
   git branch -d tmp/rebasing-notes
 

@@ -7,14 +7,39 @@ alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
 alias 'notego'              'cd "$HOME/var/notes"'
 
 function note-backup
+  set -l ICLOUD_DIRECTORY "/Users/millerhall/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/"
   echo "Going to notes directory $HOME/var/notes"
   notego
 
-  pull-rebase
+  git switch -c tmp/rebasing-notes
   git add .
   git commit -m "Note archive through $(todays-date)"
-  git push
 
+  git switch main
+  git pull
+
+  echo "Initiating merge..."
+  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+  git merge tmp/rebasing-notes
+
+  git branch -d tmp/rebasing-notes
+
+  echo "Pulling in changes from mobile..."
+  git switch mobile
+  cp -r "$ICLOUD_DIRECTORY"* logseq/
+  git add .
+  git commit -m "Mobile note sync through $(todays-date)"
+
+  git switch main
+  git pull
+
+  echo "Initiating merge of mobile..."
+  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+  git merge mobile
+
+  git push origin mobile main
+
+  echo "Moving to original directory"
   echo "Going back"
   cd -
   pwd
