@@ -5,38 +5,6 @@ function dcd
     cd (dev cd -n $workspace)
 end
 
-function note-backup
-  set --local start_dir "$(pwd)"
-  echo "Moving to $HOME/Documents"
-  cd "$HOME/Documents"
-
-  echo "Creating tar file at $HOME/var/ ~/var/excalidraw-backup.tar.gz"
-  tar -cvzf "$HOME/var/excalidraw-backup.tar.gz" Excalidraw
-
-  echo "Moving to notes folder $HOME/var/notes"
-  cd "$HOME/var/notes"
-
-  echo "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
-  tar -cvzf "$HOME/var/logseq-backup.tar.gz" engineering-journal/
-
-  git switch -c tmp/rebasing-notes
-  git add .
-  git commit -m "Note archive through $(todays-date)"
-
-  git switch main
-  git pull
-
-  echo "Initiating merge..."
-  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
-  git merge tmp/rebasing-notes
-  git branch -d tmp/rebasing-notes
-
-  echo "Moving to original directory"
-  echo "Backups can be found at ~/var/"
-  cd "$start_dir"
-  pwd
-end
-
 . /opt/dev/dev.fish
 
 chruby 3.4.1

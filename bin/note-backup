@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+
+class NoteBackup
+  HOME = ENV['HOME']
+  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\""
+  DOCUMENTS_DIR = "#{HOME}/Documents/"
+
+  def self.call = new.call
+
+  def call
+    notes_dir = "#{HOME}/var/notes"
+
+    if work_computer?
+      try "echo Moving to #{DOCUMENTS_DIR}"
+      Dir.chdir(DOCUMENTS_DIR)
+
+      warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
+      try "tar -cvzf \"#{HOME}/var/excalidraw-backup.tar.gz\" Excalidraw"
+    end
+
+    warn "Going to notes directory #{notes_dir}"
+    Dir.chdir(notes_dir)
+
+    if work_computer?
+      warn "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
+      try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" engineering-journal/"
+    end
+
+    git "switch -c tmp/rebasing-notes"
+    git "add ."
+    git "commit -m \"Note archive through #{todays_date}\""
+
+    git "switch main"
+    git "pull"
+
+    warn "Initiating merge..."
+    warn "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+
+    git "merge tmp/rebasing-notes"
+    git "branch -d tmp/rebasing-notes"
+
+    unless work_computer?
+      warn "Pulling in changes from mobile..."
+      git "switch mobile"
+      try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
+      git "add ."
+      git "commit -m \"Mobile note sync through #{todays_date}\""
+
+      git "switch main"
+      git "pull"
+
+      warn "Initiating merge of mobile..."
+      warn "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+
+      git "merge mobile"
+
+      git "switch mobile"
+      git "merge main --ff-only"
+
+      try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
+    end
+
+    warn "Backing up to remote..."
+
+    git work_computer? ? "push origin main" : "push origin mobile main"
+    warn "Backups can be found at ~/var/" if work_computer?
+  end
+
+  def git(command)
+    return if command.split.first == "commit" && `git changed`.chomp.empty?
+
+    try "git #{command}"
+  end
+
+  def try(command)
+    warn "Running: #{command}"
+    abort unless system command
+  end
+
+  def todays_date
+    @date ||= Time.new.strftime("%b %d, %Y")
+  end
+
+  def work_computer?
+    ! `hostname`.include? "miller-home"
+  end
+end
+
+NoteBackup.call

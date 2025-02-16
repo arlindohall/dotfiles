@@ -6,47 +6,6 @@ fish_add_path       /opt/homebrew/bin
 alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
 alias 'notego'              'cd "$HOME/var/notes"'
 
-function note-backup
-  set --local start_dir "$(pwd)"
-  set --local icloud_directory "/Users/millerhall/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/"
-
-  echo "Going to notes directory $HOME/var/notes"
-  notego
-
-  git switch -c tmp/rebasing-notes
-  git add .
-  git commit -m "Note archive through $(todays-date)"
-
-  git switch main
-  git pull
-
-  echo "Initiating merge..."
-  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
-  git merge tmp/rebasing-notes
-
-  git branch -d tmp/rebasing-notes
-
-  echo "Pulling in changes from mobile..."
-  git switch mobile
-  cp -r "$icloud_directory"* logseq/
-  git add .
-  git commit -m "Mobile note sync through $(todays-date)"
-
-  git switch main
-  git pull
-
-  echo "Initiating merge of mobile..."
-  echo "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
-  git merge mobile
-
-  git push origin mobile main
-
-  echo "Moving to original directory"
-  echo "Backups can be found at ~/var/"
-  cd "$start_dir"
-  pwd
-end
-
 alias docker                podman
 
 alias mermaid 'npx @mermaid-js/mermaid-cli'
