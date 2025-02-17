@@ -28,7 +28,7 @@ class NoteBackup
 
     git "switch -c tmp/rebasing-notes"
     git "add ."
-    git "commit -m \"Note archive through #{todays_date}\""
+    git "commit -m \"Note archive through #{todays_date}\" --no-edit"
 
     git "switch main"
     git "pull"
@@ -44,7 +44,7 @@ class NoteBackup
       git "switch mobile"
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
       git "add ."
-      git "commit -m \"Mobile note sync through #{todays_date}\""
+      git "commit -m \"Mobile note sync through #{todays_date}\" --no-edit"
 
       git "switch main"
       git "pull"
@@ -67,7 +67,7 @@ class NoteBackup
   end
 
   def git(command)
-    return if command.split.first == "commit" && `git changed`.chomp.empty?
+    return if command.split.first == "commit" && `git diff HEAD`.chomp.empty?
 
     try "git #{command}"
   end
