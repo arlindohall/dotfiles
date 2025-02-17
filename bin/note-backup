@@ -21,10 +21,8 @@ class NoteBackup
     warn "Going to notes directory #{notes_dir}"
     Dir.chdir(notes_dir)
 
-    if work_computer?
-      warn "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
-      try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" engineering-journal/"
-    end
+    warn "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
+    try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
     git "switch -c tmp/rebasing-notes"
     git "add ."
@@ -59,6 +57,8 @@ class NoteBackup
 
       try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
     end
+
+    git "switch main"
 
     warn "Backing up to remote..."
 
