@@ -25,3 +25,5 @@ function dl {
 function open-spin {
     open https://$SPIN_FQDN
 }
+
+alias vim=nvim
