@@ -18,6 +18,7 @@ return {
         typescript = { "prettier" },
         typescriptreact = { "prettier" },
         graphql = { "prettier" },
+        ruby = { "rubocop" },
       },
     },
   },
