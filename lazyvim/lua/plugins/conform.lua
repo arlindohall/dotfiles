@@ -17,6 +17,7 @@ return {
         javascript = { "prettier" },
         typescript = { "prettier" },
         typescriptreact = { "prettier" },
+        graphql = { "prettier" },
       },
     },
   },
