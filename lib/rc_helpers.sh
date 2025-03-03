@@ -45,5 +45,6 @@ function install_lazyvim_config {
   fi
 
   mkdir "$config_dir"
-  cp -r lazyvim/* "$config_dir"
+  source="$INSTALL_PATH/lazyvim/"
+  cp -r "$source"* "$config_dir"
 }
