@@ -3,18 +3,14 @@
 set -euxo pipefail
 
 INSTALL_PATH="$HOME/dotfiles/"
-WORKING_PATH="$HOME/workspace/dotfiles/"
 
 function use_helper {
   if ls "$INSTALL_PATH"; then
     # shellcheck source=/dev/null
     . "$INSTALL_PATH/lib/$1"
-  elif ls "$WORKING_PATH"; then
-    # shellcheck source=/dev/null
-    . "$WORKING_PATH/lib/$1"
   else
     echo "Unable to run script..."
-    echo "Please place dir in either $HOME/dotfiles or $HOME/worksapce/dotfiles..."
+    echo "Please place dir in $HOME/dotfiles..."
     exit 1
   fi
 }
