@@ -5,15 +5,63 @@
 require 'nokogiri'
 
 class BuildkiteFailedTests
+  class AppStore
+    attr_reader :html
+
+    def initialize(html)
+      @html = html
+    end
+
+    def type = 'app-store'
+    def matches? = html.at('title').text.match('shopify-app-store')
+
+    def failed_tests
+      html.search('p:contains("Run locally")')
+          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
+    end
+  end
+
+  class AdminWeb
+    attr_reader :html
+
+    def initialize(html)
+      @html = html
+    end
+
+    def type = 'admin-web'
+    def matches? = true
+
+    def failed_tests
+      html.search('strong:contains("Test failure")')
+          .map { |it| it.parent.at('code').children.to_s.split('#').first }
+    end
+  end
+
+  class ShopifyCore
+    attr_reader :html
+
+    def initialize(html)
+      @html = html
+    end
+
+    def type = 'shopify-core'
+    def matches? = html.at('title').text.match(/^world-shopify/)
+
+    def failed_tests
+      html.search('p:contains("Run locally")')
+          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split.last }
+    end
+  end
+
   FAILED_FILE = '/tmp/failed.html'
 
-  NO_FAILURES_FOUND = 1
-  INVALID_SINGLE_QUOTES = 2
-
   MESSAGES = {
-    NO_FAILURES_FOUND => "No failures in file #{FAILED_FILE}",
-    INVALID_SINGLE_QUOTES => "Invalid args with single quotes: (REPLACE)",
+    (NO_FAILURES_FOUND = 1) => "No failures in file #{FAILED_FILE}",
+    (INVALID_SINGLE_QUOTES = 2) => 'Invalid args with single quotes: (REPLACE)',
+    (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
   }
+
+  TEST_FINDERS = [ShopifyCore, AppStore, AdminWeb]
 
   attr_reader :contents
 
@@ -29,7 +77,9 @@ class BuildkiteFailedTests
 
   def call
     fatal NO_FAILURES_FOUND if failed.empty?
+    fatal UNDETERMINED_TEST_FINDER if test_finder.nil?
 
+    warn "Running test, found type #{test_finder.type}"
     dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
   end
 
@@ -37,16 +87,12 @@ class BuildkiteFailedTests
     Nokogiri::HTML(contents)
   end
 
+  def test_finder
+    TEST_FINDERS.map { |it| it.new(html) }.find(&:matches?)
+  end
+
   def failed
-    if html.at('title').text.match('shopify-app-store')
-      html.search('p:contains("Run locally")')
-          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
-          .uniq
-    else
-      html.search('strong:contains("Test failure")')
-          .map { |it| it.parent.at('code').children.to_s.split('#').first }
-          .uniq
-    end
+    test_finder.failed_tests.uniq
   end
 
   def dev(args)
@@ -60,7 +106,7 @@ class BuildkiteFailedTests
   end
 
   def fatal(code, replacement = '')
-    warn MESSAGES[code].gsub("REPLACE", replacement)
+    warn MESSAGES[code].gsub('REPLACE', replacement)
     exit code
   end
 end
