@@ -79,8 +79,12 @@ class BuildkiteFailedTests
     fatal NO_FAILURES_FOUND if failed.empty?
     fatal UNDETERMINED_TEST_FINDER if test_finder.nil?
 
-    warn "Running test, found type #{test_finder.type}"
-    dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
+    if ARGV.include?('--print')
+      puts failed.join(' ')
+    else
+      warn "Running test, found type #{test_finder.type}"
+      dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
+    end
   end
 
   def html
