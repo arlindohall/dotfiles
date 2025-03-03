@@ -21,6 +21,22 @@ class BuildkiteFailedTests
     end
   end
 
+  class ThemeStore
+    attr_reader :html
+
+    def initialize(html)
+      @html = html
+    end
+
+    def type = 'theme-store'
+    def matches? = html.at('title').text.match('shopify-theme-store')
+
+    def failed_tests
+      html.search('p:contains("Run locally")')
+          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
+    end
+  end
+
   class AdminWeb
     attr_reader :html
 
@@ -61,7 +77,7 @@ class BuildkiteFailedTests
     (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
   }
 
-  TEST_FINDERS = [ShopifyCore, AppStore, AdminWeb]
+  TEST_FINDERS = [ShopifyCore, AppStore, ThemeStore, AdminWeb]
 
   attr_reader :contents
 
