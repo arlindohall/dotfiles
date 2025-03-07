@@ -1,5 +1,5 @@
 return {
-  "juacker/git-link.nvim",
+  "arlindohall/git-link.nvim",
   keys = {
     {
       "<leader>gu",
