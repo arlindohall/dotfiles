@@ -30,6 +30,7 @@
 [alias]
 	la = log-all
 	ll = log-all short
+	ln = log-all short -n
 	root = rev-parse --show-toplevel
 [init]
 	defaultBranch = main
