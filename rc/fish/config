@@ -2,6 +2,9 @@
 alias sc systemctl
 alias jc journalctl
 
+alias jjhd "jj log -r @ | rg '^@' | ruby -e 'puts gets.split.drop(1).first'"
+alias jjgt "jj log -r @ | rg '^@' |  ruby -e 'puts gets.split.last'"
+
 function dl
     mv $argv $HOME/.rm-trash-can/
 end
