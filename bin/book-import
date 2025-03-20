@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# import_books
+# Usage: import_books (diff|new|same|copy|overwrite)
+
+require 'pathname'
+require 'English'
+
+CLOUD_PATH = "~/Library/Mobile\\\ Documents/com~apple~CloudDocs/Books"
+BOOKS_PATH = '~/Downloads/Books'
+
+def find(path)
+  `find #{path}`.lines.map { Pathname.new(it.strip) }.select(&:file?)
+                .map(&:realpath)
+end
+
+def new_book(old_path)
+  Pathname.new(CLOUD_PATH).join(old_path.basename)
+end
+
+def make_sure!
+  warn 'Are you sure?'
+  exit unless getch.match(/[yY]/)
+end
+
+cloud_books = find(CLOUD_PATH)
+books_books = find(BOOKS_PATH)
+
+existing_books = books_books.map { |bb| [bb, cloud_books.find { |cb| bb.basename == cb.basename }] }
+
+new_books = existing_books.select { |_bb, cb| cb.nil? }
+old_books = existing_books - new_books
+
+diff_books = old_books.reject { |bb, cb| bb.read == cb.read }
+same_books = old_books.select { |bb, cb| bb.read == cb.read }
+
+case ARGV.first
+when 'diff'
+  puts(diff_books.map(&:first).map(&:to_s))
+when 'new'
+  puts(new_books.map(&:first).map(&:to_s))
+when 'same'
+  puts(same_books.map(&:first).map(&:to_s))
+when 'copy'
+  new_books.map(&:first).each { |bb| new_book(bb).write(bb.read) }
+when 'clean'
+  make_sure!
+
+  same_boks.map(&:first).each(&:remove)
+when 'overwrite'
+  make_sure!
+
+  diff_books.each { |bb, cb| warn "Overwrite \"#{cb}\" with \"#{bb}\"" }
+when nil
+  warn '--- Summary ---'
+  warn "New:        #{new_books.count}"
+  warn "Same:       #{same_books.count}"
+  warn "Different:  #{diff_books.count}"
+  warn "Total:      #{existing_books.count}"
+else
+  raise "Unknown argument #{ARGV}"
+end
