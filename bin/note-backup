@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 class NoteBackup
   HOME = ENV['HOME']
-  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\""
-  DOCUMENTS_DIR = "#{HOME}/Documents/"
+  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
+  DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
 
   def self.call = new.call
 
@@ -21,53 +22,53 @@ class NoteBackup
     warn "Going to notes directory #{notes_dir}"
     Dir.chdir(notes_dir)
 
-    warn "Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz"
+    warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
-    git "switch -c tmp/rebasing-notes"
-    git "add ."
+    git 'switch -c tmp/rebasing-notes'
+    git 'add .'
     git "commit -m \"Note archive through #{todays_date}\" --no-edit"
 
-    git "switch main"
-    git "pull"
+    git 'switch main'
+    git 'pull'
 
-    warn "Initiating merge..."
-    warn "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+    warn 'Initiating merge...'
+    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    git "merge tmp/rebasing-notes"
-    git "branch -d tmp/rebasing-notes"
+    git 'merge tmp/rebasing-notes'
+    git 'branch -d tmp/rebasing-notes'
 
     unless work_computer?
-      warn "Pulling in changes from mobile..."
-      git "switch mobile"
+      warn 'Pulling in changes from mobile...'
+      git 'switch mobile'
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
-      git "add ."
+      git 'add .'
       git "commit -m \"Mobile note sync through #{todays_date}\" --no-edit"
 
-      git "switch main"
-      git "pull"
+      git 'switch main'
+      git 'pull'
 
-      warn "Initiating merge of mobile..."
-      warn "If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts."
+      warn 'Initiating merge of mobile...'
+      warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-      git "merge mobile"
+      git 'merge mobile'
 
-      git "switch mobile"
-      git "merge main --ff-only"
+      git 'switch mobile'
+      git 'merge main --ff-only'
 
       try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
     end
 
-    git "switch main"
+    git 'switch main'
 
-    warn "Backing up to remote..."
+    warn 'Backing up to remote...'
 
-    git work_computer? ? "push origin main" : "push origin mobile main"
-    warn "Backups can be found at ~/var/" if work_computer?
+    git work_computer? ? 'push origin main' : 'push origin mobile main'
+    warn 'Backups can be found at ~/var/' if work_computer?
   end
 
   def git(command)
-    return if command.split.first == "commit" && `git diff HEAD`.chomp.empty?
+    return if command.split.first == 'commit' && `git diff HEAD`.chomp.empty?
 
     try "git #{command}"
   end
@@ -78,11 +79,11 @@ class NoteBackup
   end
 
   def todays_date
-    @date ||= Time.new.strftime("%b %d, %Y")
+    @todays_date ||= Time.new.strftime('%b %d, %Y')
   end
 
   def work_computer?
-    ! `hostname`.include? "miller-home"
+    !`hostname`.include? 'miller-home'
   end
 end
 

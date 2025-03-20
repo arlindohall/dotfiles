@@ -118,7 +118,7 @@ class Args
         @steps = args.shift.split(',')
         validate_steps(@steps)
       else
-        puts "Unknown argument: #{arg} {full_args=#{@argv}}" unless ["--help", "-h", "help"].include?(arg)
+        puts "Unknown argument: #{arg} {full_args=#{@argv}}" unless ['--help', '-h', 'help'].include?(arg)
         puts <<~USAGE
           Usage: #{File.basename($PROGRAM_NAME)} --start <start_branch> [--end <end_branch>]
 
@@ -364,7 +364,7 @@ class Commands
   end
 
   def self.command_string_for_type_check
-    "pnpm typecheck"
+    'pnpm typecheck'
   end
 
   def self.all_custom

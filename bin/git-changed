@@ -25,7 +25,7 @@ class Changed
     exit err
   end
 
-  def parse! # rubocop:disable Metrics/MethodLength
+  def parse!
     return if @parsed
 
     @parsed = true

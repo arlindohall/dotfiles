@@ -40,7 +40,7 @@ class GitLogAll
     exit err
   end
 
-  def parse! # rubocop:disable all
+  def parse!
     return if @parsed
 
     @parsed = true

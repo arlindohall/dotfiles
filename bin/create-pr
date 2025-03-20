@@ -7,7 +7,7 @@ class Args
   attr_reader :branch
 
   def self.instance
-    @instance ||= new(ARGV).tap { |it| it.parse! }
+    @instance ||= new(ARGV).tap(&:parse!)
   end
 
   def self.branch = instance.branch
@@ -19,7 +19,7 @@ class Args
   def parse!
     until @argv.empty?
       case (arg = @argv.shift)
-      when "--branch"
+      when '--branch'
         @branch = @argv.shift
       else
         raise "Unexpected arg #{arg}"
@@ -71,13 +71,13 @@ class PullRequest
     return Args.branch if Args.branch
     return branch_output if branch_output
 
-    raise "Unknown branch"
+    raise 'Unknown branch'
   end
 
   def branch_output
     @branch_output ||= `git branch --show-current`.chomp
 
-    return unless @branch_output&.size > 0
+    return unless @branch_output&.size&.> 0
 
     @branch_output
   end

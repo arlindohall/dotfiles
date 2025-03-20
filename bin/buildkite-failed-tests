@@ -75,9 +75,9 @@ class BuildkiteFailedTests
     (NO_FAILURES_FOUND = 1) => "No failures in file #{FAILED_FILE}",
     (INVALID_SINGLE_QUOTES = 2) => 'Invalid args with single quotes: (REPLACE)',
     (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
-  }
+  }.freeze
 
-  TEST_FINDERS = [ShopifyCore, AppStore, ThemeStore, AdminWeb]
+  TEST_FINDERS = [ShopifyCore, AppStore, ThemeStore, AdminWeb].freeze
 
   attr_reader :contents
 
