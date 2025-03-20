@@ -1,8 +1,0 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
-
-# code: language=ruby
-
-require_relative 'lib/servers'
-
-Servers::Registry.servers_for_args(ARGV).each(&:stop)
