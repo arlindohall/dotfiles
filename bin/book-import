@@ -4,6 +4,7 @@
 # import_books
 # Usage: import_books (diff|new|same|copy|overwrite)
 
+require 'io/console'
 require 'pathname'
 require 'English'
 
@@ -20,8 +21,10 @@ def new_book(old_path)
 end
 
 def make_sure!
-  warn 'Are you sure?'
-  exit unless getch.match(/[yY]/)
+  warn 'Are you sure? (y/n)'
+  return unless $stdin.getch.match(/[yY]/)
+
+  warn 'Continuing...'
 end
 
 cloud_books = find(CLOUD_PATH)
@@ -47,7 +50,7 @@ when 'copy'
 when 'clean'
   make_sure!
 
-  same_boks.map(&:first).each(&:remove)
+  same_books.map(&:first).each(&:delete)
 when 'overwrite'
   make_sure!
 
