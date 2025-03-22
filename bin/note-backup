@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'io/console'
+
 class NoteBackup
   HOME = ENV['HOME']
   ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
@@ -25,6 +27,7 @@ class NoteBackup
     warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
+    pause('commit local changes')
     git 'switch -c tmp/rebasing-notes'
     git 'add .'
     git "commit -m \"Note archive through #{todays_date}\" --no-edit"
@@ -35,11 +38,14 @@ class NoteBackup
     warn 'Initiating merge...'
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
+    pause('merge local changes into main')
     git 'merge tmp/rebasing-notes'
     git 'branch -d tmp/rebasing-notes'
 
     unless work_computer?
       warn 'Pulling in changes from mobile...'
+
+      pause('force-replace local changes with mobile changes')
       git 'switch mobile'
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
       git 'add .'
@@ -51,6 +57,7 @@ class NoteBackup
       warn 'Initiating merge of mobile...'
       warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
+      pause('merge mobile changes into main')
       git 'merge mobile'
 
       git 'switch mobile'
@@ -63,8 +70,16 @@ class NoteBackup
 
     warn 'Backing up to remote...'
 
+    pause('push changes to remote')
     git work_computer? ? 'push origin main' : 'push origin mobile main'
     warn 'Backups can be found at ~/var/' if work_computer?
+  end
+
+  def pause(message)
+    warn "--- About to #{message}; Would you like to continue? (y/n)"
+    return if $stdin.getch.match(/[yY]/)
+
+    exit 0
   end
 
   def git(command)
