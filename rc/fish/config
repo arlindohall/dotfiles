@@ -4,6 +4,8 @@ alias jc journalctl
 
 alias jjhd "jj log -r @ | rg '^@' | ruby -e 'puts gets.split.drop(1).first'"
 alias jjgt "jj log -r @ | rg '^@' |  ruby -e 'puts gets.split.last'"
+alias jl "jj ll"
+alias ja "jj la"
 
 function dl
     mv $argv $HOME/.rm-trash-can/
