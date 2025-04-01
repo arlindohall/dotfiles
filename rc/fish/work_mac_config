@@ -1,8 +1,16 @@
 GCLOUD_BIN=(dirname (ls -l (which gcloud) | ruby -ane 'puts $F.last')) fish_add_path $GCLOUD_BIN
 
-function dcd
-    set workspace $argv[1]
-    cd (dev cd -n $workspace)
+function constellation
+    for proj in $argv
+        set cmd "dev cd $proj && dev pull && dev up && dev s || read"
+        if tmux ls | grep servers:
+          echo "Found session called servers, creating a window in it called $proj..."
+          tmux neww -t servers -n $proj -d $cmd
+        else
+          echo "Starting $proj in new tmux session..."
+          tmux new -s servers -n $proj -d $cmd
+        end
+    end
 end
 
 . /opt/dev/dev.fish
