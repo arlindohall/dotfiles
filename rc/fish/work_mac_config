@@ -6,6 +6,9 @@ function constellation
         if tmux ls | grep servers:
           echo "Found session called servers, creating a window in it called $proj..."
           tmux neww -t servers -n $proj -d $cmd
+        else if tmux list-windows | grep $proj#
+          echo "Found window called $proj, skipping..."
+          continue
         else
           echo "Starting $proj in new tmux session..."
           tmux new -s servers -n $proj -d $cmd
