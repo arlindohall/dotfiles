@@ -1,43 +1,54 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
-local function copy_filename_relative_to_git()
-  -- Get the Git root directory
-  local _git_root = vim.fn.trim(vim.fn.system("git rev-parse --show-toplevel"))
+local function relative_filename()
   local filename = vim.fn.expand("%:p"):gsub("\\", "/")
+  local cwd = vim.fn.getcwd()
+  return filename:gsub("^" .. cwd:gsub("\\", "/") .. "/", "")
+end
+
+local function filename_relative_to_git()
+  vim.fn.trim(vim.fn.system("git rev-parse --show-toplevel"))
 
   -- Check if the command was successful (i.e., we are in a Git repository)
   if vim.v.shell_error ~= 0 then
     -- If not in a Git repo, fallback to relative to the current directory
-    local cwd = vim.fn.getcwd()
-    return filename:gsub("^" .. cwd:gsub("\\", "/") .. "/", "")
+    relative_filename()
   end
 
-  -- If in a Git repo, compute the filename relative to the Git root
+  local filename = vim.fn.expand("%:p"):gsub("\\", "/")
   return vim.fn.trim(vim.fn.system("git ls-files --full-name " .. filename))
 end
 
--- Define the function to copy the current filename to the @ register
-local function copy_filename_to_register()
-  local relative_filename = copy_filename_relative_to_git() -- Get the relative filename
-  vim.fn.setreg("@", relative_filename) -- Set the @ register to the relative filename
-  vim.fn.setreg("*", relative_filename) -- Set the * register to the relative filename
-  vim.fn.setreg("+", relative_filename) -- Set the + register to the relative filename
-  print("Copied filename to @ register: " .. relative_filename) -- Optional confirmation message
+local function copy_filename_to_register(type)
+  return function()
+    local filename_types = {
+      relative = relative_filename(),
+      absolute = vim.fn.expand("%:p"),
+      from_git_root = filename_relative_to_git(),
+    }
+
+    local filename = filename_types[type] or relative_filename()
+    print(
+      "Determined filename to be type="
+        .. type
+        .. " filename="
+        .. filename
+        .. " is_fallback="
+        .. tostring(filename_types[type] == nil)
+    )
+
+    vim.fn.setreg("@", filename)
+    vim.fn.setreg("*", filename)
+    vim.fn.setreg("+", filename)
+    print("Copied filename to @ register: " .. filename)
+  end
 end
 
-local function copy_filename_relative_to_cwd_to_register()
-  local relative_filename = vim.fn.expand("%")
-  vim.fn.setreg("@", relative_filename) -- Set the @ register to the relative filename
-  vim.fn.setreg("*", relative_filename) -- Set the * register to the relative filename
-  vim.fn.setreg("+", relative_filename) -- Set the + register to the relative filename
-  print("Copied filename to @ register: " .. relative_filename) -- Optional confirmation message
-end
+vim.api.nvim_create_user_command("CopyGitFilename", copy_filename_to_register("from_git_root"), {})
+vim.api.nvim_create_user_command("CopyRelativeFilename", copy_filename_to_register("relative"), {})
+vim.api.nvim_create_user_command("CopyAbsoluteFilename", copy_filename_to_register("absolute"), {})
 
--- Create a command that can be called from the key mapping
-vim.api.nvim_create_user_command("CopyFilename", copy_filename_to_register, {})
-vim.api.nvim_create_user_command("CopyRelativeFilename", copy_filename_relative_to_cwd_to_register, {})
-
--- Map <leader>gl to the CopyFilename command
-vim.api.nvim_set_keymap("n", "<leader>ga", ":CopyFilename<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>gg", ":CopyGitFilename<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<leader>gr", ":CopyRelativeFilename<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>ga", ":CopyAbsoluteFilename<CR>", { noremap = true, silent = true })
