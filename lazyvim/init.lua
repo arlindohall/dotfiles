@@ -1,10 +1,12 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
+local function line_number()
+  return vim.fn.line(".")
+end
+
 local function relative_filename()
-  local filename = vim.fn.expand("%:p"):gsub("\\", "/")
-  local cwd = vim.fn.getcwd()
-  return filename:gsub("^" .. cwd:gsub("\\", "/") .. "/", "")
+  return vim.fn.expand("%"):gsub("\\", "/")
 end
 
 local function filename_relative_to_git()
@@ -20,7 +22,7 @@ local function filename_relative_to_git()
   return vim.fn.trim(vim.fn.system("git ls-files --full-name " .. filename))
 end
 
-local function copy_filename_to_register(type)
+local function copy_filename_to_register(type, opts)
   return function()
     local filename_types = {
       relative = relative_filename(),
@@ -38,6 +40,10 @@ local function copy_filename_to_register(type)
         .. tostring(filename_types[type] == nil)
     )
 
+    if opts.line_number then
+      filename = filename .. ":" .. line_number()
+    end
+
     vim.fn.setreg("@", filename)
     vim.fn.setreg("*", filename)
     vim.fn.setreg("+", filename)
@@ -45,10 +51,40 @@ local function copy_filename_to_register(type)
   end
 end
 
-vim.api.nvim_create_user_command("CopyGitFilename", copy_filename_to_register("from_git_root"), {})
-vim.api.nvim_create_user_command("CopyRelativeFilename", copy_filename_to_register("relative"), {})
-vim.api.nvim_create_user_command("CopyAbsoluteFilename", copy_filename_to_register("absolute"), {})
+vim.api.nvim_create_user_command(
+  "CopyGitFilename",
+  copy_filename_to_register("from_git_root", { line_number = false }),
+  {}
+)
+vim.api.nvim_create_user_command(
+  "CopyRelativeFilename",
+  copy_filename_to_register("relative", { line_number = false }),
+  {}
+)
+vim.api.nvim_create_user_command(
+  "CopyAbsoluteFilename",
+  copy_filename_to_register("absolute", { line_number = false }),
+  {}
+)
+vim.api.nvim_create_user_command(
+  "CopyGitFilenameLine",
+  copy_filename_to_register("from_git_root", { line_number = true }),
+  {}
+)
+vim.api.nvim_create_user_command(
+  "CopyRelativeFilenameLine",
+  copy_filename_to_register("relative", { line_number = true }),
+  {}
+)
+vim.api.nvim_create_user_command(
+  "CopyAbsoluteFilenameLine",
+  copy_filename_to_register("absolute", { line_number = true }),
+  {}
+)
 
 vim.api.nvim_set_keymap("n", "<leader>gg", ":CopyGitFilename<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<leader>gr", ":CopyRelativeFilename<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<leader>ga", ":CopyAbsoluteFilename<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>glg", ":CopyGitFilenameLine<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>glr", ":CopyRelativeFilenameLine<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>gla", ":CopyAbsoluteFilenameLine<CR>", { noremap = true, silent = true })
