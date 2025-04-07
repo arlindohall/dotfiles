@@ -28,7 +28,7 @@ class NoteBackup
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
     pause('commit local changes')
-    git 'switch -c tmp/rebasing-notes'
+    git "switch -c #{branch_name}"
     git 'add .'
     git "commit -m \"Note archive through #{todays_date}\" --no-edit"
 
@@ -39,8 +39,8 @@ class NoteBackup
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
     pause('merge local changes into main')
-    git 'merge tmp/rebasing-notes'
-    git 'branch -d tmp/rebasing-notes'
+    git "merge #{branch_name} --log -m 'merge: Copy local changes into main #{todays_date}'"
+    git "branch -d #{branch_name}"
 
     unless work_computer?
       warn 'Pulling in changes from mobile...'
@@ -58,10 +58,10 @@ class NoteBackup
       warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
       pause('merge mobile changes into main')
-      git 'merge mobile'
+      git "merge mobile --log -m 'merge: Copy changes from mobile into main #{todays_date}'"
 
       git 'switch mobile'
-      git 'merge main --ff-only'
+      git "merge main --ff-only --log -m 'merge: Copy changes from mobile into main #{todays_date}'"
 
       try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
     end
@@ -95,6 +95,14 @@ class NoteBackup
 
   def todays_date
     @todays_date ||= Time.new.strftime('%b %d, %Y')
+  end
+
+  def branch_name
+    if work_computer?
+      'tmp/rebasing-work'
+    else
+      'tmp/rebasing-notes'
+    end
   end
 
   def work_computer?
