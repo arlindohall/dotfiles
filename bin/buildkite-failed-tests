@@ -4,6 +4,43 @@
 
 require 'nokogiri'
 
+class Args
+  class << self
+    def instance
+      @instance ||= new.tap(&:parse_args!)
+    end
+
+    def files_args = instance.files_args
+    def dev_args = instance.dev_args
+    def print? = instance.print?
+  end
+
+  attr_reader :files_args, :dev_args
+
+  def initialize
+    @print = false
+    @files_args = []
+    @dev_args = []
+  end
+
+  def print? = @print
+
+  def parse_args!
+    args = ARGV.dup
+    while (arg = args.shift)
+      case arg
+      when "--"
+        @dev_args = args
+        args = []
+      when "--print", "-p"
+        @print = true
+      else
+        @files_args << arg
+      end
+    end
+  end
+end
+
 class BuildkiteFailedTests
   class AppStore
     attr_reader :html
@@ -72,7 +109,7 @@ class BuildkiteFailedTests
   FAILED_FILE = '/tmp/failed.html'
 
   MESSAGES = {
-    (NO_FAILURES_FOUND = 1) => "No failures in file #{FAILED_FILE}",
+    (NO_FAILURES_FOUND = 1) => "No failures in file (REPLACE)",
     (INVALID_SINGLE_QUOTES = 2) => 'Invalid args with single quotes: (REPLACE)',
     (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
   }.freeze
@@ -82,24 +119,22 @@ class BuildkiteFailedTests
   attr_reader :contents
 
   def self.call
-    File.open(FAILED_FILE, 'r') do |file|
-      new(file.read).call
-    end
+    new.call
   end
 
-  def initialize(contents)
-    @contents = contents
+  def initialize(contents = nil)
+    @contents = contents || load_contents
   end
 
   def call
-    fatal NO_FAILURES_FOUND if failed.empty?
+    fatal NO_FAILURES_FOUND, failure_files if failed.empty?
     fatal UNDETERMINED_TEST_FINDER if test_finder.nil?
 
-    if ARGV.include?('--print')
+    if Args.print?
       puts failed.join(' ')
     else
       warn "Running test, found type #{test_finder.type}"
-      dev "test #{failed.join(' ')} #{ARGV.join(' ')}"
+      dev "test #{failed.join(' ')} #{Args.dev_args.join(' ')}"
     end
   end
 
@@ -128,6 +163,16 @@ class BuildkiteFailedTests
   def fatal(code, replacement = '')
     warn MESSAGES[code].gsub('REPLACE', replacement)
     exit code
+  end
+
+  def load_contents
+    str = String.new
+    failure_files.each { |name| str << File.read(name) }
+    str
+  end
+
+  def failure_files
+    Args.files_args.empty? ? [FAILED_FILE] : Args.files_args
   end
 end
 
