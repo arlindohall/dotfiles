@@ -1,0 +1,12 @@
+# typed: false
+# frozen_string_literal: true
+
+test_name_and_line = if ARGV.empty?
+  File.open("miller-stuff/tests.txt").read.split
+else
+  ARGF.read
+    .scan(/(?<=\[).*?test.rb:\d+(?=\])|test.*?test.rb:\d+(?=:in)/)
+end
+
+warn "dev test #{test_name_and_line.join(" ")}"
+system "dev test #{test_name_and_line.join(" ")}"
