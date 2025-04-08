@@ -1,12 +1,72 @@
 # typed: false
 # frozen_string_literal: true
 
-test_name_and_line = if ARGV.empty?
-  File.open("miller-stuff/tests.txt").read.split
-else
-  ARGF.read
-    .scan(/(?<=\[).*?test.rb:\d+(?=\])|test.*?test.rb:\d+(?=:in)/)
+class Args
+  class << self
+    def instance
+      @instance ||= new.tap(&:parse_args!)
+    end
+
+    def files_args = instance.files_args
+    def dev_args = instance.dev_args
+    def print? = instance.print?
+  end
+
+  attr_reader :files_args, :dev_args
+
+  def initialize
+    @print = false
+    @files_args = []
+    @dev_args = []
+  end
+
+  def print? = @print
+
+  def parse_args!
+    args = ARGV.dup
+    while (arg = args.shift)
+      case arg
+      when "--"
+        @dev_args = args
+        args = []
+      when "--print", "-p"
+        @print = true
+      else
+        @files_args << arg
+      end
+    end
+  end
 end
 
-warn "dev test #{test_name_and_line.join(" ")}"
-system "dev test #{test_name_and_line.join(" ")}"
+class TxtFailedTests
+  FAILED_FILE = '/tmp/failed.txt'
+
+  def self.call
+    new.call
+  end
+
+  def call
+    if Args.print?
+      puts test_name_and_line.join(' ')
+    else
+      dev "test #{test_name_and_line.join(' ')} #{Args.dev_args.join(' ')}"
+    end
+  end
+
+  def dev(cmd)
+    warn "dev #{cmd}"
+    system "dev #{cmd}"
+  end
+
+  def test_name_and_line
+    @test_name_and_line ||= if Args.files_args.empty?
+      File.open(FAILED_FILE).read.split
+    else
+      content = String.new
+      Args.files_args.each { |name| content << File.read(name) }
+      content.scan(/(?<=\[).*?test.rb:\d+(?=\])|test.*?test.rb:\d+(?=:in)/)
+    end
+  end
+end
+
+TxtFailedTests.call
