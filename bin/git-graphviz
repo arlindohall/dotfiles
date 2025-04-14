@@ -1,39 +1,47 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-log_output = `git log --pretty=format:"%h %p %s" #{ARGV.join(' ')}`
-branch_output = `git branch --all`
-commits = <GET_COMMITS_HERE>
+log_output = `git log --pretty=format:"%hXX_PARENT_START%pXX_PARENT_END%s" #{ARGV.join(' ')}`
+branch_output = `git branch --all --format='%(refname:short)'`
 
-branches = branch_output.split("\n").map { |line| line.strip.sub('* ', '') }
+commits = log_output.split("\n").map { |line| line.split('XX_PARENT_START').first }
+branches = branch_output.split("\n").map { |line| line.strip.sub('* ', '').chomp.split.last }
 
 graphviz = String.new
 graphviz << "digraph git {\n"
 graphviz << "  rankdir=TB;\n"
-graphviz << "  node [shape=rect];\n" # Nodes are rectangles
+graphviz << "  node [shape=rect];\n"
 
 log_output.each_line do |line|
-  commit_hash, parent_hashes, commit_message = line.split(' ', 3)
+  commit_hash, rest = line.split('XX_PARENT_START')
+  parent_hashes, commit_message = rest.split('XX_PARENT_END')
+  next unless commits.include?(commit_hash)
 
   graphviz << "  \"#{commit_hash}\" [label=\"#{commit_hash}\\n#{commit_message.chomp}\"];\n"
-
   next if parent_hashes.empty?
 
   parent_hashes.split.each do |parent_hash|
-    graphviz << "  \"#{parent_hash}\" -> \"#{commit_hash}\";\n"
+    graphviz << "  \"#{parent_hash}\" -> \"#{commit_hash}\";\n" if commits.include?(parent_hash)
   end
 end
 
 branches.each do |branch|
   commit_hash = `git rev-parse --short #{branch}`.strip
-  if branch.include?('origin')
-    graphviz << "  node [shape=ellipse color=red];\n"
-    graphviz << "  \"#{commit_hash}\" -> \"#{branch}\" [style=dotted, color=red];\n"
-  else
-    graphviz << "  node [shape=ellipse color=blue];\n"
-    graphviz << "  \"#{commit_hash}\" -> \"#{branch}\" [style=dotted, color=blue];\n"
+
+  if commits.include?(commit_hash)
+    if branch.include?('origin')
+      graphviz << "  node [shape=ellipse color=red];\n"
+      graphviz << "  \"#{branch}\" -> \"#{commit_hash}\" [style=dotted, color=red];\n"
+    else
+      graphviz << "  node [shape=ellipse color=blue];\n"
+      graphviz << "  \"#{branch}\" -> \"#{commit_hash}\" [style=dotted, color=blue];\n"
+    end
   end
 end
 
 graphviz << "}\n"
-puts graphviz
+Tempfile.create do |temp|
+  temp.write(graphviz)
+  temp.rewind
+  system "dot -Tpng #{temp.path} | imgcat"
+end
