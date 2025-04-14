@@ -1,49 +1,39 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-# Get command-line arguments passed to the script
-args = ARGV.join(' ')
+log_output = `git log --pretty=format:"%h %p %s" #{ARGV.join(' ')}`
+branch_output = `git branch --all`
+commits = <GET_COMMITS_HERE>
 
-# Run git log to fetch commit hashes, parents, commit messages, and branches
-log_output = `git log --pretty=format:"%h %p %s" #{args}`
-
-# Run git branch to get the branch names
-branch_output = `git branch --contains $(git rev-parse --short HEAD)`
-
-# Prepare a set of all the commits and their respective branches
 branches = branch_output.split("\n").map { |line| line.strip.sub('* ', '') }
 
-# Start the digraph string with bottom-to-top layout and node shape as rectangle
-graphviz = "digraph git {\n"
-graphviz += "  rankdir=BT;\n" # Bottom to top
-graphviz += "  node [shape=rect];\n" # Nodes are rectangles
+graphviz = String.new
+graphviz << "digraph git {\n"
+graphviz << "  rankdir=TB;\n"
+graphviz << "  node [shape=rect];\n" # Nodes are rectangles
 
-# Add commit nodes to the graph, with commit messages and hashes
 log_output.each_line do |line|
   commit_hash, parent_hashes, commit_message = line.split(' ', 3)
 
-  # Create a node for each commit
-  graphviz += "  \"#{commit_hash}\" [label=\"#{commit_hash}\\n#{commit_message.chomp}\"];\n"
+  graphviz << "  \"#{commit_hash}\" [label=\"#{commit_hash}\\n#{commit_message.chomp}\"];\n"
 
-  # If there are parents, create edges for them
   next if parent_hashes.empty?
 
   parent_hashes.split.each do |parent_hash|
-    graphviz += "  \"#{parent_hash}\" -> \"#{commit_hash}\";\n"
+    graphviz << "  \"#{parent_hash}\" -> \"#{commit_hash}\";\n"
   end
 end
 
-# Add branch nodes, pointing to the relevant commit
 branches.each do |branch|
   commit_hash = `git rev-parse --short #{branch}`.strip
-  graphviz += if branch.include?('origin') # Assuming remote branches contain 'origin'
-                "  \"#{branch}\" -> \"#{commit_hash}\" [style=dotted, color=red];\n"
-              else
-                "  \"#{branch}\" -> \"#{commit_hash}\" [style=dotted, color=blue];\n"
-              end
+  if branch.include?('origin')
+    graphviz << "  node [shape=ellipse color=red];\n"
+    graphviz << "  \"#{commit_hash}\" -> \"#{branch}\" [style=dotted, color=red];\n"
+  else
+    graphviz << "  node [shape=ellipse color=blue];\n"
+    graphviz << "  \"#{commit_hash}\" -> \"#{branch}\" [style=dotted, color=blue];\n"
+  end
 end
 
-# End the digraph
-graphviz += "}\n"
-
-# Output the Graphviz digraph
+graphviz << "}\n"
 puts graphviz
