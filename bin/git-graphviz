@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'tempfile'
+
 log_output = `git log --pretty=format:"%hXX_PARENT_START%pXX_PARENT_END%s" #{ARGV.join(' ')}`
 branch_output = `git branch --all --format='%(refname:short)'`
 
