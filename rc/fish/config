@@ -30,6 +30,8 @@ end
 alias tree 'tree -C'
 alias vim nvim
 
+. /opt/dev/dev.fish
+
 ## Use local path first
 fish_add_path -p    $HOME/bin
 fish_add_path -p    $HOME/pybin/bin

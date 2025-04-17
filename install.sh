@@ -91,7 +91,6 @@ function install_work_linux {
   rc_install aspell/dictionary.txt var/dictionary.txt
   rc_install fish/config .config/fish/config.fish
   rc_install fish/linux_config .config/fish/conf.d/500_linux_config.fish
-  rc_install fish/work_linux_config .config/fish/conf.d/550_work_linux_config.fish
   rc_install gitconfig/work .gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install sh/inputrc .inputrc
