@@ -27,7 +27,7 @@ class NoteBackup
     warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
-    pause('commit local changes')
+    pause('commit local changes', 'HEAD')
     git "switch -c #{branch_name}"
     git 'add .'
     git "commit -m \"docs(#{conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
@@ -38,14 +38,14 @@ class NoteBackup
     warn 'Initiating merge...'
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    pause('merge local changes into main')
+    pause('merge local changes into main', 'main', branch_name)
     git "merge #{branch_name} --log -m 'merge(#{conventional_commit_tag}): Copy local changes into main #{todays_date}'"
     git "branch -d #{branch_name}"
 
     unless work_computer?
       warn 'Pulling in changes from mobile...'
 
-      pause('force-replace local changes with mobile changes')
+      pause('force-replace local changes with mobile changes', 'HEAD', 'mobile')
       git 'switch mobile'
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
       git 'add .'
@@ -57,7 +57,7 @@ class NoteBackup
       warn 'Initiating merge of mobile...'
       warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-      pause('merge mobile changes into main')
+      pause('merge mobile changes into main', 'main', 'mobile')
       git "merge mobile --log -m 'merge(mobile): Copy changes from mobile into main #{todays_date}'"
 
       git 'switch mobile'
@@ -70,12 +70,14 @@ class NoteBackup
 
     warn 'Backing up to remote...'
 
-    pause('push changes to remote')
+    pause('push changes to remote', 'origin/main', 'main')
     git work_computer? ? 'push origin main' : 'push origin mobile main'
     warn 'Backups can be found at ~/var/' if work_computer?
   end
 
-  def pause(message)
+  def pause(message, stat_ref, source = '')
+    warn "--- Showing stat of changes..."
+    system "git diff #{stat_ref} #{source} --stat"
     warn "--- About to #{message}; Would you like to continue? (y/n)"
     return if $stdin.getch.match(/[yY]/)
 
