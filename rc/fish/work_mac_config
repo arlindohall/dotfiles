@@ -14,3 +14,5 @@ alias servers-with-up "tmux new -d -s web-server 'dev cd web && dev up && dev se
 alias servers-kill-all "pgrep -f '(puma|concurrently.js)' | xargs kill -15"
 
 alias bft buildkite-failed-tests
+
+alias graphite-branch "gt switch (jj bookmark list -r @- | head -1 | cut -d: -f1)"
