@@ -1,8 +1,5 @@
 GCLOUD_BIN=(dirname (ls -l (which gcloud) | ruby -ane 'puts $F.last')) fish_add_path $GCLOUD_BIN
 
-. /opt/dev/dev.fish
-chruby 3.4.1
-
 alias kk kubectl
 
 alias spin "caffeinate -d spin"

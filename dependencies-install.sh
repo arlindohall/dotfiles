@@ -22,7 +22,7 @@ use_helper dependencies_helpers.sh
 function install_home_mac {
   install_homebrew
   install_rust
-  install_chruby
+  install_asdf
   install_pybin
   install_git
   install_git_delta
@@ -40,7 +40,7 @@ function install_home_mac {
 function install_home_linux {
   install_clang
   install_rust
-  install_chruby
+  install_asdf
   install_pybin
   install_git
   install_git_delta
@@ -57,7 +57,7 @@ function install_work_mac {
   install_git
   install_git_delta
   install_openjdk
-  install_chruby
+  install_asdf
 
   install_homebrew_tools
 

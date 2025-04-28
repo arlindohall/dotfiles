@@ -1,0 +1,2 @@
+# Asdf version manager configuration
+source (brew --prefix asdf)/libexec/asdf.fish

@@ -21,4 +21,3 @@ end
 
 fish_add_path -p    /Library/Java/JavaVirtualMachines/amazon-corretto-11.jdk/Contents/Home/bin/
 
-chruby 3.4.1

@@ -63,18 +63,20 @@ function install_rust {
     bece2dfa6889f3ac4de782e51543cf18112130092d50d270c86ffcd5f6e62636d39077dffd71ed7df59e7fa8123f5746d0558783f86246ca2cee8c24ecb07545
 }
 
-function install_chruby {
-  if which chruby || which ruby-install; then
-    # Uses either/or because env in shell doesn't quite match, fix later?
+function install_asdf {
+  if which asdf; then
     return
   fi
 
-  if is_linux; then
-    apt install ruby-install
-    echo "Please install chruby according to https://github.com/postmodern/chruby?tab=readme-ov-file"
-    read -pr "When chruby is installed, press any key to continue..."
+  if is_linux && which yum; then
+    yum install asdf # Will fail, sorry future me you have to fix this eventually
+  elif is_linux && which apt; then
+    apt install asdf
+  elif is_linux; then
+    echo "Unknown linux package manager for installing asdf"
+    exit -1
   else
-    brew install chruby ruby-install
+    brew install asdf
   fi
 }
 

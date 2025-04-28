@@ -25,6 +25,7 @@ function install_home_mac {
   create_notes_symlink_if_home
 
   rc_install aspell/dictionary.txt var/dictionary.txt
+  rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install bash/bash_profile .bash_profile
   rc_install fish/config .config/fish/config.fish
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
@@ -46,6 +47,7 @@ function install_home_linux {
   install_personal_bin
 
   rc_install aspell/dictionary.txt var/dictionary.txt
+  rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install bash/bash_profile .bash_profile
   rc_install fish/config .config/fish/config.fish
   rc_install fish/linux_config .config/fish/conf.d/500_linux_config.fish
@@ -65,6 +67,7 @@ function install_work_mac {
   install_personal_bin
 
   rc_install aspell/dictionary.txt var/dictionary.txt
+  rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install bash/bash_profile .bash_profile
   rc_install fish/config .config/fish/config.fish
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
@@ -89,6 +92,7 @@ function install_work_linux {
   install_personal_bin
 
   rc_install aspell/dictionary.txt var/dictionary.txt
+  rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install fish/config .config/fish/config.fish
   rc_install fish/linux_config .config/fish/conf.d/500_linux_config.fish
   rc_install gitconfig/work .gitconfig
