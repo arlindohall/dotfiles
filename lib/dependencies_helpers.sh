@@ -103,6 +103,14 @@ function install_graphite {
   brew install withgraphite/tap/graphite
 }
 
+function install_aider {
+  if which aider; then
+    return
+  fi
+
+  uvx aider-install
+}
+
 function install_homebrew_tools {
   if homebrew_tools_installed; then
     return
@@ -120,6 +128,7 @@ function install_homebrew_tools {
     shellcheck \
     tmux \
     tree \
+    uv \
     watch \
     watchman
 }

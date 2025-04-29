@@ -29,6 +29,7 @@ function install_home_mac {
   install_openjdk
 
   install_homebrew_tools
+  install_aider
 
   # These steps are interactive, so the script must be run
   # by a human and not by automation
@@ -60,6 +61,7 @@ function install_work_mac {
   install_asdf
 
   install_homebrew_tools
+  install_aider
 
   # These steps are interactive, so the script must be run
   # by a human and not by automation
