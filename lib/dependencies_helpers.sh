@@ -80,6 +80,30 @@ function install_asdf {
   fi
 }
 
+function install_asdf_plugins {
+  if ! which asdf; then
+    return
+  fi
+
+  if ! asdf plugin list | grep nodejs; then
+    asdf plugin add nodejs
+    asdf install nodejs latest
+    asdf set -u nodejs latest
+  fi
+
+  if ! asdf plugin list | grep python; then
+    asdf plugin add python
+    asdf install python latest
+    asdf set -u python latest
+  fi
+
+  if ! asdf plugin list | grep ruby; then
+    asdf plugin add ruby
+    asdf install ruby latest
+    asdf set -u ruby latest
+  fi
+}
+
 function homebrew_tools_installed {
   which bat &&
     which delta &&

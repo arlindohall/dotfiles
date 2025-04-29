@@ -1,4 +1,4 @@
-GCLOUD_BIN=(dirname (ls -l (which gcloud) | ruby -ane 'puts $F.last')) fish_add_path $GCLOUD_BIN
+alias gcloud 'uvx gcloud'
 
 alias kk kubectl
 
