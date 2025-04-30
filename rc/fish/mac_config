@@ -1,5 +1,6 @@
 ## Path variables
 fish_add_path         /usr/local/bin
+fish_add_path -a -P   $HOME/.local/bin
 
 # Append homebrew to end of PATH instead of universal fish_add_path
 fish_add_path -a -P   /opt/homebrew/bin
