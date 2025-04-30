@@ -1,6 +1,8 @@
 ## Path variables
-fish_add_path       /usr/local/bin
-fish_add_path       /opt/homebrew/bin
+fish_add_path         /usr/local/bin
+
+# Append homebrew to end of PATH instead of universal fish_add_path
+fish_add_path -a -P   /opt/homebrew/bin
 
 ## Notes Shortcuts
 alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
