@@ -24,7 +24,6 @@ function install_home_mac {
   install_rust
   install_asdf
   install_asdf_plugins
-  install_pybin
   install_git
   install_git_delta
   install_openjdk
@@ -44,7 +43,6 @@ function install_home_linux {
   install_rust
   install_asdf
   install_asdf_plugins
-  install_pybin
   install_git
   install_git_delta
 
@@ -56,7 +54,6 @@ function install_home_linux {
 function install_work_mac {
   install_homebrew
   install_rust
-  install_pybin
   install_git
   install_git_delta
   install_openjdk

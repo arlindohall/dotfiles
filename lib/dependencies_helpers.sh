@@ -1,18 +1,6 @@
 #!/bin/bash
 
 #### Specific installations commands ###
-function install_pybin {
-  if ls "$HOME"/pybin; then
-    return
-  fi
-
-  if is_linux; then
-    sudo apt install -y python3.10-venv
-  fi
-
-  python3 -m venv "$HOME"/pybin
-}
-
 function clone_var_repo {
   repo=$1
 
