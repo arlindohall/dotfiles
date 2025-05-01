@@ -103,8 +103,7 @@ function homebrew_tools_installed {
     which shellcheck &&
     which tmux &&
     which tree &&
-    which watch &&
-    which watchman
+    which watch
 }
 
 function install_graphite {
@@ -141,8 +140,7 @@ function install_homebrew_tools {
     tmux \
     tree \
     uv \
-    watch \
-    watchman
+    watch
 }
 
 function install_apt_tools {
