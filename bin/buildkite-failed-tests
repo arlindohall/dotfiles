@@ -2,6 +2,12 @@
 # frozen_string_literal: true
 # typed: true
 
+# Required to load gems from the ruby version in the shebang
+Gem.paths = {
+  'GEM_HOME' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0',
+  'GEM_PATH' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0'
+}
+
 require 'nokogiri'
 
 class Args
@@ -29,10 +35,10 @@ class Args
     args = ARGV.dup
     while (arg = args.shift)
       case arg
-      when "--"
+      when '--'
         @dev_args = args
         args = []
-      when "--print", "-p"
+      when '--print', '-p'
         @print = true
       else
         @files_args << arg
@@ -109,7 +115,7 @@ class BuildkiteFailedTests
   FAILED_FILE = '/tmp/failed.html'
 
   MESSAGES = {
-    (NO_FAILURES_FOUND = 1) => "No failures in file (REPLACE)",
+    (NO_FAILURES_FOUND = 1) => 'No failures in file (REPLACE)',
     (INVALID_SINGLE_QUOTES = 2) => 'Invalid args with single quotes: (REPLACE)',
     (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
   }.freeze

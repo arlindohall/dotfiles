@@ -2,6 +2,12 @@
 # frozen_string_literal: true
 # typed: true
 
+# Required to load gems from the ruby version in the shebang
+Gem.paths = {
+  'GEM_HOME' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0',
+  'GEM_PATH' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0'
+}
+
 require 'English'
 require 'sorbet-runtime'
 

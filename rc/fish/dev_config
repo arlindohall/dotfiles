@@ -1,1 +1,6 @@
+# Defines functions and aliases, auto commands
 . /opt/dev/dev.fish
+
+# Adds executable to path for use in, e.g. subshells or xargs or layered
+# environments like shadowenv, overmind etc.
+fish_add_path -a -P         /opt/dev/bin
