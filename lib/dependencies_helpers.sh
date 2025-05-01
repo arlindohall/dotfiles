@@ -1,16 +1,6 @@
 #!/bin/bash
 
 #### Specific installations commands ###
-function clone_var_repo {
-  repo=$1
-
-  if ls "$HOME"/var/"$repo"; then
-    return
-  fi
-
-  git clone https://gitlab.com/arlindohall/"$repo" "$HOME"/var/"$repo"
-}
-
 function install_homebrew {
   if which brew; then
     return

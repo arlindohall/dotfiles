@@ -33,9 +33,11 @@ function install_home_mac {
 
   # These steps are interactive, so the script must be run
   # by a human and not by automation
-  clone_var_repo notes
-  clone_var_repo journal
-  clone_var_repo essays
+  if ls "$HOME/var/notes"; then
+    return
+  fi
+
+  git clone https://gitlab.com/arlindohall/notes "$HOME/var/notes"
 }
 
 function install_home_linux {
