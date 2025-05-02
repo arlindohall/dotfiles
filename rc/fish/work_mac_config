@@ -12,4 +12,4 @@ alias servers-kill-all "pgrep -f '(puma|concurrently.js)' | xargs kill -15"
 
 alias bft buildkite-failed-tests
 
-alias graphite-branch "gt switch (jj bookmark list -r @- | head -1 | cut -d: -f1)"
+alias gg "gt switch (jj bookmark list -r @- | head -1 | cut -d: -f1)"
