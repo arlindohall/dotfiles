@@ -27,9 +27,11 @@ class NoteBackup
     warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
-    pause('commit local changes', 'HEAD')
+    # Hacky but I'm tired. Skip the first diff, ls-files to get staged diff, then replay the first diff with --stat
+    pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
     git "switch -c #{branch_name}"
     git 'add .'
+    pause('commit local changes', 'HEAD')
     git "commit -m \"docs(#{conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
 
     git 'switch main'
@@ -76,7 +78,7 @@ class NoteBackup
   end
 
   def pause(message, stat_ref, source = '')
-    warn "--- Showing stat of changes..."
+    warn '--- Showing stat of changes...'
     system "git diff #{stat_ref} #{source} --stat"
     warn "--- About to #{message}; Would you like to continue? (y/n)"
     return if $stdin.getch.match(/[yY]/)
@@ -109,9 +111,9 @@ class NoteBackup
 
   def conventional_commit_tag
     if work_computer?
-      "engineering-journal"
+      'engineering-journal'
     else
-      "notes"
+      'notes'
     end
   end
 
