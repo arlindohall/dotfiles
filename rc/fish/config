@@ -43,3 +43,15 @@ set fish_greeting
 fish_vi_key_bindings
 
 alias aspell 'aspell --personal=$HOME/var/dictionary.txt'
+
+function !!
+    for cmd in $history
+        if ! string match -r '[!]{2}' "$cmd"
+            echo "Found command: $cmd"
+            eval "$cmd"
+            return
+        else
+            echo "Skipping command: $cmd"
+        end
+    end
+end
