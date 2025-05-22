@@ -3,10 +3,10 @@
 
 require 'io/console'
 
-module Commands
+module Command
   HOME = ENV['HOME']
 
-  class ComputerType
+  class Manager
     HOME_NAME = 'miller-home'
 
     def self.work? = instance.work?
@@ -26,7 +26,7 @@ module Commands
     def hostname = @hostname ||= `hostname`.strip
   end
 
-  module CommandHelper
+  module Helper
     def pause(message, stat_ref, source = '')
       warn '--- Showing stat of changes...'
       system "git diff #{stat_ref} #{source} --stat"
@@ -53,7 +53,7 @@ module Commands
   end
 
   class WorkExcalidrawBackup
-    include CommandHelper
+    include Command::Helper
 
     DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
 
@@ -73,7 +73,7 @@ module Commands
   end
 
   class TarBackup
-    include CommandHelper
+    include Command::Helper
 
     def self.call = new.call
 
@@ -100,23 +100,22 @@ module Commands
 end
 
 class NoteBackup
-  include CommandHelper
+  include Command::Helper
 
   ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
-  ComputerType = Commands::ComputerType
 
   def self.call = new.call
 
   def call
-    ComputerType.excalidraw_backup.call
-    ComputerType.tar_backup.call
+    Command::Manager.excalidraw_backup.call
+    Command::Manager.tar_backup.call
 
     # Hacky but I'm tired. Skip the first diff, ls-files to get staged diff, then replay the first diff with --stat
     pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
-    git "switch -c #{ComputerType.git.branch_name}"
+    git "switch -c #{Command::Manager.git.branch_name}"
     git 'add .'
     pause('commit local changes', 'HEAD')
-    git "commit -m \"docs(#{ComputerType.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
+    git "commit -m \"docs(#{Command::Manager.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
 
     git 'switch main'
     git 'pull'
@@ -124,11 +123,11 @@ class NoteBackup
     warn 'Initiating merge...'
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    pause('merge local changes into main', 'main', ComputerType.git.branch_name)
-    git "merge #{ComputerType.git.branch_name} --log -m 'merge(#{ComputerType.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
-    git "branch -d #{ComputerType.git.branch_name}"
+    pause('merge local changes into main', 'main', Command::Manager.git.branch_name)
+    git "merge #{Command::Manager.git.branch_name} --log -m 'merge(#{Command::Manager.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
+    git "branch -d #{Command::Manager.git.branch_name}"
 
-    unless ComputerType.work?
+    unless Command::Manager.work?
       warn 'Pulling in changes from mobile...'
 
       pause('force-replace local changes with mobile changes', 'HEAD', 'mobile')
@@ -156,7 +155,7 @@ class NoteBackup
     warn 'Backing up to remote...'
     pause('push changes to remote', 'origin/main', 'main')
 
-    ComputerType.git.push_command
+    Command::Manager.git.push_command
     warn 'Backups can be found at ~/var/'
   end
 end
