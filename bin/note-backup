@@ -11,9 +11,10 @@ module Commands
 
     def self.work? = instance.work?
     def self.instance = @instance ||= new
-    def self.excalidraw_backup = work? ? Commands::WorkExcalidrawBackup : Commands::ExcalidrawBackup
-    def self.git = work? ? Commands::WorkGitConfig : Commands::GitConfig
-    def self.mobile_backup = work? ? Commands::WorkMobileBackup : Commands::MobileBackup
+    def self.excalidraw_backup = work? ? WorkExcalidrawBackup : ExcalidrawBackup
+    def self.tar_backup = TarBackup
+    def self.git = work? ? WorkGitConfig : GitConfig
+    def self.mobile_backup = work? ? WorkMobileBackup : MobileBackup
     def self.notes_dir = "#{HOME}/var/notes"
 
     private
@@ -59,7 +60,7 @@ module Commands
     def self.call = new.call
 
     def call
-      try "echo Moving to #{DOCUMENTS_DIR}"
+      warn "Going to documents directory #{DOCUMENTS_DIR}"
       Dir.chdir(DOCUMENTS_DIR)
 
       warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
@@ -69,6 +70,20 @@ module Commands
 
   class ExcalidrawBackup
     def self.call; end
+  end
+
+  class TarBackup
+    include CommandHelper
+
+    def self.call = new.call
+
+    def call
+      warn "Going to notes directory #{ComputerType.notes_dir}"
+      Dir.chdir(ComputerType.notes_dir)
+
+      warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
+      try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
+    end
   end
 
   class WorkGitConfig
@@ -94,12 +109,7 @@ class NoteBackup
 
   def call
     ComputerType.excalidraw_backup.call
-
-    warn "Going to notes directory #{ComputerType.notes_dir}"
-    Dir.chdir(ComputerType.notes_dir)
-
-    warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
-    try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
+    ComputerType.tar_backup.call
 
     # Hacky but I'm tired. Skip the first diff, ls-files to get staged diff, then replay the first diff with --stat
     pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
