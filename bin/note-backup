@@ -3,36 +3,110 @@
 
 require 'io/console'
 
-class NoteBackup
+module Commands
   HOME = ENV['HOME']
-  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
-  DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
 
-  def self.call = new.call
+  class ComputerType
+    HOME_NAME = 'miller-home'
 
-  def call
-    notes_dir = "#{HOME}/var/notes"
+    def self.work? = instance.work?
+    def self.instance = @instance ||= new
+    def self.excalidraw_backup = work? ? Commands::WorkExcalidrawBackup : Commands::ExcalidrawBackup
+    def self.git = work? ? Commands::WorkGitConfig : Commands::GitConfig
+    def self.mobile_backup = work? ? Commands::WorkMobileBackup : Commands::MobileBackup
+    def self.notes_dir = "#{HOME}/var/notes"
 
-    if work_computer?
+    private
+
+    def work?
+      hostname.include? HOME_NAME
+    end
+
+    def hostname = @hostname ||= `hostname`.strip
+  end
+
+  module CommandHelper
+    def pause(message, stat_ref, source = '')
+      warn '--- Showing stat of changes...'
+      system "git diff #{stat_ref} #{source} --stat"
+      warn "--- About to #{message}; Would you like to continue? (y/n)"
+      return if $stdin.getch.match(/[yY]/)
+
+      exit 0
+    end
+
+    def git(command)
+      return if command.split.first == 'commit' && `git diff HEAD`.chomp.empty?
+
+      try "git #{command}"
+    end
+
+    def try(command)
+      warn "Running: #{command}"
+      abort unless system command
+    end
+
+    def todays_date
+      @todays_date ||= Time.new.strftime('%b %d, %Y')
+    end
+  end
+
+  class WorkExcalidrawBackup
+    include CommandHelper
+
+    DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
+
+    def self.call = new.call
+
+    def call
       try "echo Moving to #{DOCUMENTS_DIR}"
       Dir.chdir(DOCUMENTS_DIR)
 
       warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
       try "tar -cvzf \"#{HOME}/var/excalidraw-backup.tar.gz\" Excalidraw"
     end
+  end
 
-    warn "Going to notes directory #{notes_dir}"
-    Dir.chdir(notes_dir)
+  class ExcalidrawBackup
+    def self.call; end
+  end
+
+  class WorkGitConfig
+    def self.conventional_commit_tag = 'engineering-journal'
+    def self.branch_name = 'tmp/rebasing-work'
+    def self.push_command = 'push origin main'
+  end
+
+  class GitConfig
+    def self.conventional_commit_tag = 'notes'
+    def self.branch_name = 'tmp/rebasing-notes'
+    def self.push_command = 'push origin mobile main'
+  end
+end
+
+class NoteBackup
+  include CommandHelper
+
+  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
+  ComputerType = Commands::ComputerType
+
+  def self.call = new.call
+
+  def call
+    ComputerType.excalidraw_backup.call
+
+    warn "Going to notes directory #{ComputerType.notes_dir}"
+    Dir.chdir(ComputerType.notes_dir)
 
     warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
     try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
 
     # Hacky but I'm tired. Skip the first diff, ls-files to get staged diff, then replay the first diff with --stat
     pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
-    git "switch -c #{branch_name}"
+    git "switch -c #{ComputerType.git.branch_name}"
     git 'add .'
     pause('commit local changes', 'HEAD')
-    git "commit -m \"docs(#{conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
+    git "commit -m \"docs(#{ComputerType.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
 
     git 'switch main'
     git 'pull'
@@ -40,11 +114,11 @@ class NoteBackup
     warn 'Initiating merge...'
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    pause('merge local changes into main', 'main', branch_name)
-    git "merge #{branch_name} --log -m 'merge(#{conventional_commit_tag}): Copy local changes into main #{todays_date}'"
-    git "branch -d #{branch_name}"
+    pause('merge local changes into main', 'main', ComputerType.git.branch_name)
+    git "merge #{ComputerType.git.branch_name} --log -m 'merge(#{ComputerType.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
+    git "branch -d #{ComputerType.git.branch_name}"
 
-    unless work_computer?
+    unless ComputerType.work?
       warn 'Pulling in changes from mobile...'
 
       pause('force-replace local changes with mobile changes', 'HEAD', 'mobile')
@@ -69,56 +143,11 @@ class NoteBackup
     end
 
     git 'switch main'
-
     warn 'Backing up to remote...'
-
     pause('push changes to remote', 'origin/main', 'main')
-    git work_computer? ? 'push origin main' : 'push origin mobile main'
-    warn 'Backups can be found at ~/var/' if work_computer?
-  end
 
-  def pause(message, stat_ref, source = '')
-    warn '--- Showing stat of changes...'
-    system "git diff #{stat_ref} #{source} --stat"
-    warn "--- About to #{message}; Would you like to continue? (y/n)"
-    return if $stdin.getch.match(/[yY]/)
-
-    exit 0
-  end
-
-  def git(command)
-    return if command.split.first == 'commit' && `git diff HEAD`.chomp.empty?
-
-    try "git #{command}"
-  end
-
-  def try(command)
-    warn "Running: #{command}"
-    abort unless system command
-  end
-
-  def todays_date
-    @todays_date ||= Time.new.strftime('%b %d, %Y')
-  end
-
-  def branch_name
-    if work_computer?
-      'tmp/rebasing-work'
-    else
-      'tmp/rebasing-notes'
-    end
-  end
-
-  def conventional_commit_tag
-    if work_computer?
-      'engineering-journal'
-    else
-      'notes'
-    end
-  end
-
-  def work_computer?
-    !`hostname`.include? 'miller-home'
+    ComputerType.git.push_command
+    warn 'Backups can be found at ~/var/'
   end
 end
 
