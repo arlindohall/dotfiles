@@ -14,7 +14,7 @@ module Command
     def self.excalidraw_backup = work? ? WorkExcalidrawBackup : ExcalidrawBackup
     def self.tar_backup = TarBackup
     def self.git = work? ? WorkGitConfig : GitConfig
-    def self.mobile_backup = work? ? WorkMobileBackup : MobileBackup
+    def self.mobile = work? ? NoBackup : MobileGitConfig
     def self.notes_dir = "#{HOME}/var/notes"
 
     private
@@ -100,12 +100,112 @@ module Command
     def self.branch_name = 'tmp/rebasing-notes'
     def self.push_command = 'push origin mobile main'
   end
+
+  class MobileGitConfig
+    def self.conventional_commit_tag = 'mobile'
+    def self.branch_name = 'mobile'
+  end
+end
+
+class Backup
+  class NoBackup
+    def backup; end
+  end
+
+  class LocalGitBackup
+    def prefix
+      stat('ls-files --other --exclude-standard')
+      stat('diff HEAD')
+      pause('create branch and add local changes')
+      git "switch -c #{branch_name}"
+    end
+
+    def postfix
+      stat('diff HEAD')
+      pause('commit local changes')
+    end
+
+    def cleanup
+      git "branch -d #{branch_name}"
+    end
+
+    def branch_name
+      Command::Manager.git
+    end
+
+    def action
+      'Note archive'
+    end
+  end
+
+  class MobileGitBackup
+    ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
+
+    def prefix
+      stat('diff HEAD mobile')
+      pause('force-replace local changes with mobile changes')
+      git "switch #{branch_name}"
+      try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
+    end
+
+    def postfix; end
+
+    def cleanup
+      git "switch #{branch_name}"
+      git 'merge main --ff-only --log'
+      try "rm -r #{ICLOUD_DIRECTORY}*"
+      try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
+    end
+
+    def branch_name
+      Command::Manager.mobile
+    end
+
+    def action
+      'Mobile note sync'
+    end
+  end
+
+  def self.for(change)
+    if change == 'local'
+      new(change, LocalGitBackup.new)
+    elsif change == 'mobile' && Command::Manager.work?
+      NoBackup.new
+    else
+      new(change, MobileGitBackup.new)
+    end
+  end
+
+  def initialize(change, backup)
+    @change = change
+    @backup = backup
+  end
+
+  def backup
+    warn "Pulling in changes from #{@change}..."
+
+    @backup.prefix
+    git 'add .'
+    @backup.postfix
+
+    git "commit -m \"docs(#{@backup.conventional_commit_tag}): #{@backup.action} through #{todays_date}\" --no-edit"
+    git 'switch main'
+    git 'pull'
+
+    warn "Initiating merge of #{@change}..."
+    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
+
+    stat("diff main #{@backup.branch_name}")
+    pause("merge #{@change} changes into main")
+
+    git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{todays_date}'"
+
+    @backup.cleanup
+  end
 end
 
 class NoteBackup
   include Command::Helper
-
-  ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
 
   def self.call = new.call
 
@@ -113,8 +213,8 @@ class NoteBackup
     Command::Manager.excalidraw_backup.call
     Command::Manager.tar_backup.call
 
-    backup('local')
-    backup('mobile')
+    Backup.for('local').backup
+    Backup.for('mobile').backup
 
     git 'switch main'
     warn 'Backing up to remote...'
@@ -123,63 +223,6 @@ class NoteBackup
 
     git Command::Manager.git.push_command
     warn 'Backups can be found at ~/var/'
-  end
-
-  def backup(change = 'local')
-    if change == 'local'
-      branch_name = Command::Manager.git.branch_name
-      commit_tag = Command::Manager.git.conventional_commit_tag
-      action = 'Note archive'
-      prefix_warning = proc {
-        stat('ls-files --other --exclude-standard')
-        stat('diff HEAD')
-        pause('create branch and add local changes')
-        git "switch -c #{branch_name}"
-      }
-      postfix_warning = proc {
-        stat('diff HEAD')
-        pause('commit local changes')
-      }
-      cleanup = proc {
-        git "branch -d #{branch_name}"
-      }
-
-    elsif change == 'mobile'
-      return unless Command::Manager.work?
-
-      branch_name = 'mobile'
-      commit_tag = 'mobile'
-      action = 'Mobile note sync'
-      prefix_warning = proc {
-        stat('diff HEAD mobile')
-        pause('force-replace local changes with mobile changes')
-        git "switch #{branch_name}"
-        try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
-      }
-      postfix_warning = proc {}
-      cleanup = proc {
-        git "switch #{branch_name}"
-        git 'merge main --ff-only --log'
-        try "rm -r #{ICLOUD_DIRECTORY}*"
-        try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
-      }
-    else
-      raise "Unknown change type: #{change}"
-    end
-
-    warn "Pulling in changes from #{change}..."
-    prefix_warning.call
-    git 'add .'
-    postfix_warning.call
-    git "commit -m \"docs(#{commit_tag}): #{action} through #{todays_date}\" --no-edit"
-    git 'switch main'
-    git 'pull'
-    warn "Initiating merge of #{change}..."
-    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
-    stat("diff main #{branch_name}")
-    pause("merge #{change} changes into main")
-    git "merge #{branch_name} --log -m 'merge(#{commit_tag}): Copy changes from #{branch_name} into main #{todays_date}'"
-    cleanup.call
   end
 end
 
