@@ -148,6 +148,7 @@ class NoteBackup
       git 'switch mobile'
       git "merge main --ff-only --log -m 'merge(mobile): Copy changes from mobile into main #{todays_date}'"
 
+      try "rm -r #{ICLOUD_DIRECTORY}*"
       try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
     end
 
