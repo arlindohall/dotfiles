@@ -27,9 +27,12 @@ module Command
   end
 
   module Helper
-    def pause(message, stat_ref, source = '')
+    def stat(git_cmd)
       warn '--- Showing stat of changes...'
-      system "git diff #{stat_ref} #{source} --stat"
+      git(git_cmd)
+    end
+
+    def pause(message)
       warn "--- About to #{message}; Would you like to continue? (y/n)"
       return if $stdin.getch.match(/[yY]/)
 
@@ -114,10 +117,13 @@ class NoteBackup
     branch_name = Command::Manager.git.branch_name
     warn "Pulling in changes from #{change}..."
 
-    pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
+    stat('ls-files --other --exclude-standard')
+    stat('diff HEAD')
+    pause('create branch and add local changes')
     git "switch -c #{branch_name}"
     git 'add .'
-    pause('commit local changes', 'HEAD')
+    stat('diff HEAD')
+    pause('commit local changes')
     git "commit -m \"docs(#{Command::Manager.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
 
     git 'switch main'
@@ -126,7 +132,8 @@ class NoteBackup
     warn "Initiating merge of #{change}..."
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    pause('merge local changes into main', 'main', branch_name)
+    stat("diff main #{branch_name}")
+    pause('merge local changes into main')
     git "merge #{branch_name} --log -m 'merge(#{Command::Manager.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
     git "branch -d #{branch_name}"
 
@@ -135,7 +142,8 @@ class NoteBackup
       branch_name = 'mobile'
       warn "Pulling in changes from #{change}..."
 
-      pause('force-replace local changes with mobile changes', 'HEAD', 'mobile')
+      stat('diff HEAD mobile')
+      pause('force-replace local changes with mobile changes')
       git "switch #{branch_name}"
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
       git 'add .'
@@ -147,7 +155,8 @@ class NoteBackup
       warn "Initiating merge of #{change}..."
       warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-      pause('merge mobile changes into main', 'main', branch_name)
+      stat("diff main #{branch_name}")
+      pause('merge mobile changes into main')
       git "merge #{branch_name} --log -m 'merge(#{change}): Copy changes from #{branch_name} into main #{todays_date}'"
 
       git "switch #{branch_name}"
@@ -159,7 +168,8 @@ class NoteBackup
 
     git 'switch main'
     warn 'Backing up to remote...'
-    pause('push changes to remote', 'origin/main', 'main')
+    stat('diff origin/main main')
+    pause('push changes to remote')
 
     Command::Manager.git.push_command
     warn 'Backups can be found at ~/var/'
