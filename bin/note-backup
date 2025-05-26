@@ -110,9 +110,12 @@ class NoteBackup
     Command::Manager.excalidraw_backup.call
     Command::Manager.tar_backup.call
 
-    # Hacky but I'm tired. Skip the first diff, ls-files to get staged diff, then replay the first diff with --stat
+    change = 'local'
+    branch_name = Command::Manager.git.branch_name
+    warn "Pulling in changes from #{change}..."
+
     pause('create branch and add local changes', 'HEAD HEAD', '; git ls-files --other --exclude-standard; git diff HEAD')
-    git "switch -c #{Command::Manager.git.branch_name}"
+    git "switch -c #{branch_name}"
     git 'add .'
     pause('commit local changes', 'HEAD')
     git "commit -m \"docs(#{Command::Manager.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
@@ -120,33 +123,35 @@ class NoteBackup
     git 'switch main'
     git 'pull'
 
-    warn 'Initiating merge...'
+    warn "Initiating merge of #{change}..."
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    pause('merge local changes into main', 'main', Command::Manager.git.branch_name)
-    git "merge #{Command::Manager.git.branch_name} --log -m 'merge(#{Command::Manager.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
-    git "branch -d #{Command::Manager.git.branch_name}"
+    pause('merge local changes into main', 'main', branch_name)
+    git "merge #{branch_name} --log -m 'merge(#{Command::Manager.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
+    git "branch -d #{branch_name}"
 
     unless Command::Manager.work?
-      warn 'Pulling in changes from mobile...'
+      change = 'mobile'
+      branch_name = 'mobile'
+      warn "Pulling in changes from #{change}..."
 
       pause('force-replace local changes with mobile changes', 'HEAD', 'mobile')
-      git 'switch mobile'
+      git "switch #{branch_name}"
       try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
       git 'add .'
-      git "commit -m \"docs(mobile): Mobile note sync through #{todays_date}\" --no-edit"
+      git "commit -m \"docs(#{Command::Manager.git.mobile_commit_tag}): Mobile note sync through #{todays_date}\" --no-edit"
 
       git 'switch main'
       git 'pull'
 
-      warn 'Initiating merge of mobile...'
+      warn "Initiating merge of #{change}..."
       warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-      pause('merge mobile changes into main', 'main', 'mobile')
-      git "merge mobile --log -m 'merge(mobile): Copy changes from mobile into main #{todays_date}'"
+      pause('merge mobile changes into main', 'main', branch_name)
+      git "merge #{branch_name} --log -m 'merge(#{change}): Copy changes from #{branch_name} into main #{todays_date}'"
 
-      git 'switch mobile'
-      git "merge main --ff-only --log -m 'merge(mobile): Copy changes from mobile into main #{todays_date}'"
+      git "switch #{branch_name}"
+      git "merge main --ff-only --log -m 'merge(#{change}): Copy changes from #{branch_name} into main #{todays_date}'"
 
       try "rm -r #{ICLOUD_DIRECTORY}*"
       try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
