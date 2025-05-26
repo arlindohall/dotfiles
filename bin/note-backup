@@ -113,66 +113,73 @@ class NoteBackup
     Command::Manager.excalidraw_backup.call
     Command::Manager.tar_backup.call
 
-    change = 'local'
-    branch_name = Command::Manager.git.branch_name
-    warn "Pulling in changes from #{change}..."
-
-    stat('ls-files --other --exclude-standard')
-    stat('diff HEAD')
-    pause('create branch and add local changes')
-    git "switch -c #{branch_name}"
-    git 'add .'
-    stat('diff HEAD')
-    pause('commit local changes')
-    git "commit -m \"docs(#{Command::Manager.git.conventional_commit_tag}): Note archive through #{todays_date}\" --no-edit"
-
-    git 'switch main'
-    git 'pull'
-
-    warn "Initiating merge of #{change}..."
-    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
-
-    stat("diff main #{branch_name}")
-    pause('merge local changes into main')
-    git "merge #{branch_name} --log -m 'merge(#{Command::Manager.git.conventional_commit_tag}): Copy local changes into main #{todays_date}'"
-    git "branch -d #{branch_name}"
-
-    unless Command::Manager.work?
-      change = 'mobile'
-      branch_name = 'mobile'
-      warn "Pulling in changes from #{change}..."
-
-      stat('diff HEAD mobile')
-      pause('force-replace local changes with mobile changes')
-      git "switch #{branch_name}"
-      try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
-      git 'add .'
-      git "commit -m \"docs(#{Command::Manager.git.mobile_commit_tag}): Mobile note sync through #{todays_date}\" --no-edit"
-
-      git 'switch main'
-      git 'pull'
-
-      warn "Initiating merge of #{change}..."
-      warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
-
-      stat("diff main #{branch_name}")
-      pause('merge mobile changes into main')
-      git "merge #{branch_name} --log -m 'merge(#{change}): Copy changes from #{branch_name} into main #{todays_date}'"
-
-      git "switch #{branch_name}"
-      git "merge main --ff-only --log -m 'merge(#{change}): Copy changes from #{branch_name} into main #{todays_date}'"
-
-      try "rm -r #{ICLOUD_DIRECTORY}*"
-      try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
-    end
+    backup('local')
+    backup('mobile')
 
     git 'switch main'
     warn 'Backing up to remote...'
     stat('diff origin/main main')
     pause('push changes to remote')
 
-    Command::Manager.git.push_command
+    git Command::Manager.git.push_command
     warn 'Backups can be found at ~/var/'
+  end
+
+  def backup(change = 'local')
+    if change == 'local'
+      branch_name = Command::Manager.git.branch_name
+      commit_tag = Command::Manager.git.conventional_commit_tag
+      action = 'Note archive'
+      prefix_warning = proc {
+        stat('ls-files --other --exclude-standard')
+        stat('diff HEAD')
+        pause('create branch and add local changes')
+        git "switch -c #{branch_name}"
+      }
+      postfix_warning = proc {
+        stat('diff HEAD')
+        pause('commit local changes')
+      }
+      cleanup = proc {
+        git "branch -d #{branch_name}"
+      }
+
+    elsif change == 'mobile'
+      return unless Command::Manager.work?
+
+      branch_name = 'mobile'
+      commit_tag = 'mobile'
+      action = 'Mobile note sync'
+      prefix_warning = proc {
+        stat('diff HEAD mobile')
+        pause('force-replace local changes with mobile changes')
+        git "switch #{branch_name}"
+        try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
+      }
+      postfix_warning = proc {}
+      cleanup = proc {
+        git "switch #{branch_name}"
+        git 'merge main --ff-only --log'
+        try "rm -r #{ICLOUD_DIRECTORY}*"
+        try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
+      }
+    else
+      raise "Unknown change type: #{change}"
+    end
+
+    warn "Pulling in changes from #{change}..."
+    prefix_warning.call
+    git 'add .'
+    postfix_warning.call
+    git "commit -m \"docs(#{commit_tag}): #{action} through #{todays_date}\" --no-edit"
+    git 'switch main'
+    git 'pull'
+    warn "Initiating merge of #{change}..."
+    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
+    stat("diff main #{branch_name}")
+    pause("merge #{change} changes into main")
+    git "merge #{branch_name} --log -m 'merge(#{commit_tag}): Copy changes from #{branch_name} into main #{todays_date}'"
+    cleanup.call
   end
 end
 
