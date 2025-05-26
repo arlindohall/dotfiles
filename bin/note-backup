@@ -26,7 +26,7 @@ module Command
     def hostname = @hostname ||= `hostname`.strip
   end
 
-  module Helper
+  class Helper
     def stat(git_cmd)
       warn '--- Showing stat of changes...'
       git(git_cmd)
@@ -56,36 +56,40 @@ module Command
   end
 
   class WorkExcalidrawBackup
-    include Command::Helper
-
     DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
 
-    def self.call = new.call
+    def self.call(helper) = new.call(helper)
+
+    def initialize(helper)
+      @helper = helper
+    end
 
     def call
       warn "Going to documents directory #{DOCUMENTS_DIR}"
       Dir.chdir(DOCUMENTS_DIR)
 
       warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
-      try "tar -cvzf \"#{HOME}/var/excalidraw-backup.tar.gz\" Excalidraw"
+      @helper.try "tar -cvzf \"#{HOME}/var/excalidraw-backup.tar.gz\" Excalidraw"
     end
   end
 
   class ExcalidrawBackup
-    def self.call; end
+    def self.call(**params); end
   end
 
   class TarBackup
-    include Command::Helper
+    def self.call(helper) = new.call(helper)
 
-    def self.call = new.call
+    def initialize(helper)
+      @helper = helper
+    end
 
     def call
       warn "Going to notes directory #{ComputerType.notes_dir}"
       Dir.chdir(ComputerType.notes_dir)
 
       warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
-      try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
+      @helper.try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
     end
   end
 
@@ -113,20 +117,24 @@ class Backup
   end
 
   class LocalGitBackup
+    def initialize(helper)
+      @helper = helper
+    end
+
     def prefix
-      stat('ls-files --other --exclude-standard')
-      stat('diff HEAD')
-      pause('create branch and add local changes')
-      git "switch -c #{branch_name}"
+      @helper.stat('ls-files --other --exclude-standard')
+      @helper.stat('diff HEAD')
+      @helper.pause('create branch and add local changes')
+      @helper.git "switch -c #{branch_name}"
     end
 
     def postfix
-      stat('diff HEAD')
-      pause('commit local changes')
+      @helper.stat('diff HEAD')
+      @helper.pause('commit local changes')
     end
 
     def cleanup
-      git "branch -d #{branch_name}"
+      @helper.git "branch -d #{branch_name}"
     end
 
     def branch_name
@@ -141,20 +149,24 @@ class Backup
   class MobileGitBackup
     ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
 
+    def initialize(helper)
+      @helper = helper
+    end
+
     def prefix
-      stat('diff HEAD mobile')
-      pause('force-replace local changes with mobile changes')
-      git "switch #{branch_name}"
-      try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
+      @helper.stat('diff HEAD mobile')
+      @helper.pause('force-replace local changes with mobile changes')
+      @helper.git "switch #{branch_name}"
+      @helper.try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
     end
 
     def postfix; end
 
     def cleanup
-      git "switch #{branch_name}"
-      git 'merge main --ff-only --log'
-      try "rm -r #{ICLOUD_DIRECTORY}*"
-      try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
+      @helper.git "switch #{branch_name}"
+      @helper.git 'merge main --ff-only --log'
+      @helper.try "rm -r #{ICLOUD_DIRECTORY}*"
+      @helper.try "cp -r logseq/* #{ICLOUD_DIRECTORY}"
     end
 
     def branch_name
@@ -166,64 +178,67 @@ class Backup
     end
   end
 
-  def self.for(change)
-    if change == 'local'
-      new(change, LocalGitBackup.new)
-    elsif change == 'mobile' && Command::Manager.work?
-      NoBackup.new
-    else
-      new(change, MobileGitBackup.new)
-    end
+  def self.local(helper:)
+    new(change: 'local', backup: LocalGitBackup.new(helper), helper: helper)
   end
 
-  def initialize(change, backup)
+  def self.mobile(helper:)
+    return NoBackup.new if Command::Manager.work?
+
+    new(change: 'mobile', backup: MobileGitBackup.new(helper), helper: helper)
+  end
+
+  def initialize(change:, backup:, helper:)
     @change = change
     @backup = backup
+    @helper = helper
   end
 
   def backup
     warn "Pulling in changes from #{@change}..."
 
     @backup.prefix
-    git 'add .'
+    @helper.git 'add .'
     @backup.postfix
 
-    git "commit -m \"docs(#{@backup.conventional_commit_tag}): #{@backup.action} through #{todays_date}\" --no-edit"
-    git 'switch main'
-    git 'pull'
+    @helper.git "commit -m \"docs(#{@backup.conventional_commit_tag}): #{@backup.action} through #{todays_date}\" --no-edit"
+    @helper.git 'switch main'
+    @helper.git 'pull'
 
     warn "Initiating merge of #{@change}..."
     warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    stat("diff main #{@backup.branch_name}")
-    pause("merge #{@change} changes into main")
+    @helper.stat("diff main #{@backup.branch_name}")
+    @helper.pause("merge #{@change} changes into main")
 
-    git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{todays_date}'"
+    @helper.git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{todays_date}'"
 
     @backup.cleanup
   end
 end
 
 class NoteBackup
-  include Command::Helper
+  def self.call(helper:) = new(helper:).call
 
-  def self.call = new.call
+  def initialize(helper:)
+    @helper = helper
+  end
 
   def call
-    Command::Manager.excalidraw_backup.call
-    Command::Manager.tar_backup.call
+    Command::Manager.excalidraw_backup.call(@helper)
+    Command::Manager.tar_backup.call(@helper)
 
-    Backup.for('local').backup
-    Backup.for('mobile').backup
+    Backup.local(helper: @helper).backup
+    Backup.mobile(helper: @helper).backup
 
-    git 'switch main'
+    @helper.git 'switch main'
     warn 'Backing up to remote...'
-    stat('diff origin/main main')
-    pause('push changes to remote')
+    @helper.stat('diff origin/main main')
+    @helper.pause('push changes to remote')
 
-    git Command::Manager.git.push_command
+    @helper.git Command::Manager.git.push_command
     warn 'Backups can be found at ~/var/'
   end
 end
 
-NoteBackup.call
+NoteBackup.call(helper: Command::Helper.new)
