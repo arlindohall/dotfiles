@@ -258,4 +258,28 @@ class NoteBackup
   end
 end
 
-NoteBackup.call(helper: Command::Helper.new)
+class Test
+  class Helper
+    def stat; end
+    def pause; end
+    def git; end
+    def try; end
+    def warn; end
+    def todays_date; end
+  end
+
+  def run
+    helper = Test::Helper
+    puts :success
+  end
+end
+
+args = ARGV.dup
+until args.empty?
+  case (arg = arg.shift)
+  when 'test'
+    Test.run
+  else
+    NoteBackup.call(helper: Command::Helper.new)
+  end
+end
