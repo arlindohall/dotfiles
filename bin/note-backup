@@ -6,7 +6,7 @@ require 'io/console'
 module Command
   HOME = ENV['HOME']
 
-  class Manager
+  class ConfigRouter
     HOME_NAME = 'miller-home'
 
     def self.work? = instance.work?
@@ -14,7 +14,8 @@ module Command
     def self.excalidraw_backup = work? ? WorkExcalidrawBackup : ExcalidrawBackup
     def self.tar_backup = TarBackup
     def self.git = work? ? WorkGitConfig : GitConfig
-    def self.mobile = MobileGitConfig
+    def self.mobile = work? ? NoBackup : MobileGitBackup
+    def self.mobile_git = MobileGitConfig
     def self.notes_dir = "#{HOME}/var/notes"
 
     private
@@ -50,6 +51,10 @@ module Command
       abort unless system command
     end
 
+    def warn(message)
+      $stderr.warn(message)
+    end
+
     def todays_date
       @todays_date ||= Time.new.strftime('%b %d, %Y')
     end
@@ -65,10 +70,10 @@ module Command
     end
 
     def call
-      warn "Going to documents directory #{DOCUMENTS_DIR}"
+      @helper.warn "Going to documents directory #{DOCUMENTS_DIR}"
       Dir.chdir(DOCUMENTS_DIR)
 
-      warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
+      @helper.warn "Creating tar file at #{HOME}/var/ ~/var/excalidraw-backup.tar.gz"
       @helper.try "tar -cvzf \"#{HOME}/var/excalidraw-backup.tar.gz\" Excalidraw"
     end
   end
@@ -85,10 +90,10 @@ module Command
     end
 
     def call
-      warn "Going to notes directory #{ComputerType.notes_dir}"
+      @helper.warn "Going to notes directory #{ComputerType.notes_dir}"
       Dir.chdir(ComputerType.notes_dir)
 
-      warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
+      @helper.warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
       @helper.try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
     end
   end
@@ -113,6 +118,7 @@ end
 
 class Backup
   class NoBackup
+    def initialize(*params); end
     def backup; end
   end
 
@@ -138,7 +144,7 @@ class Backup
     end
 
     def branch_name
-      Command::Manager.git
+      Command::ConfigRouter.git.branch_name
     end
 
     def action
@@ -179,7 +185,7 @@ class Backup
     end
 
     def branch_name
-      Command::Manager.mobile.branch_name
+      Command::ConfigRouter.mobile_git.branch_name
     end
 
     def action
@@ -192,9 +198,11 @@ class Backup
   end
 
   def self.mobile(helper:)
-    return NoBackup.new if Command::Manager.work?
-
-    new(change: 'mobile', backup: MobileGitBackup.new(helper), helper: helper)
+    Command::ConfigRouter.mobile.new(
+      change: 'mobile',
+      backup: MobileGitBackup.new(helper),
+      helper: helper
+    )
   end
 
   def initialize(change:, backup:, helper:)
@@ -204,7 +212,7 @@ class Backup
   end
 
   def backup
-    warn "Pulling in changes from #{@change}..."
+    @helper.warn "Pulling in changes from #{@change}..."
 
     @backup.prefix
     @helper.git 'add .'
@@ -214,8 +222,8 @@ class Backup
     @helper.git 'switch main'
     @helper.git 'pull'
 
-    warn "Initiating merge of #{@change}..."
-    warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
+    @helper.warn "Initiating merge of #{@change}..."
+    @helper.warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
     @helper.stat("diff main #{@backup.branch_name}")
     @helper.pause("merge #{@change} changes into main")
@@ -234,19 +242,19 @@ class NoteBackup
   end
 
   def call
-    Command::Manager.excalidraw_backup.call(@helper)
-    Command::Manager.tar_backup.call(@helper)
+    Command::ConfigRouter.excalidraw_backup.call(@helper)
+    Command::ConfigRouter.tar_backup.call(@helper)
 
     Backup.local(helper: @helper).backup
     Backup.mobile(helper: @helper).backup
 
     @helper.git 'switch main'
-    warn 'Backing up to remote...'
+    @helper.warn 'Backing up to remote...'
     @helper.stat('diff origin/main main')
     @helper.pause('push changes to remote')
 
-    @helper.git Command::Manager.git.push_command
-    warn 'Backups can be found at ~/var/'
+    @helper.git Command::ConfigRouter.git.push_command
+    @helper.warn 'Backups can be found at ~/var/'
   end
 end
 
