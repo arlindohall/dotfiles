@@ -14,7 +14,7 @@ module Command
     def self.excalidraw_backup = work? ? WorkExcalidrawBackup : ExcalidrawBackup
     def self.tar_backup = TarBackup
     def self.git = work? ? WorkGitConfig : GitConfig
-    def self.mobile = work? ? NoBackup : MobileGitConfig
+    def self.mobile = MobileGitConfig
     def self.notes_dir = "#{HOME}/var/notes"
 
     private
@@ -179,7 +179,7 @@ class Backup
     end
 
     def branch_name
-      Command::Manager.mobile
+      Command::Manager.mobile.branch_name
     end
 
     def action
