@@ -18,10 +18,8 @@ module Command
     def self.mobile_git = MobileGitConfig
     def self.notes_dir = "#{HOME}/var/notes"
 
-    private
-
     def work?
-      hostname.include? HOME_NAME
+      !(hostname.include? HOME_NAME)
     end
 
     def hostname = @hostname ||= `hostname`.strip
@@ -79,7 +77,7 @@ module Command
   end
 
   class ExcalidrawBackup
-    def self.call(**params); end
+    def self.call(*params, **kw_params); end
   end
 
   class TarBackup
@@ -153,7 +151,7 @@ class Backup
   end
 
   class MobileGitBackup
-    ICLOUD_DIRECTORY = "\"#{HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
+    ICLOUD_DIRECTORY = "\"#{Command::HOME}/Library/Mobile Documents/iCloud~com~logseq~logseq/Documents/mobile/\"".freeze
 
     def initialize(helper)
       @helper = helper
@@ -242,10 +240,14 @@ class NoteBackup
   end
 
   def call
+    warn 'excalidraw'
     Command::ConfigRouter.excalidraw_backup.call(@helper)
+    warn 'tar'
     Command::ConfigRouter.tar_backup.call(@helper)
 
+    warn 'local'
     Backup.local(helper: @helper).backup
+    warn 'mobile'
     Backup.mobile(helper: @helper).backup
 
     @helper.git 'switch main'
@@ -269,7 +271,6 @@ class Test
   end
 
   def run
-    helper = Test::Helper
     puts :success
   end
 end
@@ -279,7 +280,9 @@ until args.empty?
   case (arg = arg.shift)
   when 'test'
     Test.run
-  else
-    NoteBackup.call(helper: Command::Helper.new)
+    puts :success
+    exit 0
   end
 end
+
+NoteBackup.call(helper: Command::Helper.new)
