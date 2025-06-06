@@ -15,7 +15,7 @@ module Command
     def self.excalidraw_backup = work? ? WorkExcalidrawBackup : ExcalidrawBackup
     def self.tar_backup = TarBackup
     def self.git = work? ? WorkGitConfig : GitConfig
-    def self.mobile = work? ? NoBackup : MobileGitBackup
+    def self.mobile = work? ? Backup::NoBackup : Backup::MobileGitBackup
     def self.mobile_git = MobileGitConfig
     def self.notes_dir = "#{HOME}/var/notes"
 
@@ -27,9 +27,13 @@ module Command
   end
 
   class Helper
+    def initialize(stderr: $stderr)
+      @stderr = stderr
+    end
+
     def stat(git_cmd)
       warn '--- Showing stat of changes...'
-      git(git_cmd)
+      git("diff #{git_cmd} --stat")
     end
 
     def pause(message)
@@ -40,7 +44,7 @@ module Command
     end
 
     def git(command)
-      return if command.split.first == 'commit' && `git diff HEAD`.chomp.empty?
+      return if command.split.first == 'commit' && `git diff HEAD --stat`.chomp.empty?
 
       try "git #{command}"
     end
@@ -51,7 +55,7 @@ module Command
     end
 
     def warn(message)
-      $stderr.warn(message)
+      @stderr.puts(message)
     end
 
     def todays_date
@@ -62,7 +66,7 @@ module Command
   class WorkExcalidrawBackup
     DOCUMENTS_DIR = "#{HOME}/Documents/".freeze
 
-    def self.call(helper) = new.call(helper)
+    def self.call(helper) = new(helper).call
 
     def initialize(helper)
       @helper = helper
@@ -82,15 +86,15 @@ module Command
   end
 
   class TarBackup
-    def self.call(helper) = new.call(helper)
+    def self.call(helper) = new(helper).call
 
     def initialize(helper)
       @helper = helper
     end
 
     def call
-      @helper.warn "Going to notes directory #{ComputerType.notes_dir}"
-      Dir.chdir(ComputerType.notes_dir)
+      @helper.warn "Going to notes directory #{Command::ConfigRouter.notes_dir}"
+      Dir.chdir(Command::ConfigRouter.notes_dir)
 
       @helper.warn 'Creating tar file at $HOME/var/ ~/var/logseq-backup.tar.gz'
       @helper.try "tar -cvzf \"#{HOME}/var/logseq-backup.tar.gz\" logseq/"
@@ -126,28 +130,25 @@ class Backup
       @helper = helper
     end
 
+    def conventional_commit_tag = Command::ConfigRouter.git.conventional_commit_tag
+    def branch_name = Command::ConfigRouter.git.branch_name
+    def push_command = Command::ConfigRouter.git.push_command
+    def action = 'Note archive'
+
     def prefix
-      @helper.stat('ls-files --other --exclude-standard')
-      @helper.stat('diff HEAD')
+      @helper.git('ls-files --other --exclude-standard')
+      @helper.stat('HEAD')
       @helper.pause('create branch and add local changes')
       @helper.git "switch -c #{branch_name}"
     end
 
     def postfix
-      @helper.stat('diff HEAD')
+      @helper.stat('HEAD')
       @helper.pause('commit local changes')
     end
 
     def cleanup
       @helper.git "branch -d #{branch_name}"
-    end
-
-    def branch_name
-      Command::ConfigRouter.git.branch_name
-    end
-
-    def action
-      'Note archive'
     end
   end
 
@@ -158,8 +159,13 @@ class Backup
       @helper = helper
     end
 
+    def conventional_commit_tag = Command::ConfigRouter.mobile_git.conventional_commit_tag
+    def branch_name = Command::ConfigRouter.mobile_git.branch_name
+    def push_command = Command::ConfigRouter.mobile_git.push_command
+    def action = 'Mobile note sync'
+
     def prefix
-      @helper.stat('diff HEAD mobile')
+      @helper.stat('HEAD mobile')
       @helper.pause('force-replace local changes with mobile changes')
       @helper.git "switch #{branch_name}"
       @helper.try "cp -r #{ICLOUD_DIRECTORY}* logseq/"
@@ -181,14 +187,6 @@ class Backup
         # and then re-copying, which is what I did before I added this line
         file.delete unless local_path.exist?
       end
-    end
-
-    def branch_name
-      Command::ConfigRouter.mobile_git.branch_name
-    end
-
-    def action
-      'Mobile note sync'
     end
   end
 
@@ -217,17 +215,17 @@ class Backup
     @helper.git 'add .'
     @backup.postfix
 
-    @helper.git "commit -m \"docs(#{@backup.conventional_commit_tag}): #{@backup.action} through #{todays_date}\" --no-edit"
+    @helper.git "commit -m \"docs(#{@backup.conventional_commit_tag}): #{@backup.action} through #{@helper.todays_date}\" --no-edit"
     @helper.git 'switch main'
     @helper.git 'pull'
 
     @helper.warn "Initiating merge of #{@change}..."
     @helper.warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    @helper.stat("diff main #{@backup.branch_name}")
+    @helper.stat("main #{@backup.branch_name}")
     @helper.pause("merge #{@change} changes into main")
 
-    @helper.git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{todays_date}'"
+    @helper.git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{@helper.todays_date}'"
 
     @backup.cleanup
   end
@@ -253,7 +251,7 @@ class NoteBackup
 
     @helper.git 'switch main'
     @helper.warn 'Backing up to remote...'
-    @helper.stat('diff origin/main main')
+    @helper.stat('origin/main main')
     @helper.pause('push changes to remote')
 
     @helper.git Command::ConfigRouter.git.push_command
