@@ -1,5 +1,6 @@
 #!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
 # frozen_string_literal: true
+# typed: true
 
 require 'io/console'
 

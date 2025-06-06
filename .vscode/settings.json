@@ -1,0 +1,10 @@
+{
+  "rdbg.rubyVersionManager": "asdf",
+  "rubyLsp.rubyVersionManager": {
+    "identifier": "asdf"
+  },
+  "cSpell.words": [
+    "Excalidraw",
+    "millerhall"
+  ]
+}
