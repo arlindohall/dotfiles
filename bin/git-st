@@ -1,0 +1,8 @@
+#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+# frozen_string_literal: true
+
+require_relative 'lib/git_jj'
+
+setup
+
+system 'git show --stat'

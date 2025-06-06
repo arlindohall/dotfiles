@@ -1,0 +1,14 @@
+#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+# frozen_string_literal: true
+
+require_relative 'lib/git_jj'
+
+setup
+
+system "git switch #{@branch}" unless @branch.empty?
+
+if @has_message
+  system %(git commit --amend --allow-empty -m '#{@message}')
+else
+  system %(git commit --amend --edit --allow-empty)
+end
