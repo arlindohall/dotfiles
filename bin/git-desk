@@ -5,10 +5,14 @@ require_relative 'lib/git_jj'
 
 setup
 
-system "git switch #{@branch}" unless @branch.empty?
-
-if @has_message
-  system %(git commit --amend --allow-empty -m '#{@message}')
-else
-  system %(git commit --amend --edit --allow-empty)
+unless @branch.empty?
+  system "git switch #{@branch}" unless @branch.empty?
+  setup
 end
+
+edit = @has_message ? '--no-edit' : '--edit'
+amend = @head_not_on_jj_style_commit ? '' : '--amend'
+with_message = @head_not_on_jj_style_commit || @has_message ? "-m '#{@message}'" : ''
+
+puts %(git commit --allow-empty #{amend} #{edit} #{with_message})
+system %(git commit --allow-empty #{amend} #{edit} #{with_message})
