@@ -183,7 +183,7 @@ class Backup
 
       icloud = Pathname.new(ICLOUD_DIRECTORY).realpath
       notes = Pathname.new('logseq').realpath
-      icloud.glob('**').each do |file|
+      icloud.glob('**/*').filter(&:file?).each do |file|
         local_path = notes.join(file.relative_path_from(icloud))
         # Okay to delete because we've already copied to local, and then rebased to pick up
         # any deletions that happened on the remote, this is sort of like doing rm -rf *
