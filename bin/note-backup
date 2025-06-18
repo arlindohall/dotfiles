@@ -198,6 +198,8 @@ class Backup
   end
 
   def self.mobile(helper:)
+    return NoBackup.new if Command::ConfigRouter.work?
+
     new(change: 'mobile', backup: MobileGitBackup.new(helper), helper: helper)
   end
 
