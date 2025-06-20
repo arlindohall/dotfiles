@@ -5,4 +5,4 @@ require_relative 'lib/git_jj'
 
 setup
 
-system 'git show --stat'
+system "git show --stat #{ARGV}"
