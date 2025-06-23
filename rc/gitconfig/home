@@ -25,6 +25,7 @@
 	ll = log-all short
 	ln = log-all short -n
 	adog = log --all --decorate --oneline --graph
+	bdog = log --branches --decorate --oneline --graph
 	root = rev-parse --show-toplevel
 [init]
 	defaultBranch = main
