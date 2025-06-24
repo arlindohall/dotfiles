@@ -167,7 +167,8 @@ class BuildkiteFailedTests
   end
 
   def fatal(code, replacement = '')
-    warn MESSAGES[code].gsub('REPLACE', replacement)
+    replacements = Array(replacement).map(&:to_s)
+    warn MESSAGES[code].gsub('REPLACE', replacements.join(','))
     exit code
   end
 
