@@ -65,7 +65,7 @@ class TxtFailedTests
     else
       content = String.new
       Args.files_args.each { |name| content << File.read(name) }
-      content.scan(/(?<=\[).*?test.rb:\d+(?=\])|component.*?test.rb:\d+(?=:in)|test.*?test.rb:\d+(?=:in)/)
+      content.scan(/(?<=\[)\S*?test.rb:\d+(?=\])|component\S*?test.rb:\d+(?=:in)|test\S*?test.rb:\d+(?=:in)/)
     end
   end
 end
