@@ -60,13 +60,16 @@ class TxtFailedTests
   end
 
   def test_name_and_line
-    @test_name_and_line ||= if Args.files_args.empty?
-                              File.open(FAILED_FILE).read.split
-                            else
-                              content = String.new
-                              Args.files_args.each { |name| content << File.read(name) }
-                              content.scan(/(?<=\[)\S*?test.rb:\d+(?=\])|component\S*?test.rb:\d+(?=:in)|test\S*?test.rb:\d+(?=:in)/)
-                            end
+    files = if Args.file_args.empty?
+              [FAILED_FILE]
+            else
+              Args.files_args
+            end
+
+    content = String.new
+    files.each { |name| content << File.read(name) }
+
+    @test_name_and_line ||= content.scan(/(?<=\[)\S*?_test.rb:\d+(?=\])|component\S*?_test.rb:\d+(?=:in)|test\S*?_test.rb:\d+(?=:in)/)
   end
 end
 
