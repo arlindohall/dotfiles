@@ -27,10 +27,10 @@ class Args
     args = ARGV.dup
     while (arg = args.shift)
       case arg
-      when "--"
+      when '--'
         @dev_args = args
         args = []
-      when "--print", "-p"
+      when '--print', '-p'
         @print = true
       else
         @files_args << arg
@@ -40,7 +40,7 @@ class Args
 end
 
 class TxtFailedTests
-  FAILED_FILE = '/tmp/failed.txt'
+  FAILED_FILE = 'miller/failed'
 
   def self.call
     new.call
@@ -61,12 +61,12 @@ class TxtFailedTests
 
   def test_name_and_line
     @test_name_and_line ||= if Args.files_args.empty?
-      File.open(FAILED_FILE).read.split
-    else
-      content = String.new
-      Args.files_args.each { |name| content << File.read(name) }
-      content.scan(/(?<=\[)\S*?test.rb:\d+(?=\])|component\S*?test.rb:\d+(?=:in)|test\S*?test.rb:\d+(?=:in)/)
-    end
+                              File.open(FAILED_FILE).read.split
+                            else
+                              content = String.new
+                              Args.files_args.each { |name| content << File.read(name) }
+                              content.scan(/(?<=\[)\S*?test.rb:\d+(?=\])|component\S*?test.rb:\d+(?=:in)|test\S*?test.rb:\d+(?=:in)/)
+                            end
   end
 end
 
