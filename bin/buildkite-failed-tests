@@ -56,7 +56,7 @@ class BuildkiteFailedTests
     end
 
     def type = 'app-store'
-    def matches? = html.at('title').text.match('shopify-app-store')
+    def matches? = html.at('title')&.text&.match('shopify-app-store')
 
     def failed_tests
       html.search('p:contains("Run locally")')
@@ -72,7 +72,7 @@ class BuildkiteFailedTests
     end
 
     def type = 'theme-store'
-    def matches? = html.at('title').text.match('shopify-theme-store')
+    def matches? = html.at('title')&.text&.match('shopify-theme-store')
 
     def failed_tests
       html.search('p:contains("Run locally")')
@@ -104,7 +104,7 @@ class BuildkiteFailedTests
     end
 
     def type = 'shopify-core'
-    def matches? = html.at('title').text.match(/^world-shopify/)
+    def matches? = html.at('title')&.text&.match(/^world-shopify/)
 
     def failed_tests
       html.search('p:contains("Run locally")')
