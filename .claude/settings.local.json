@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(asdf env which:*)",
+      "Bash(asdf which:*)",
+      "Bash(bundle --version)",
+      "Bash(gem environment:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}
