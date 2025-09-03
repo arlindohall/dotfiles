@@ -60,7 +60,7 @@ class TxtFailedTests
   end
 
   def test_name_and_line
-    files = if Args.file_args.empty?
+    files = if Args.files_args.empty?
               [FAILED_FILE]
             else
               Args.files_args

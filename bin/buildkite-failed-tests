@@ -77,6 +77,7 @@ class BuildkiteFailedTests
     def failed_tests
       html.search('p:contains("Run locally")')
           .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
+          .filter { |name| name.end_with?('_test.rb') }
     end
   end
 
