@@ -18,7 +18,7 @@
 
           # Wrap the script to ensure Ruby and gems are available
           wrapProgram $out/bin/${name} \
-            --set PATH ${gems.wrappedRuby}/bin
+            --set PATH ${gems.wrappedRuby}/bin:${pkgs.ripgrep}/bin
         '';
         pkgs = nixpkgs.legacyPackages.${system};
         gems = pkgs.bundlerEnv {
@@ -51,6 +51,7 @@
             buildInputs = [
               gems
               gems.wrappedRuby
+              ripgrep
             ];
           };
       }
