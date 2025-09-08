@@ -46,24 +46,6 @@ class Manners
   end
 
   def call
-    download_swear_words
-    search_for_swear_words
-  end
-
-  # private
-
-  def download_swear_words
-    debug("Downloading swear words from #{swear_words_uri}")
-    @download_swear_words ||= Net::HTTP.get(swear_words_uri)
-                                       .gsub("\r", '')
-                                       .split("\n")
-  end
-
-  def swear_words_uri
-    URI('http://www.bannedwordlist.com/lists/swearWords.txt')
-  end
-
-  def search_for_swear_words
     if !@stdin.tty?
       search_stdin
     elsif @args.has_files?
@@ -73,29 +55,44 @@ class Manners
     end
   end
 
+  # private
+
+  def swear_words
+    return @swear_words if @swear_words
+
+    debug("Downloading swear words from #{swear_words_uri}")
+    @swear_words = Net::HTTP.get(swear_words_uri)
+                            .gsub("\r", '')
+                            .split("\n")
+  end
+
+  def swear_words_uri
+    URI('http://www.bannedwordlist.com/lists/swearWords.txt')
+  end
+
   def search_files
-    debug("Searching for #{@swear_words.size} swear words in files=#{@args.files}...")
-    status = system("rg -w '#{@swear_words.join('|')}' #{@args.files.join(' ')}")
+    debug("Searching for #{swear_words.size} swear words in files=#{@args.files}...")
+    status = system("rg -w '#{swear_words.join('|')}' #{@args.files.join(' ')}")
 
     exit(1) unless status
   end
 
   def search_directory
-    debug("Searching for #{@swear_words.size} swear words in current directory...")
-    status = system("rg -w '#{@swear_words.join('|')}'")
+    debug("Searching for #{swear_words.size} swear words in current directory...")
+    status = system("rg -w '#{swear_words.join('|')}'")
 
     exit(1) unless status
   end
 
   def search_stdin
-    debug("Searching for #{@swear_words.size} swear words in standard in...")
+    debug("Searching for #{swear_words.size} swear words in standard in...")
     @stdin.each_line.each_with_index do |line, line_number|
       check_line(line, line_number)
     end
   end
 
   def check_line(line, line_number)
-    if (word = @swear_words.find { |swear_word| matches(swear_word, line) })
+    if (word = swear_words.find { |swear_word| matches(swear_word, line) })
       debug("Found swear word in line: #{line_number}:#{line.index(word)}")
       exit(1)
     end
