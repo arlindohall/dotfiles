@@ -1,4 +1,4 @@
-#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+#!/usr/bin/env ruby
 # typed: true
 # frozen_string_literal: true
 
