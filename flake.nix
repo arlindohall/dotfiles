@@ -13,13 +13,27 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        wrapScript = name: ''
-          chmod u+x $out/bin/${name}
-
-          # Wrap the script to ensure Ruby and gems are available
-          wrapProgram $out/bin/${name} \
-            --set PATH ${gems.wrappedRuby}/bin:${pkgs.ripgrep}/bin
-        '';
+        wrapScript = (
+          name:
+          let
+            path = ./. + "/bin/${name}";
+            output = "$out/bin/${name}";
+            makeBinPath = nixpkgs.lib.strings.makeBinPath;
+          in
+          ''
+            cp ${path} ${output}
+            chmod u+x  ${output}
+            # Wrap the script to ensure Ruby and gems are available
+            wrapProgram ${output} \
+              --set PATH ${
+                makeBinPath [
+                  gems.wrappedRuby
+                  pkgs.ripgrep
+                  "$out"
+                ]
+              }
+          ''
+        );
         pkgs = nixpkgs.legacyPackages.${system};
         gems = pkgs.bundlerEnv {
           name = "gemset";
@@ -35,8 +49,7 @@
           ];
           installPhase = ''
             mkdir -p $out/bin
-            cp -r ${./bin}/* $out/bin/
-
+            cp -r ${./bin/lib} $out/bin/lib
             ${wrapScript "manners"}
           '';
           nativeBuildInputs = [ pkgs.makeWrapper ];
