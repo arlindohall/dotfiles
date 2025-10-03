@@ -82,9 +82,39 @@ vim.api.nvim_create_user_command(
   {}
 )
 
-vim.api.nvim_set_keymap("n", "<leader>gg", ":CopyGitFilename<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<leader>gr", ":CopyRelativeFilename<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<leader>ga", ":CopyAbsoluteFilename<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<leader>glg", ":CopyGitFilenameLine<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<leader>glr", ":CopyRelativeFilenameLine<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<leader>gla", ":CopyAbsoluteFilenameLine<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>gg",
+  ":CopyGitFilename<CR>",
+  { noremap = true, silent = true, desc = "Copy filename from git root" }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>gr",
+  ":CopyRelativeFilename<CR>",
+  { noremap = true, silent = true, desc = "Copy filename realtive to current directory" }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>ga",
+  ":CopyAbsoluteFilename<CR>",
+  { noremap = true, silent = true, desc = "Copy filename from filesystem root" }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>glg",
+  ":CopyGitFilenameLine<CR>",
+  { noremap = true, silent = true, desc = "Copy filename from git root, with line number" }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>glr",
+  ":CopyRelativeFilenameLine<CR>",
+  { noremap = true, silent = true, desc = "Copy filename relative to current directory, with line number" }
+)
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>gla",
+  ":CopyAbsoluteFilenameLine<CR>",
+  { noremap = true, silent = true, desc = "Copy filename from filesystem root, with line number" }
+)
