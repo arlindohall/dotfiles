@@ -1,7 +1,7 @@
 -- Function to check if 'bundle exec' works in the current working directory
 return {
   {
-    "williamboman/mason.nvim",
+    "mason-org/mason.nvim",
     opts = {
       ensure_installed = {
         "prettier",
@@ -9,7 +9,7 @@ return {
     },
   },
   {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
   },
   {
     "stevearc/conform.nvim",
