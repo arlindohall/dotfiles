@@ -1,7 +1,16 @@
-[ui]
-editor = "vim"
-
 [user]
 name = "Miller Arlindo Hall"
 email = "miller.hall@shopify.com"
+[ui]
+editor = "nvim"
+default-command = "log"
 
+[credential]
+
+[git]
+private-commits = "description(glob:'wip:*') | description(glob:'private:*')"
+
+[aliases]
+ll = ["log", "-r", "main::@ | @::"]
+la = ["log", "-r", "heads(::main & ::mine())::"]
+e = ["edit"]
