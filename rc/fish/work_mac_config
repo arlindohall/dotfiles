@@ -13,3 +13,10 @@ alias servers-kill-all "pgrep -f '(puma|concurrently.js)' | xargs kill -15"
 alias bft buildkite-failed-tests
 
 alias gg "gt switch (jj bookmark list -r @- | head -1 | cut -d: -f1)"
+
+function latest_commit_in_zone --argument-names zone
+  git log --pretty=%H -n 1 -- (git rev-parse --show-toplevel)$zone
+end
+
+alias latest_theme_store_commit 'latest_commit_in_zone /areas/incubating/theme-store'
+alias latest_app_store_commit 'latest_commit_in_zone /areas/incubating/app-store'
