@@ -181,9 +181,17 @@ class Backup
     def cleanup
       @helper.git "switch #{branch_name}"
       @helper.git 'merge main --ff-only --log'
-      @helper.warn 'Copying files back to iCloud'
-      @helper.try 'rm -rf "'"#{ICLOUD_DIRECTORY}"'"*'
       @helper.try "cp -r logseq/* \"#{ICLOUD_DIRECTORY}\""
+
+      icloud = Pathname.new(ICLOUD_DIRECTORY).realpath
+      notes = Pathname.new('logseq').realpath
+      icloud.glob('**/*').filter(&:file?).each do |file|
+        local_path = notes.join(file.relative_path_from(icloud))
+        # Okay to delete because we've already copied to local, and then rebased to pick up
+        # any deletions that happened on the remote, this is sort of like doing rm -rf *
+        # and then re-copying, which is what I did before I added this line
+        file.delete unless local_path.exist?
+      end
     end
   end
 
