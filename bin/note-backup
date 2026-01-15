@@ -31,11 +31,6 @@ module Command
       @stderr = stderr
     end
 
-    def stat(git_cmd)
-      warn '--- Showing stat of changes...'
-      git("diff #{git_cmd} --stat")
-    end
-
     def pause(message)
       warn "--- About to #{message}; Would you like to continue? (y/n)"
       return if $stdin.getch.match(/[yY]/)
@@ -137,13 +132,11 @@ class Backup
 
     def prefix
       @helper.git('ls-files --other --exclude-standard')
-      @helper.stat('HEAD')
       @helper.pause('create branch and add local changes')
       @helper.git "switch -c #{branch_name}"
     end
 
     def postfix
-      @helper.stat('HEAD')
       @helper.pause('commit local changes')
     end
 
@@ -165,7 +158,6 @@ class Backup
     def action = 'Mobile note sync'
 
     def prefix
-      @helper.stat('HEAD mobile')
       @helper.pause('copy files from iCloud to mobile')
       @helper.git "switch #{branch_name}"
       @helper.try 'rm -rf logseq/'
@@ -174,7 +166,6 @@ class Backup
     end
 
     def postfix
-      @helper.stat('HEAD')
       @helper.pause('commit mobile files')
     end
 
@@ -225,7 +216,6 @@ class Backup
     @helper.warn "Initiating merge of #{@change}..."
     @helper.warn 'If it succeeds, you will return to where you were before this command, otherwise you can stay here and fix conflicts.'
 
-    @helper.stat("main #{@backup.branch_name}")
     @helper.pause("merge #{@change} changes into main")
 
     @helper.git "merge #{@backup.branch_name} --log -m 'merge(#{@backup.conventional_commit_tag}): Copy changes from #{@backup.branch_name} into main #{@helper.todays_date}'"
@@ -254,7 +244,6 @@ class NoteBackup
 
     @helper.git 'switch main'
     @helper.warn 'Backing up to remote...'
-    @helper.stat('origin/main main')
     @helper.pause('push changes to remote')
 
     @helper.git Command::ConfigRouter.git.push_command
@@ -264,7 +253,6 @@ end
 
 class Test
   class Helper
-    def stat; end
     def pause; end
     def git; end
     def try; end
