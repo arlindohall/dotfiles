@@ -1,12 +1,8 @@
-#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+#!/usr/bin/env nix-shell
+#! nix-shell -I nixpkgs=channel:nixos-25.05 -p "ruby.withPackages (ps: with ps; [ sorbet-runtime ])" -i ruby
+# vim: ft=ruby
 # frozen_string_literal: true
 # typed: true
-
-# Required to load gems from the ruby version in the shebang
-Gem.paths = {
-  'GEM_HOME' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0',
-  'GEM_PATH' => '/Users/millerhall/.asdf/installs/ruby/3.4.3/lib/ruby/gems/3.4.0'
-}
 
 require 'English'
 require 'sorbet-runtime'

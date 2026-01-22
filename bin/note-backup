@@ -1,4 +1,7 @@
-#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+#!/usr/bin/env nix-shell
+#! nix-shell -I nixpkgs=channel:nixos-25.05 -p "ruby.withPackages (ps: with ps; [ sorbet-runtime ])" -i ruby
+# vim: ft=ruby
+
 # frozen_string_literal: true
 # typed: true
 
