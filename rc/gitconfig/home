@@ -24,6 +24,7 @@
 	la = log-all
 	ll = log-all short
 	ln = log-all short -n
+	short = log --pretty=short
 	adog = log --all --decorate --oneline --graph
 	bdog = log --branches --decorate --oneline --graph
 	root = rev-parse --show-toplevel
