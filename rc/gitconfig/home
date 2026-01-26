@@ -25,9 +25,14 @@
 	ll = log-all short
 	ln = log-all short -n
 	short = log --pretty=short
+	when = log --pretty='%C(yellow)%h %Cblue%ad %Cgreen%an %Creset%<(50,trunc)%s' --date=short
+	names = show --name-only --pretty=""
+	dnames = diff --name-only --pretty=""
 	adog = log --all --decorate --oneline --graph
 	bdog = log --branches --decorate --oneline --graph
 	root = rev-parse --show-toplevel
+	stat = show --stat
+	dstat = diff --stat
 [init]
 	defaultBranch = main
 [commit]
