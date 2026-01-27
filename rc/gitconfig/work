@@ -28,17 +28,21 @@
 	default = simple
     autoSetupRemote = true
 [alias]
-	la = log-all
-	ll = log-all short
-	ln = log-all short -n
 	short = log --pretty=short
 	when = log --pretty='%C(yellow)%h %Cblue%ad %Cgreen%an %Creset%<(50,trunc)%s' --date=short
+	whend = log --decorate=short --decorate-refs-exclude='refs/tags/*' \
+		--decorate-refs-exclude='refs/remotes/*/conveyor/*' \
+		--decorate-refs-exclude='refs/remotes/*/gtmq*' \
+		--pretty='%C(yellow)%h %Cblue%ad %Cgreen%an %Creset%s%C(auto)%(decorate)%(describe:exclude=*)' --date=short
+	la = whend --decorate --graph --branches -- .
+	ln = whend --decorate --graph -n
+	ll = whend --decorate --graph main.. -- .
 	names = show --name-only --pretty=""
 	dnames = diff --name-only --pretty=""
 	adog = log --all --decorate --oneline --graph
 	bdog = log --branches --decorate --oneline --graph
 	root = rev-parse --show-toplevel
-	stat = show --stat
+	stat = show --stat --pretty=""
 	dstat = diff --stat
 [init]
 	defaultBranch = main
