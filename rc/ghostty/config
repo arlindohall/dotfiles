@@ -6,8 +6,8 @@ command = /opt/homebrew/bin/fish
 #================================================#
 # Display
 #================================================#
-window-height = 32
-window-width = 130
+window-height = 42
+window-width = 172
 
 window-padding-x = 12
 window-padding-y = 12
