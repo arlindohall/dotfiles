@@ -1,0 +1,316 @@
+#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+# frozen_string_literal: true
+
+require 'uri'
+
+class SlackThreadFormatter
+  attr_reader :preserve_emojis
+
+  def initialize(preserve_emojis: false)
+    @preserve_emojis = preserve_emojis
+  end
+
+  def self.perform(args)
+    preserve_emojis = args.include?('--preserve-emojis')
+
+    # Check if there are file arguments (not just flags)
+    file_args = args.reject { |arg| arg.start_with?('-') }
+
+    input = if file_args.empty?
+              # No file arguments, read from stdin
+              STDIN.read
+            else
+              # File arguments provided, use ARGF (which handles all files)
+              ARGF.read
+            end
+
+    new(preserve_emojis: preserve_emojis).format(input)
+  end
+
+  def format(input)
+    return puts 'No input provided' if input.nil? || input.strip.empty?
+
+    lines = input.split("\n")
+    messages = parse_messages(lines)
+    output_messages(messages)
+  end
+
+  private
+
+  def parse_messages(lines)
+    messages = []
+    current_message = nil
+
+    lines.each do |line|
+      next if line.strip.empty?
+
+      normalized_line = line.gsub(/\u00A0/, ' ')
+
+      if new_message?(normalized_line)
+        messages << current_message if current_message
+        current_message = parse_new_message(normalized_line)
+      elsif current_message
+        # Handle run-together patterns manually
+        if (next_msg = handle_special_patterns(normalized_line, current_message))
+          messages << current_message
+          current_message = next_msg
+        else
+          append_to_current_message(current_message, line)
+        end
+      end
+    end
+
+    messages << current_message if current_message
+    messages.compact
+  end
+
+  def new_message?(line)
+    # Check for line that starts with username and has [timestamp]
+    timestamp_start = line.index('[')
+    timestamp_end = line.index(']')
+    return false unless timestamp_start && timestamp_end && timestamp_end > timestamp_start
+
+    # Check if the content between brackets looks like a timestamp
+    timestamp_content = line[timestamp_start + 1...timestamp_end]
+    timestamp_content =~ /^\d{1,2}:\d{2}\s+(AM|PM)$/
+  end
+
+  def parse_new_message(line)
+    # Find the timestamp pattern
+    timestamp_start = line.index('[')
+    timestamp_end = line.index(']')
+
+    if timestamp_start && timestamp_end
+      username = line[0...timestamp_start].strip
+      timestamp = line[timestamp_start + 1...timestamp_end]
+      content = line[timestamp_end + 1..-1].strip
+
+      {
+        username: username,
+        timestamp: timestamp,
+        content: content,
+        reactions: []
+      }
+    else
+      fallback_message(line)
+    end
+  end
+
+  def fallback_message(line)
+    {
+      username: 'Unknown',
+      timestamp: '',
+      content: line.strip,
+      reactions: []
+    }
+  end
+
+  def handle_special_patterns(line, current_message)
+    # Handle "43 repliesVerdant Express [11:28 AM]" pattern
+    if line.include?('replies') && line.include?('[') && line.include?(']')
+      # Split at the bracket
+      parts = line.split('[', 2)
+      return nil unless parts.length >= 2
+
+      before_bracket = parts[0]
+      after_bracket = parts[1]
+
+      # Add everything before 'replies' to current message
+      replies_pos = before_bracket.rindex('replies')
+      current_message[:content] += "\n" + before_bracket[0...replies_pos + 7].strip if replies_pos
+
+      # Parse the part after the bracket
+      timestamp_end = after_bracket.index(']')
+      return nil unless timestamp_end
+
+      timestamp_and_username = after_bracket[0...timestamp_end]
+      username_and_content = after_bracket[timestamp_end + 1..-1].strip
+
+      # Extract timestamp
+      timestamp = timestamp_and_username
+
+      # Extract username (last properly capitalized word before timestamp)
+      words = username_and_content.split(/\s+/)
+      username = nil
+      words.reverse.each do |word|
+        # Check if word starts with capital letter and contains only allowed username chars
+        if word.match(/^[A-Z][a-zA-Z0-9_.\-.]*$/)
+          username = word
+          break
+        end
+      end
+
+      if username
+        return {
+          username: username.strip,
+          timestamp: timestamp,
+          content: '',
+          reactions: []
+        }
+      end
+    end
+
+    # Handle "Impact theme miller [11:34 AM]" pattern
+    if line.include?('theme') && line.include?('[') && line.include?(']')
+      theme_pos = line.index('theme')
+      return nil unless theme_pos
+
+      before_theme = line[0...theme_pos + 5] # 5 = length of 'theme'
+      after_theme = line[theme_pos + 5..-1]
+
+      # Add the theme part to current message
+      current_message[:content] += "\n" + before_theme.strip unless before_theme.strip.empty?
+
+      # Parse the rest as a new message
+      parse_new_message(after_theme)
+    end
+
+    # Handle "content username [timestamp]" pattern where username is at the end
+    if line.include?('[') && line.include?(']')
+      timestamp_start = line.rindex('[')
+      timestamp_end = line.rindex(']')
+
+      if timestamp_start && timestamp_end && timestamp_start > 0
+        timestamp_content = line[timestamp_start + 1...timestamp_end]
+        if timestamp_content.match?(/^\d{1,2}:\d{2}\s+(AM|PM)$/)
+          content_part = line[0...timestamp_start].strip
+          username_and_rest = line[timestamp_end + 1..-1].strip
+
+          # Extract username from the beginning of the rest
+          username_parts = username_and_rest.split(/\s+/)
+          if username_parts.length > 0
+            username = username_parts[0]
+
+            # Add content part to current message
+            current_message[:content] += "\n" + content_part unless content_part.empty?
+
+            # Extract timestamp (simplified)
+            timestamp = timestamp_content
+
+            return {
+              username: username,
+              timestamp: timestamp,
+              content: '',
+              reactions: []
+            }
+          end
+        end
+      end
+    end
+
+    nil
+  end
+
+  def append_to_current_message(message, line)
+    normalized_line = line.gsub(/\u00A0/, ' ')
+
+    if reaction_line?(normalized_line)
+      message[:reactions].concat(parse_reactions(normalized_line))
+    else
+      message[:content] += "\n" + line
+    end
+
+    nil
+  end
+
+  def reaction_line?(line)
+    stripped = line.strip
+    return false if stripped.length > 100
+
+    stripped.match?(/:[a-zA-Z_]+:/) || stripped.match?(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/)
+  end
+
+  def parse_reactions(line)
+    reactions = []
+    shortcodes = line.scan(/:[a-zA-Z_]+:/)
+    reactions.concat(shortcodes)
+
+    unicode_emoji = line.scan(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/)
+    reactions.concat(unicode_emoji) if preserve_emojis
+
+    reactions
+  end
+
+  def process_content(content)
+    # Remove emoji images
+    content = content.gsub(/<img[^>]*>/, '')
+
+    # Convert URLs to markdown format
+    content = convert_urls_to_markdown(content)
+
+    # Convert Slack formatting to markdown
+    content = content.gsub(/\*([^*]+)\*/, '**\1**')
+    content.gsub(/_([^_]+)_/, '*\1*')
+  end
+
+  def convert_urls_to_markdown(text)
+    url_pattern = %r{https?://[^\s]+}
+    text.gsub(url_pattern) do |url|
+      title = extract_url_title(url)
+      "[#{title}](#{url})"
+    end
+  end
+
+  def extract_url_title(url)
+    uri = URI.parse(url)
+    hostname = uri.hostname
+
+    case hostname
+    when /admin\.shopify\.com/
+      if url.include?('/themes')
+        'Theme Admin'
+      elsif url.include?('/services/internal')
+        'Internal Admin'
+      else
+        'Shopify Admin'
+      end
+    when /screenshot\.click/
+      'Screenshot'
+    when /vault\.shopify\.io/
+      'Vault'
+    when /shopify\.slack\.com/
+      'Slack Thread'
+    else
+      path = uri.path.split('/').reject(&:empty?)
+      if path.any?
+        path.last.split(/[-_]/).map(&:capitalize).join(' ')
+      else
+        'Link'
+      end
+    end
+  rescue StandardError
+    'Link'
+  end
+
+  def output_messages(messages)
+    messages.each_with_index do |message, index|
+      puts "**#{message[:username]}** [#{message[:timestamp]}]"
+
+      processed_content = process_content(message[:content])
+      puts processed_content unless processed_content.strip.empty?
+
+      puts message[:reactions].join(' ') if preserve_emojis && message[:reactions].any?
+
+      puts if index < messages.length - 1
+    end
+  end
+end
+
+# Handle help and arguments
+if ARGV.include?('--help') || ARGV.include?('-h')
+  puts 'Usage: format-slack-thread [--preserve-emojis] [input-file]'
+  puts '  --preserve-emojis  Keep emoji reactions as shortcodes'
+  puts '  --help, -h        Show this help message'
+  exit 0
+end
+
+begin
+  SlackThreadFormatter.perform(ARGV)
+rescue Errno::ENOENT
+  # This is normal when no input, ARGF reads stdin by default
+  puts 'Error: No input provided.'
+  exit 1
+rescue Interrupt
+  puts 'Interrupted.'
+  exit 1
+end
