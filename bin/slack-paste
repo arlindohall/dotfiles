@@ -1,0 +1,7 @@
+osascript -e 
+  set htmlContent to ( read ( POSIX file "/tmp/release_message.html" ) as «class HTML» )
+  set rtfContent to (read ( POSIX file "/tmp/release_message.rtf" ) as «class RTF » )
+  set txtContent to  (read ( POSIX file "/tmp/release_message.txt" ) as «class utf8»)
+
+  set the clipboard to {«class HTML»:htmlContent, «class RTF »:rtfContent, string:txtContent}
+  
