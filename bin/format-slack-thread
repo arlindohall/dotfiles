@@ -6,12 +6,14 @@ require 'uri'
 class SlackThreadFormatter
   attr_reader :preserve_emojis
 
-  def initialize(preserve_emojis: false)
+  def initialize(preserve_emojis: false, debug_mode: false)
     @preserve_emojis = preserve_emojis
+    @debug_mode = debug_mode
   end
 
   def self.perform(args)
     preserve_emojis = args.include?('--preserve-emojis')
+    debug_mode = args.include?('--debug')
 
     # Check if there are file arguments (not just flags)
     file_args = args.reject { |arg| arg.start_with?('-') }
@@ -24,39 +26,131 @@ class SlackThreadFormatter
               ARGF.read
             end
 
-    new(preserve_emojis: preserve_emojis).format(input)
+    new(preserve_emojis: preserve_emojis, debug_mode: debug_mode).format(input)
   end
 
   def format(input)
-    return puts 'No input provided' if input.nil? || input.strip.empty?
+    # Input validation
+    if input.nil?
+      debug_log 'Warning: Input is nil'
+      return puts 'No input provided'
+    end
+
+    if input.strip.empty?
+      debug_log 'Warning: Input is empty or only whitespace'
+      return puts 'No input provided'
+    end
+
+    # Validate input encoding
+    if input.respond_to?(:encode)
+      begin
+        input = input.encode('UTF-8', invalid: :replace, undef: :replace)
+      rescue Encoding::UndefinedConversionError => e
+        debug_log "Warning: Encoding issue with input: #{e.message}"
+      end
+    end
 
     lines = input.split("\n")
+    debug_log('Starting message parsing', {
+                input_length: input.length,
+                line_count: lines.length,
+                first_line: begin
+                  first = lines.first&.strip
+                  if first && first.length > 50
+                    first[0, 47] + '...'
+                  else
+                    first || 'empty'
+                  end
+                end
+              })
+
+    # Basic structural validation
+    debug_log "Warning: Very short input (#{lines.length} lines), may not contain complete messages" if lines.length < 3
+
+    # Count potential message lines (lines with time indicators)
+    potential_message_lines = lines.count { |line| line.match?(/\d{1,2}:\d{2}|\[.*\]|at\s+\d{1,2}:\d{2}/) }
+    debug_log('Potential message lines detected', { count: potential_message_lines })
+
+    if potential_message_lines == 0
+      debug_log 'Warning: No lines contain recognizable timestamp patterns'
+      debug_log "Supported formats: [HH:MM AM/PM], [YYYY-MM-DD HH:MM:SS], or 'Day at HH:MM'"
+    end
+
     messages = parse_messages(lines)
+
+    debug_log('Parsing completed', {
+                messages_found: messages.length,
+                potential_lines: potential_message_lines,
+                success_rate: potential_message_lines > 0 ? (messages.length.to_f / potential_message_lines * 100).round(1) : 0
+              })
+
+    if messages.empty?
+      debug_log 'Warning: No messages were parsed from input. Check timestamp formats or use --debug for details.'
+      debug_log 'Try: format-slack-thread --debug input.txt to see detailed parsing information'
+    elsif messages.length < potential_message_lines * 0.5
+      debug_log "Warning: Only #{messages.length} of #{potential_message_lines} potential messages were parsed. Consider using --debug to investigate."
+    end
+
     output_messages(messages)
   end
 
   private
 
+  def debug_log(message, data = nil)
+    return unless @debug_mode
+
+    puts "[DEBUG] #{message}"
+    puts "         Data: #{data.inspect}" if data
+  end
+
   def parse_messages(lines)
     messages = []
     current_message = nil
+    pending_username = nil
 
-    lines.each do |line|
+    lines.each_with_index do |line, index|
       next if line.strip.empty?
 
       normalized_line = line.gsub(/\u00A0/, ' ')
+      debug_log("Processing line #{index + 1}", { original: line, normalized: normalized_line })
 
       if new_message?(normalized_line)
-        messages << current_message if current_message
-        current_message = parse_new_message(normalized_line)
+        format_info = detect_timestamp_format(normalized_line)
+        debug_log('Detected new message', { line: normalized_line, format: format_info[:type] })
+
+        # Handle the two-line pattern
+        if format_info[:type] == :standalone_day_at_24h && pending_username
+          # We have a username from the previous line and a timestamp on this line
+          messages << current_message if current_message
+          current_message = create_message_from_parts(pending_username, format_info[:timestamp], '')
+          debug_log('Created message from username+timestamp lines', { username: current_message[:username], timestamp: current_message[:timestamp] })
+          pending_username = nil
+
+        elsif format_info[:type] == :standalone_username
+          # This is just a username, timestamp will be on next line
+          pending_username = format_info[:username]
+          debug_log('Found standalone username', { username: pending_username })
+
+        else
+          # Normal single-line message
+          messages << current_message if current_message
+          current_message = parse_new_message(normalized_line)
+          debug_log('Parsed message', { username: current_message[:username], timestamp: current_message[:timestamp] }) if current_message
+        end
       elsif current_message
         # Handle run-together patterns manually
         if (next_msg = handle_special_patterns(normalized_line, current_message))
+          debug_log('Handled special pattern', { pattern: 'split_message' })
           messages << current_message
           current_message = next_msg
         else
           append_to_current_message(current_message, line)
         end
+      elsif pending_username && current_message.nil?
+        # If we have a pending username and this isn't a timestamp, treat as content of previous message
+        debug_log "Warning: Line #{index + 1} appears to be content but no current message: #{normalized_line[0..50]}..."
+      else
+        debug_log "Warning: Line #{index + 1} appears to be content but no current message: #{normalized_line[0..50]}..."
       end
     end
 
@@ -65,38 +159,184 @@ class SlackThreadFormatter
   end
 
   def new_message?(line)
-    # Check for line that starts with username and has [timestamp]
-    timestamp_start = line.index('[')
-    timestamp_end = line.index(']')
-    return false unless timestamp_start && timestamp_end && timestamp_end > timestamp_start
+    # Check for various timestamp formats
+    format_info = detect_timestamp_format(line)
+    return false unless format_info
 
-    # Check if the content between brackets looks like a timestamp
-    timestamp_content = line[timestamp_start + 1...timestamp_end]
-    timestamp_content =~ /^\d{1,2}:\d{2}\s+(AM|PM)$/
+    debug_log('Detected timestamp format', { format: format_info[:type], line: line.strip })
+    true
   end
 
-  def parse_new_message(line)
-    # Find the timestamp pattern
-    timestamp_start = line.index('[')
-    timestamp_end = line.index(']')
-
-    if timestamp_start && timestamp_end
-      username = line[0...timestamp_start].strip
-      timestamp = line[timestamp_start + 1...timestamp_end]
-      content = line[timestamp_end + 1..-1].strip
-
-      {
-        username: username,
-        timestamp: timestamp,
-        content: content,
-        reactions: []
+  def detect_timestamp_format(line)
+    # Format 1: [HH:MM AM/PM] - Traditional Slack format with username on same line
+    if (bracket_match = line.match(/^\s*(.*?)\s*\[(\d{1,2}:\d{2}\s+(AM|PM))\]/))
+      return {
+        type: :bracketed_12h,
+        username: bracket_match[1].strip,
+        timestamp: bracket_match[2],
+        start_pos: bracket_match.begin(2),
+        end_pos: bracket_match.end(2)
       }
+    end
+
+    # Format 2: [YYYY-MM-DD HH:MM:SS] - ISO timestamp format with username on same line
+    if (iso_match = line.match(/^\s*(.*?)\s*\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]/))
+      return {
+        type: :iso_timestamp,
+        username: iso_match[1].strip,
+        timestamp: iso_match[2],
+        start_pos: iso_match.begin(2),
+        end_pos: iso_match.end(2)
+      }
+    end
+
+    # Format 3: Day at HH:MM - 24-hour format on its own line (e.g., "Monday at 16:01")
+    # This needs to come BEFORE the combined username+timestamp pattern
+    if (standalone_at_match = line.match(/^\s*(\w+\s+at\s+\d{1,2}:\d{2})\s*$/))
+      return {
+        type: :standalone_day_at_24h,
+        username: '', # Username from previous line
+        timestamp: standalone_at_match[1],
+        content: ''
+      }
+    end
+
+    # Format 4: Day at HH:MM - 24-hour format with username on same line (e.g., "miller Monday at 16:01")
+    # Only match if there's content after the timestamp (to avoid false matches)
+    if (at_match = line.match(/^\s*(.*?)\s+(\w+\s+at\s+\d{1,2}:\d{2})\s*(.*)$/)) && at_match[3] && !at_match[3].strip.empty?
+      return {
+        type: :day_at_24h,
+        username: at_match[1].strip,
+        timestamp: at_match[2],
+        content_start: at_match.begin(3),
+        content: at_match[3].strip
+      }
+    end
+
+    # Format 5: Username on its own line (followed by timestamp on next line)
+    if (username_match = line.match(/^\s*([A-Za-z][A-Za-z0-9_.\-. ]*)\s*$/))
+      # Only treat as username if it doesn't look like content
+      username = username_match[1].strip
+      if username.length > 0 && username.length <= 50 && (!username.include?(' ') || username.split.length <= 3)
+        return {
+          type: :standalone_username,
+          username: username,
+          timestamp: '', # Will be on next line
+          content: ''
+        }
+      end
+    end
+
+    debug_log "Warning: Unrecognized timestamp format in line: #{line.strip[0..80]}..."
+    nil
+  end
+
+  def convert_24h_to_12h(time_str)
+    # Extract hours and minutes from "Day at HH:MM" format
+    if (time_match = time_str.match(/at\s+(\d{1,2}):(\d{2})/))
+      hour = time_match[1].to_i
+      minute = time_match[2]
+
+      # Extract day of week
+      day = time_str.split(' at ').first
+
+      # Convert to 12-hour format
+      ampm = hour >= 12 ? 'PM' : 'AM'
+      hour_12 = if hour == 0
+                  12
+                else
+                  (hour > 12 ? hour - 12 : hour)
+                end
+
+      "#{day} at #{hour_12}:#{minute} #{ampm}"
     else
-      fallback_message(line)
+      debug_log "Warning: Could not parse 24h time format: #{time_str}"
+      time_str
     end
   end
 
+  def create_message_from_parts(username, timestamp, content)
+    # Convert timestamp if needed
+    if timestamp.include?('at') && timestamp.match?(/\d{1,2}:\d{2}/) && timestamp.match?(/\w+\s+at\s+\d{1,2}:\d{2}$/)
+      # Check if it's 24-hour format
+      timestamp = convert_24h_to_12h(timestamp)
+    end
+
+    # Validate parsed components
+    if username.empty?
+      debug_log "Warning: Empty username detected, using 'Unknown'"
+      username = 'Unknown'
+    end
+
+    {
+      username: username,
+      timestamp: timestamp,
+      content: content,
+      reactions: []
+    }
+  end
+
+  def parse_new_message(line)
+    format_info = detect_timestamp_format(line)
+
+    unless format_info
+      debug_log "Warning: Could not parse timestamp format from line: #{line.strip[0..80]}..."
+      return fallback_message(line)
+    end
+
+    username = format_info[:username]
+    timestamp = format_info[:timestamp]
+    content = ''
+
+    case format_info[:type]
+    when :bracketed_12h
+      # Original format: username [HH:MM AM/PM] content
+      content = line[format_info[:end_pos]..-1].strip
+
+    when :day_at_24h
+      # New format: username Day at HH:MM content
+      # Convert 24h to 12h for consistency
+      timestamp = convert_24h_to_12h(timestamp)
+      content = format_info[:content]
+
+    when :iso_timestamp
+      # ISO format: username [YYYY-MM-DD HH:MM:SS] content
+      content = line[format_info[:end_pos]..-1].strip
+
+    when :standalone_day_at_24h, :standalone_username
+      # These are handled separately in parse_messages
+      return fallback_message(line)
+
+    else
+      debug_log "Warning: Unknown timestamp format type: #{format_info[:type]}"
+      return fallback_message(line)
+    end
+
+    # Validate parsed components
+    if username.empty?
+      debug_log "Warning: Empty username detected, using 'Unknown'"
+      username = 'Unknown'
+    end
+
+    debug_log('Successfully parsed message', {
+                username: username,
+                timestamp: timestamp,
+                content_length: content.length,
+                format: format_info[:type]
+              })
+
+    {
+      username: username,
+      timestamp: timestamp,
+      content: content,
+      reactions: []
+    }
+  end
+
   def fallback_message(line)
+    debug_log "Warning: Using fallback parsing for line: #{line.strip[0..80]}..."
+    debug_log('Fallback message created', { line: line })
+
     {
       username: 'Unknown',
       timestamp: '',
@@ -106,108 +346,127 @@ class SlackThreadFormatter
   end
 
   def handle_special_patterns(line, current_message)
-    # Handle "43 repliesVerdant Express [11:28 AM]" pattern
-    if line.include?('replies') && line.include?('[') && line.include?(']')
-      # Split at the bracket
-      parts = line.split('[', 2)
-      return nil unless parts.length >= 2
+    debug_log('Checking special patterns', { line: line.strip[0..80] })
 
-      before_bracket = parts[0]
-      after_bracket = parts[1]
+    # Handle "43 replies username [timestamp]" pattern
+    return handle_replies_pattern(line, current_message) if line.include?('replies')
 
-      # Add everything before 'replies' to current message
-      replies_pos = before_bracket.rindex('replies')
-      current_message[:content] += "\n" + before_bracket[0...replies_pos + 7].strip if replies_pos
+    # Handle "theme username timestamp" pattern
+    return handle_theme_pattern(line, current_message) if line.include?('theme')
 
-      # Parse the part after the bracket
-      timestamp_end = after_bracket.index(']')
-      return nil unless timestamp_end
+    # Handle "content username timestamp" pattern - use our new detection
+    if (format_info = detect_timestamp_format(line))
+      return handle_content_timestamp_pattern(line, current_message, format_info)
+    end
 
-      timestamp_and_username = after_bracket[0...timestamp_end]
-      username_and_content = after_bracket[timestamp_end + 1..-1].strip
+    nil
+  end
 
-      # Extract timestamp
-      timestamp = timestamp_and_username
+  def handle_replies_pattern(line, current_message)
+    # Look for pattern: "X replies username [timestamp]" or "X replies username Day at HH:MM"
+    if (format_info = detect_timestamp_format(line))
+      # Add everything before the timestamp to current message, but only up to 'replies'
+      case format_info[:type]
+      when :bracketed_12h
+        before_timestamp = line[0...format_info[:start_pos]].strip
+        replies_pos = before_timestamp.rindex('replies')
+        if replies_pos
+          content_to_add = before_timestamp[0...replies_pos + 7].strip
+          current_message[:content] += "\n" + content_to_add unless content_to_add.empty?
+          debug_log('Added replies content', { content: content_to_add[0..50] })
+        end
 
-      # Extract username (last properly capitalized word before timestamp)
-      words = username_and_content.split(/\s+/)
-      username = nil
-      words.reverse.each do |word|
-        # Check if word starts with capital letter and contains only allowed username chars
-        if word.match(/^[A-Z][a-zA-Z0-9_.\-.]*$/)
-          username = word
-          break
+      when :day_at_24h
+        # For day at format, the content is already separated in format_info
+        before_timestamp = line[0...format_info[:content_start]].strip
+        replies_pos = before_timestamp.rindex('replies')
+        if replies_pos
+          content_to_add = before_timestamp[0...replies_pos + 7].strip
+          current_message[:content] += "\n" + content_to_add unless content_to_add.empty?
+          debug_log('Added replies content', { content: content_to_add[0..50] })
         end
       end
 
-      if username
-        return {
-          username: username.strip,
-          timestamp: timestamp,
-          content: '',
-          reactions: []
-        }
-      end
+      # Create new message from the detected format
+      return parse_new_message(line)
     end
 
-    # Handle "Impact theme miller [11:34 AM]" pattern
-    if line.include?('theme') && line.include?('[') && line.include?(']')
+    debug_log "Warning: Could not parse replies pattern: #{line.strip[0..80]}..."
+    nil
+  end
+
+  def handle_theme_pattern(line, current_message)
+    # Look for pattern: "theme username timestamp"
+    if (format_info = detect_timestamp_format(line))
       theme_pos = line.index('theme')
       return nil unless theme_pos
 
       before_theme = line[0...theme_pos + 5] # 5 = length of 'theme'
-      after_theme = line[theme_pos + 5..-1]
 
       # Add the theme part to current message
       current_message[:content] += "\n" + before_theme.strip unless before_theme.strip.empty?
+      debug_log('Added theme content', { content: before_theme.strip[0..50] })
 
-      # Parse the rest as a new message
-      parse_new_message(after_theme)
+      # Create new message from the detected format
+      return parse_new_message(line)
     end
 
-    # Handle "content username [timestamp]" pattern where username is at the end
-    if line.include?('[') && line.include?(']')
-      timestamp_start = line.rindex('[')
-      timestamp_end = line.rindex(']')
+    debug_log "Warning: Could not parse theme pattern: #{line.strip[0..80]}..."
+    nil
+  end
 
-      if timestamp_start && timestamp_end && timestamp_start > 0
-        timestamp_content = line[timestamp_start + 1...timestamp_end]
-        if timestamp_content.match?(/^\d{1,2}:\d{2}\s+(AM|PM)$/)
-          content_part = line[0...timestamp_start].strip
-          username_and_rest = line[timestamp_end + 1..-1].strip
+  def handle_content_timestamp_pattern(line, current_message, format_info)
+    # Handle case where content appears before a timestamp
+    case format_info[:type]
+    when :bracketed_12h, :iso_timestamp
+      content_part = line[0...format_info[:start_pos]].strip
+      username_and_rest = line[format_info[:end_pos]..-1].strip
 
-          # Extract username from the beginning of the rest
-          username_parts = username_and_rest.split(/\s+/)
-          if username_parts.length > 0
-            username = username_parts[0]
+    when :day_at_24h
+      content_part = line[0...format_info[:content_start]].strip
+      username_and_rest = format_info[:content]
+    end
 
-            # Add content part to current message
-            current_message[:content] += "\n" + content_part unless content_part.empty?
+    # Extract username from the beginning of the rest
+    username_parts = username_and_rest.split(/\s+/)
+    if username_parts.length > 0 && !username_parts[0].empty?
+      username = username_parts[0]
 
-            # Extract timestamp (simplified)
-            timestamp = timestamp_content
+      # Add content part to current message
+      current_message[:content] += "\n" + content_part unless content_part.empty?
+      debug_log('Added content before timestamp', { content: content_part[0..50], username: username })
 
-            return {
-              username: username,
-              timestamp: timestamp,
-              content: '',
-              reactions: []
-            }
-          end
-        end
-      end
+      timestamp = format_info[:type] == :day_at_24h ? convert_24h_to_12h(format_info[:timestamp]) : format_info[:timestamp]
+
+      return {
+        username: username,
+        timestamp: timestamp,
+        content: '',
+        reactions: []
+      }
+    else
+      debug_log "Warning: Could not extract username in content-timestamp pattern: #{username_and_rest[0..50]}..."
     end
 
     nil
   end
 
   def append_to_current_message(message, line)
+    unless message
+      debug_log "Warning: Attempted to append to nil message for line: #{line.strip[0..50]}..."
+      return nil
+    end
+
     normalized_line = line.gsub(/\u00A0/, ' ')
+    debug_log('Appending to current message', { username: message[:username], line_preview: line.strip[0..50] })
 
     if reaction_line?(normalized_line)
-      message[:reactions].concat(parse_reactions(normalized_line))
+      reactions = parse_reactions(normalized_line)
+      message[:reactions].concat(reactions)
+      debug_log('Added reactions', { count: reactions.length, reactions: reactions })
     else
       message[:content] += "\n" + line
+      debug_log('Added content line', { content_length: line.length })
     end
 
     nil
@@ -248,12 +507,20 @@ class SlackThreadFormatter
     text.gsub(url_pattern) do |url|
       title = extract_url_title(url)
       "[#{title}](#{url})"
+    rescue StandardError => e
+      debug_log "Warning: Failed to extract title for URL #{url[0..50]}...: #{e.message}"
+      "[#{url}](#{url})" # Fallback to URL as title
     end
   end
 
   def extract_url_title(url)
     uri = URI.parse(url)
     hostname = uri.hostname
+
+    unless hostname
+      debug_log "Warning: No hostname found for URL: #{url[0..50]}..."
+      return 'Link'
+    end
 
     case hostname
     when /admin\.shopify\.com/
@@ -270,6 +537,10 @@ class SlackThreadFormatter
       'Vault'
     when /shopify\.slack\.com/
       'Slack Thread'
+    when /observe\.shopify\.io/
+      'Observe'
+    when /github\.com/
+      'GitHub'
     else
       path = uri.path.split('/').reject(&:empty?)
       if path.any?
@@ -278,29 +549,65 @@ class SlackThreadFormatter
         'Link'
       end
     end
-  rescue StandardError
+  rescue StandardError => e
+    debug_log "Warning: Error extracting title from URL #{url[0..50]}...: #{e.message}"
     'Link'
   end
 
   def output_messages(messages)
-    messages.each_with_index do |message, index|
-      puts "**#{message[:username]}** [#{message[:timestamp]}]"
+    return debug_log 'Warning: No messages to output' if messages.nil? || messages.empty?
 
-      processed_content = process_content(message[:content])
+    messages.each_with_index do |message, index|
+      # Validate message structure
+      unless message.is_a?(Hash) && message[:username] && message[:timestamp]
+        debug_log "Warning: Invalid message structure at index #{index}, skipping"
+        next
+      end
+
+      username = message[:username].to_s.strip
+      timestamp = message[:timestamp].to_s.strip
+      content = message[:content].to_s
+      reactions = message[:reactions] || []
+
+      if username.empty?
+        debug_log "Warning: Empty username for message #{index + 1}, using 'Unknown'"
+        username = 'Unknown'
+      end
+
+      puts "**#{username}** [#{timestamp}]"
+
+      processed_content = process_content(content)
       puts processed_content unless processed_content.strip.empty?
 
-      puts message[:reactions].join(' ') if preserve_emojis && message[:reactions].any?
+      if preserve_emojis && reactions.any?
+        reaction_string = reactions.join(' ')
+        puts reaction_string unless reaction_string.strip.empty?
+      end
 
       puts if index < messages.length - 1
+    rescue StandardError => e
+      debug_log "Warning: Error processing message #{index + 1}: #{e.message}"
+      next
     end
   end
 end
 
 # Handle help and arguments
 if ARGV.include?('--help') || ARGV.include?('-h')
-  puts 'Usage: format-slack-thread [--preserve-emojis] [input-file]'
+  puts 'Usage: format-slack-thread [--preserve-emojis] [--debug] [input-file]'
   puts '  --preserve-emojis  Keep emoji reactions as shortcodes'
+  puts '  --debug           Show detailed parsing information for troubleshooting'
   puts '  --help, -h        Show this help message'
+  puts ''
+  puts 'Supported timestamp formats:'
+  puts '  [HH:MM AM/PM]     - Traditional Slack format'
+  puts '  Day at HH:MM      - 24-hour format (e.g., "Monday at 16:01")'
+  puts '  [YYYY-MM-DD HH:MM:SS] - ISO timestamp format'
+  puts ''
+  puts 'Examples:'
+  puts '  cat slack-export.txt | format-slack-thread'
+  puts '  format-slack-thread --debug input.txt'
+  puts '  format-slack-thread --preserve-emojis --debug thread.txt'
   exit 0
 end
 
