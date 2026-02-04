@@ -30,6 +30,7 @@ function install_home_mac {
   rc_install fish/config .config/fish/config.fish
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
   rc_install fish/home_mac_config .config/fish/conf.d/550_home_mac_config.fish
+  rc_install ghostty/config .config/ghostty/config
   rc_install gitconfig/home .gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install jj/home_config .config/jj/config.toml
@@ -52,6 +53,7 @@ function install_home_linux {
   rc_install bash/bash_profile .bash_profile
   rc_install fish/config .config/fish/config.fish
   rc_install fish/linux_config .config/fish/conf.d/500_linux_config.fish
+  rc_install ghostty/config .config/ghostty/config
   rc_install gitconfig/home .gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install jj/home_config .config/jj/config.toml
@@ -75,6 +77,7 @@ function install_work_mac {
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
   rc_install fish/work_mac_config .config/fish/conf.d/550_work_mac_config.fish
   rc_install fish/dev_config .config/fish/conf.d/700_dev_config.fish
+  rc_install ghostty/config .config/ghostty/config
   rc_install gitconfig/work .gitconfig
   rc_install gitconfig/work-dev .config/dev/gitconfig
   rc_install gitconfig/gitignore .gitignore
@@ -98,6 +101,7 @@ function install_work_linux {
   rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install fish/config .config/fish/config.fish
   rc_install fish/linux_config .config/fish/conf.d/500_linux_config.fish
+  rc_install ghostty/config .config/ghostty/config
   rc_install gitconfig/work .gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install jj/work_config .config/jj/config.toml
