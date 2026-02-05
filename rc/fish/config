@@ -90,3 +90,6 @@ function fish_prompt --description 'Write out the prompt'
 
     echo -n -s (prompt_login)' ' (set_color $color_cwd) (prompt_pwd --dir-length 0) $normal (fish_vcs_prompt) $normal " "$prompt_status \n$suffix " "
 end
+
+# Added by tec agent
+test -x /Users/millerhall/.local/state/tec/profiles/base/current/global/init && /Users/millerhall/.local/state/tec/profiles/base/current/global/init fish | source

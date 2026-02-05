@@ -76,6 +76,7 @@ function install_work_mac {
   rc_install fish/config .config/fish/config.fish
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
   rc_install fish/work_mac_config .config/fish/conf.d/550_work_mac_config.fish
+  rc_install fish/asdf_config .config/fish/conf.d/600_asdf_config.fish
   rc_install fish/dev_config .config/fish/conf.d/700_dev_config.fish
   rc_install ghostty/config .config/ghostty/config
   rc_install gitconfig/work .gitconfig
