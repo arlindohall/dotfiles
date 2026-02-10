@@ -88,8 +88,7 @@ function install_work_mac {
   rc_install tmux/conf .tmux.conf
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
-  rc_install zsh/work_zshrc .config/.work_zshrc
-  rc_install zsh/mac_zshrc .zshrc
+  rc_install zsh/work_zshrc .zshrc
 
   install_lazyvim_config
 }

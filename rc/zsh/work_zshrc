@@ -1,3 +1,6 @@
+autoload -Uz compinit
+compinit
+
 [ -f /etc/zsh/zshrc.default.inc.zsh ] && source /etc/zsh/zshrc.default.inc.zsh
 
 PATH=$PATH:$HOME/bin
@@ -15,8 +18,6 @@ export PATH="$PATH:$HOME/.cargo/bin"
 [[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
 
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
-
-[ -f .config/.work_zshrc ] && source .config/.work_zshrc
 
 function dl {
     mv $@ $HOME/.rm-trash-can/

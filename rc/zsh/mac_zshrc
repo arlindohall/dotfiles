@@ -1,11 +1,19 @@
+PATH=$PATH:$HOME/bin
+
+bindkey -v
+bindkey '^R' history-incremental-search-backward
+
+# Add Cargo to PATH to install git-delta
+# Installed under `.rust/bin` because that's where instances
+# come with Rust installed when I use zsh, but leave `.cargo/bin`
+# because that's where things are installed
+export PATH="$PATH:$HOME/.cargo/bin"
 
 
 [[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
 
-[ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
-
-[ -f .config/.work_zshrc ] && source .config/.work_zshrc
-
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
+
+alias vim=nvim
