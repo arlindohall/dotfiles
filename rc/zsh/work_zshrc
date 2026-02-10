@@ -2,14 +2,8 @@
 
 PATH=$PATH:$HOME/bin
 
-alias dependencies-install="tmux new -d $HOME/dotfiles/dependencies-install.sh"
-
 bindkey -v
 bindkey '^R' history-incremental-search-backward
-
-if which rbenv 1>/dev/null ; then
-  eval "$(rbenv init - zsh)"
-fi
 
 # Add Cargo to PATH to install git-delta
 # Installed under `.rust/bin` because that's where instances
@@ -17,12 +11,20 @@ fi
 # because that's where things are installed
 export PATH="$PATH:$HOME/.cargo/bin"
 
+
+[[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
+
+[ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
+
+[ -f .config/.work_zshrc ] && source .config/.work_zshrc
+
 function dl {
     mv $@ $HOME/.rm-trash-can/
 }
 
-function open-spin {
-    open https://$SPIN_FQDN
-}
-
 alias vim=nvim
+
+# cloudplatform: add Shopify clusters to your local kubernetes config
+export KUBECONFIG=${KUBECONFIG:+$KUBECONFIG:}/Users/millerhall/.kube/config:/Users/millerhall/.kube/config.shopify.cloudplatform
+for file in /Users/millerhall/src/github.com/Shopify/cloudplatform/workflow-utils/*.bash; do source ${file}; done
+kubectl-short-aliases
