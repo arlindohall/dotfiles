@@ -118,10 +118,13 @@ function install_work_linux {
 function install_personal_bin {
   mkdir -p "$HOME/bin"
 
-  if ls "$INSTALL_PATH"; then
+  if ls "$INSTALL_PATH/bin" | grep env; then
     echo "Installing personal bin from $INSTALL_PATH to $HOME"
     cp -r "$INSTALL_PATH/bin/"* "$HOME/bin/"
     ls -a "$INSTALL_PATH/bin" | grep env | xargs -n1 -I% cp "$INSTALL_PATH/bin/"% "$HOME/bin/"
+  elif ls "$INSTALL_PATH"; then
+    echo "Installing personal bin from $INSTALL_PATH to $HOME"
+    cp -r "$INSTALL_PATH/bin/"* "$HOME/bin/"
   else
     echo "Unable to run script..."
     echo "Please place dir in either $HOME/dotfiles or $HOME/worksapce/dotfiles..."
