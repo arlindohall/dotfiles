@@ -40,6 +40,7 @@ function install_home_mac {
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
   rc_install zsh/mac_zshrc .zshrc
+  rc_install claude-skills/tdd-planning.md .claude/skills/tdd-planning.md
 
   install_lazyvim_config
 }
@@ -89,6 +90,7 @@ function install_work_mac {
   rc_install tmux/conf_local .tmux.conf.local
   rc_install vim/vimrc .vimrc
   rc_install zsh/work_zshrc .zshrc
+  rc_install claude-skills/tdd-planning.md .claude/skills/tdd-planning.md
 
   install_lazyvim_config
 }
