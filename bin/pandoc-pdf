@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# pandoc-pdf - Wrapper for pandoc with LaTeX headers for emoji support
+# Usage: pandoc-pdf [pandoc options] input.md -o output.pdf
+
+HEADERS_FILE="/tmp/headers.tex"
+
+cat >"$HEADERS_FILE" <<EOF
+% Enable emoji handling via LuaLaTeX
+\usepackage{fontspec}
+\usepackage{luacode} % Needed for direct Lua code execution in LaTeX
+
+% Add the emoji fallback mechanism using LuaLaTeX
+\directlua{
+    luaotfload.add_fallback("emojifallback", {
+        "Noto Color Emoji:mode=harf;script=DFLT;"
+    })
+}
+
+% Set the main and sans-serif fonts with emoji fallback
+\setmainfont{Source Sans Pro}[RawFeature={fallback=emojifallback}]
+\setsansfont{Source Sans Pro}[RawFeature={fallback=emojifallback}]
+
+% Optional: Load emoji-specific package if you plan to use emoji characters via name
+\usepackage{emo}
+EOF
+
+pandoc --pdf-engine=lualatex -H "$HEADERS_FILE" "$@"
