@@ -25,4 +25,7 @@ cat >"$HEADERS_FILE" <<EOF
 \usepackage{emo}
 EOF
 
-pandoc --pdf-engine=lualatex -H "$HEADERS_FILE" "$@"
+CMD="pandoc --pdf-engine=lualatex -H $HEADERS_FILE $@"
+
+echo $CMD
+exec $CMD
