@@ -1,0 +1,95 @@
+#!/Users/millerhall/.asdf/installs/ruby/3.4.3/bin/ruby
+# frozen_string_literal: true
+
+require 'json'
+
+EMOJI_CACHE = '/tmp/emoji.json'
+
+USAGE = <<~USAGE
+  convert-emojis - Convert emoji unicode characters to shortcodes
+
+  USAGE:
+    convert-emojis --fetch              Fetch and cache emoji data from GitHub
+    convert-emojis < input.md           Convert stdin to /tmp/with-emoji-shortcode.txt
+    convert-emojis file.md [...]        Convert .md files to *.emj-shrt.md
+
+  EXAMPLES:
+    convert-emojis --fetch
+    echo "Hello 👋" | convert-emojis
+    convert-emojis README.md CHANGELOG.md
+
+  NOTES:
+    - Emoji data is cached in #{EMOJI_CACHE}
+    - Only .md files are accepted as arguments
+    - Stdin output goes to /tmp/with-emoji-shortcode.txt
+USAGE
+
+def usage(message = nil)
+  warn "Error: #{message}\n\n" if message
+  warn USAGE
+  exit 1
+end
+
+def fetch_emojis
+  warn "Fetching emojis from GitHub API..."
+  response = `curl -sS https://api.github.com/emojis`
+  raise "Failed to fetch emojis" unless $?.success?
+
+  github_emojis = JSON.parse(response)
+
+  emojis = github_emojis.map do |shortcode, url|
+    if url =~ %r{unicode/([0-9a-f-]+)\.png}
+      hex_codes = Regexp.last_match(1).split('-')
+      unicode = hex_codes.map { |hex| [hex.to_i(16)].pack('U*') }.join
+
+      { shortcode: shortcode, svg_url: url, unicode: unicode }
+    end
+  end.compact
+
+  File.write(EMOJI_CACHE, JSON.pretty_generate(emojis))
+  warn "Cached #{emojis.size} emojis to #{EMOJI_CACHE}"
+  emojis
+end
+
+def load_emojis
+  if File.exist?(EMOJI_CACHE)
+    JSON.parse(File.read(EMOJI_CACHE), symbolize_names: true)
+  else
+    fetch_emojis
+  end
+end
+
+def convert_text(text, emojis)
+  unicode_to_shortcode = emojis
+    .sort_by { |e| -e[:unicode].length }
+    .each_with_object({}) { |emoji, hash| hash[emoji[:unicode]] = ":#{emoji[:shortcode]}:" }
+
+  unicode_to_shortcode.each { |unicode, shortcode| text = text.gsub(unicode, shortcode) }
+  text
+end
+
+if ARGV.first == '--fetch'
+  fetch_emojis
+  exit 0
+end
+
+emojis = load_emojis
+
+if ARGV.empty?
+  text = $stdin.read
+  converted = convert_text(text, emojis)
+  output_file = '/tmp/with-emoji-shortcode.txt'
+  File.write(output_file, converted)
+  puts "Output written to #{output_file}"
+else
+  ARGV.each do |file|
+    usage("#{file} is not a .md file") unless file.end_with?('.md')
+    usage("#{file} does not exist") unless File.exist?(file)
+
+    text = File.read(file)
+    converted = convert_text(text, emojis)
+    output_file = file.sub(/\.md$/, '.emj-shrt.md')
+    File.write(output_file, converted)
+    puts "Converted #{file} -> #{output_file}"
+  end
+end
