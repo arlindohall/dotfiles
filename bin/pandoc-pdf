@@ -10,16 +10,19 @@ cat >"$HEADERS_FILE" <<EOF
 \usepackage{fontspec}
 \usepackage{luacode} % Needed for direct Lua code execution in LaTeX
 
-% Add the emoji fallback mechanism using LuaLaTeX
+% Add the font fallback chain using LuaLaTeX
+% First fallback: Source Sans Pro for missing regular characters
+% Second fallback: Noto Color Emoji for emoji characters
 \directlua{
-    luaotfload.add_fallback("emojifallback", {
+    luaotfload.add_fallback("fontfallback", {
+        "Source Sans Pro:mode=harf;",
         "Noto Color Emoji:mode=harf;script=DFLT;"
     })
 }
 
-% Set the main and sans-serif fonts with emoji fallback
-\setmainfont{Source Sans Pro}[RawFeature={fallback=emojifallback}]
-\setsansfont{Source Sans Pro}[RawFeature={fallback=emojifallback}]
+% Set the main font (Latin Modern Roman - LaTeX default) with fallback chain
+\setmainfont{Latin Modern Roman}[RawFeature={fallback=fontfallback}]
+\setsansfont{Latin Modern Sans}[RawFeature={fallback=fontfallback}]
 
 % Optional: Load emoji-specific package if you plan to use emoji characters via name
 \usepackage{emo}
