@@ -18,4 +18,5 @@ return {
       mode = { "n", "x" },
     },
   },
+  { "akinsho/git-conflict.nvim", version = "*", config = true },
 }
