@@ -36,9 +36,11 @@
 	dnames = diff --name-only --pretty=""
 	adog = log --all --decorate --oneline --graph
 	bdog = log --branches --decorate --oneline --graph
-	root = rev-parse --show-toplevel
 	stat = show --stat --pretty=""
 	dstat = diff --stat
+	save = !git add . && git commit --amend --no-edit
+	root = rev-parse --show-toplevel
+
 [init]
 	defaultBranch = main
 [commit]
