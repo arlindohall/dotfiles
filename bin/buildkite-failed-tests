@@ -72,7 +72,7 @@ class BuildkiteFailedTests
     end
 
     def type = 'theme-store'
-    def matches? = html.at('title')&.text&.match('shopify-theme-store')
+    def matches? = html.at('title')&.text&.match('world-areas-incubating-theme-store')
 
     def failed_tests
       html.search('p:contains("Run locally")')
