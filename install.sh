@@ -34,6 +34,7 @@ function install_home_mac {
   rc_install gitconfig/home .gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install jj/home_config .config/jj/config.toml
+  rc_install rg/ignore .ignore
   rc_install sh/inputrc .inputrc
   rc_install sh/profile .profile
   rc_install tmux/conf .tmux.conf
@@ -83,6 +84,7 @@ function install_work_mac {
   rc_install gitconfig/work-dev .config/dev/gitconfig
   rc_install gitconfig/gitignore .gitignore
   rc_install jj/work_config .config/jj/config.toml
+  rc_install rg/ignore .ignore
   rc_install sh/inputrc .inputrc
   rc_install sh/profile .profile
   rc_install tmux/conf .tmux.conf
