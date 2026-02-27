@@ -22,6 +22,7 @@
     autoSetupRemote = true
 [alias]
 	b = branch
+	hash = log -n 1 --pretty=%H
 	short = log --pretty=short
 	when = log --pretty='%C(yellow)%h %Cblue%ad %Cgreen%an %Creset%<(50,trunc)%s' --date=short
 	whend = log --decorate=short --decorate-refs-exclude='refs/tags/*' \
