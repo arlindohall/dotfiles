@@ -4,6 +4,7 @@
 require 'json'
 
 EMOJI_CACHE = '/tmp/emoji.json'
+CHARACTERS_TO_REMOVE = /[\x08\x0B]/
 
 USAGE = <<~USAGE
   convert-emojis - Convert emoji unicode characters to shortcodes
@@ -65,7 +66,8 @@ def convert_text(text, emojis)
     .each_with_object({}) { |emoji, hash| hash[emoji[:unicode]] = ":#{emoji[:shortcode]}:" }
 
   unicode_to_shortcode.each { |unicode, shortcode| text = text.gsub(unicode, shortcode) }
-  text
+
+  text.gsub(CHARACTERS_TO_REMOVE, '')
 end
 
 if ARGV.first == '--fetch'
