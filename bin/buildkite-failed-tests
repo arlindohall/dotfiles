@@ -59,8 +59,8 @@ class BuildkiteFailedTests
     def matches? = html.at('title')&.text&.match('shopify-app-store')
 
     def failed_tests
-      html.search('p:contains("Run locally")')
-          .map { |it| it.children.last.children.first.to_s.split(' -n').first.split('lib:test ').last }
+      html.search('code:contains("bundle exec ruby -Ilib:test")')
+          .map { |it| it.to_s.split('Ilib:test ').last.split.first }
     end
   end
 
@@ -121,7 +121,7 @@ class BuildkiteFailedTests
     (UNDETERMINED_TEST_FINDER = 3) => 'Unable to determine test finder class'
   }.freeze
 
-  TEST_FINDERS = [ShopifyCore, AppStore, ThemeStore, AdminWeb].freeze
+  TEST_FINDERS = [AppStore, ThemeStore, ShopifyCore, AdminWeb].freeze
 
   attr_reader :contents
 
