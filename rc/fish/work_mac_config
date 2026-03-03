@@ -2,14 +2,6 @@ alias gcloud 'uvx gcloud'
 
 alias kk kubectl
 
-alias spin "caffeinate -d spin"
-
-alias servers "tmux new -d -s web-server 'dev cd web && dev server' ;
-  tmux new -d -s shopify-server 'dev cd shopify && dev server'"
-alias servers-with-up "tmux new -d -s web-server 'dev cd web && dev up && dev server' ;
-  tmux new -d -s shopify-server 'dev cd shopify && dev up && dev server'"
-alias servers-kill-all "pgrep -f '(puma|concurrently.js)' | xargs kill -15"
-
 alias bft buildkite-failed-tests
 
 alias gg "gt switch (jj bookmark list -r @- | head -1 | cut -d: -f1)"
@@ -20,3 +12,16 @@ end
 
 alias latest_theme_store_commit 'latest_commit_in_zone /areas/incubating/theme-store'
 alias latest_app_store_commit 'latest_commit_in_zone /areas/incubating/app-store'
+
+alias root 'dev cd // --tree root'
+alias dotfiles 'cd ~/dotfiles'
+
+set -g trees $HOME/world/trees
+
+function __set_local_git_directory_root --on-variable PWD
+  if test (git root 2>/dev/null)
+    set -g root (git root)
+  else
+    set -eg root
+  end
+end
