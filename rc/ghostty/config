@@ -18,3 +18,4 @@ window-save-state = always
 # Clipboard
 #================================================#
 copy-on-select = clipboard
+keybind = shift+enter=text:\x1b\r
