@@ -41,7 +41,7 @@
 	dstat = diff --stat
 	save = !git add . && git commit --amend --no-edit
 	root = rev-parse --show-toplevel
-
+	dir = rev-parse --git-dir
 [init]
 	defaultBranch = main
 [commit]
