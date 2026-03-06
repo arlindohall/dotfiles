@@ -10,7 +10,11 @@ alias 'todays-date'         'echo (date +\'%b %d, %Y\')'
 alias 'notego'              'cd "$HOME/var/notes"'
 
 alias docker                podman
-alias aider                 'uvx aider'
 
 alias mermaid 'npx @mermaid-js/mermaid-cli'
 
+set -g EDITOR /opt/homebrew/bin/nvim
+
+function pi --description 'alias for pi that sets EDITOR for opening with ctrl-g'
+  EDITOR=/opt/homebrew/bin/nvim command pi -n $argv
+end
