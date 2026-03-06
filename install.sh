@@ -74,6 +74,8 @@ function install_work_mac {
   rc_install aspell/dictionary.txt var/dictionary.txt
   rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
   rc_install bash/bash_profile .bash_profile
+  rc_install claude/notify.sh .claude/notify.sh
+  rc_install claude/settings.json .claude/settings.json
   rc_install fish/config .config/fish/config.fish
   rc_install fish/mac_config .config/fish/conf.d/500_mac_config.fish
   rc_install fish/work_mac_config .config/fish/conf.d/550_work_mac_config.fish
