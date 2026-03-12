@@ -113,7 +113,7 @@ class BuildkiteFailedTests
     end
   end
 
-  FAILED_FILE = 'miller/failed'
+  FAILED_FILE = '/tmp/failed'
 
   MESSAGES = {
     (NO_FAILURES_FOUND = 1) => 'No failures in file (REPLACE)',
