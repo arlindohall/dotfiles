@@ -1,0 +1,10 @@
+[package]
+name = "manners"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "manners"
+path = "src/main.rs"
+
+[dependencies]

@@ -1,0 +1,120 @@
+name: Release Rust Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.nix_system }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            nix_system: x86_64-linux
+          - runner: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            nix_system: aarch64-linux
+            cross: true
+          - runner: macos-latest
+            target: x86_64-apple-darwin
+            nix_system: x86_64-darwin
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            nix_system: aarch64-darwin
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross (Linux ARM64 only)
+        if: matrix.cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Install musl tools (Linux x86_64)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get install -y musl-tools
+
+      - name: Build (cross)
+        if: matrix.cross
+        run: cross build --release --target ${{ matrix.target }} --manifest-path rust/Cargo.toml
+
+      - name: Build (native)
+        if: "!matrix.cross"
+        run: cargo build --release --target ${{ matrix.target }} --manifest-path rust/Cargo.toml
+
+      - name: Stage binaries
+        run: |
+          mkdir -p staging
+          for bin in rust/target/${{ matrix.target }}/release/manners; do
+            name=$(basename "$bin")
+            cp "$bin" "staging/${name}-${{ matrix.nix_system }}"
+          done
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: staging/*
+
+      - name: Upload artifact for hash job
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.nix_system }}
+          path: staging/*
+
+  update-hashes:
+    name: Update hashes.nix
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binaries-*
+          merge-multiple: true
+          path: staging/
+
+      - name: Generate hashes.nix
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          REPO="${GITHUB_REPOSITORY}"
+          BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
+
+          echo "{" > hashes.nix
+
+          for nix_system in x86_64-linux aarch64-linux x86_64-darwin aarch64-darwin; do
+            # Compute SRI sha256 (base64) from the downloaded binary
+            file="staging/manners-${nix_system}"
+            if [ -f "$file" ]; then
+              # Nix SRI format: sha256-<base64>
+              hash=$(sha256sum "$file" | awk '{print $1}')
+              b64=$(echo "$hash" | xxd -r -p | base64 -w0)
+              echo "  \"${nix_system}\" = { sha256 = \"sha256-${b64}\"; url = \"${BASE_URL}/manners-${nix_system}\"; };" >> hashes.nix
+            fi
+          done
+
+          echo "}" >> hashes.nix
+          cat hashes.nix
+
+      - name: Commit hashes.nix
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hashes.nix
+          git diff --cached --quiet || git commit -m "chore: update hashes.nix for ${GITHUB_REF_NAME}"
+          git push origin HEAD:main

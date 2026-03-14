@@ -13,60 +13,49 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        wrapScript = (
+        pkgs = nixpkgs.legacyPackages.${system};
+        hashes = import ./hashes.nix;
+
+        # Fetch a pre-built binary from GitHub Releases and install it.
+        # The binary is named "<name>-<nix_system>" in the release assets.
+        fetchBinary =
           name:
           let
-            path = ./. + "/bin/${name}";
-            output = "$out/bin/${name}";
-            makeBinPath = nixpkgs.lib.strings.makeBinPath;
+            info = hashes.${system};
           in
-          ''
-            cp ${path} ${output}
-            chmod u+x  ${output}
-            # Wrap the script to ensure Ruby and gems are available
-            wrapProgram ${output} \
-              --set PATH ${
-                makeBinPath [
-                  gems.wrappedRuby
-                  pkgs.ripgrep
-                  "$out"
-                ]
-              }
-          ''
-        );
-        pkgs = nixpkgs.legacyPackages.${system};
-        gems = pkgs.bundlerEnv {
-          name = "gemset";
-          gemdir = ./.;
-        };
-        bin = pkgs.stdenv.mkDerivation {
-          pname = "ruby-bin";
-          version = "1.0.0";
-          src = ./.;
-          buildInputs = [
-            gems
-            gems.wrappedRuby
-          ];
-          installPhase = ''
-            mkdir -p $out/bin
-            cp -r ${./bin/lib} $out/bin/lib
-            ${wrapScript "manners"}
-          '';
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-        };
+          pkgs.stdenv.mkDerivation {
+            pname = name;
+            # Read version from the Cargo.toml of the crate.
+            version =
+              let
+                raw = builtins.readFile ./rust/${name}/Cargo.toml;
+                match = builtins.match ''.*\nversion = "([^"]+)".*'' raw;
+              in
+              builtins.elemAt match 0;
+            src = pkgs.fetchurl {
+              url = info.url;
+              inherit (info) sha256;
+            };
+            dontUnpack = true;
+            installPhase = ''
+              mkdir -p $out/bin
+              cp $src $out/bin/${name}
+              chmod +x $out/bin/${name}
+            '';
+          };
+
+        manners = fetchBinary "manners";
       in
       {
-        packages.default = bin;
+        packages.manners = manners;
+        packages.default = manners;
 
-        devShells.default =
-          with pkgs;
-          mkShell {
-            buildInputs = [
-              gems
-              gems.wrappedRuby
-              ripgrep
-            ];
-          };
+        devShells.default = pkgs.mkShell {
+          buildInputs = [
+            pkgs.rustup
+            pkgs.ripgrep
+          ];
+        };
       }
     );
 }
