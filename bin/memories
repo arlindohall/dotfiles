@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# Usage: memories [command] [args...]
+# Human CLI for browsing and searching Claude agent memories.
+#
+# Commands:
+#   list              List all memories (ID, date, content snippet)
+#   show <id>         Show full memory with keywords and blobs
+#   search <keyword>  Search memories by keyword
+#   keywords          List all unique keywords with memory counts
+#   blobs             List all blob files with sizes
+#   report            Full report: keywords, memories, and blobs
+#   help              Show this help
+set -euo pipefail
+
+DB="$HOME/claude_memories.sqlite"
+BLOB_DIR="$HOME/claude_memories"
+SKILL_SCRIPTS="$HOME/dotfiles/skills/memory/scripts"
+
+usage() {
+  cat <<'EOF'
+memories - Browse and search Claude agent memories
+
+Usage: memories [command] [args...]
+
+Commands:
+  list              List all memories (ID, date, content snippet)
+  show <id>         Show full memory with keywords and blobs
+  search <keyword>  Search memories by keyword
+  keywords          List all unique keywords with memory counts
+  blobs             List all blob files with sizes
+  report            Full report: keywords, memories, and blobs
+  help              Show this help
+
+Database: ~/claude_memories.sqlite
+Blob dir: ~/claude_memories/
+EOF
+}
+
+check_db() {
+  if [[ ! -f "$DB" ]]; then
+    echo "No memory database found at $DB"
+    echo "Run: bash $SKILL_SCRIPTS/setup-db.sh"
+    exit 1
+  fi
+}
+
+cmd_list() {
+  check_db
+  echo "=== Memories ==="
+  echo ""
+  sqlite3 -header -column "$DB" "
+    SELECT
+      m.id AS ID,
+      m.created_at AS Created,
+      substr(m.content, 1, 72) AS Content
+    FROM memories m
+    ORDER BY m.created_at DESC;
+  "
+}
+
+cmd_show() {
+  check_db
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: memories show <id>" >&2
+    exit 1
+  fi
+  local id="$1"
+
+  echo "=== Memory ${id} ==="
+  echo ""
+
+  content=$(sqlite3 "$DB" "SELECT content FROM memories WHERE id = ${id};")
+  if [[ -z "$content" ]]; then
+    echo "Memory ${id} not found."
+    exit 1
+  fi
+
+  created=$(sqlite3 "$DB" "SELECT created_at FROM memories WHERE id = ${id};")
+  keywords=$(sqlite3 "$DB" "SELECT GROUP_CONCAT(keyword, ', ') FROM memory_keywords WHERE memory_id = ${id};")
+
+  echo "Created: ${created}"
+  echo "Keywords: ${keywords:-none}"
+  echo ""
+  echo "$content"
+  echo ""
+
+  blobs=$(sqlite3 -separator '|' "$DB" "SELECT filename, filetype, description FROM memory_blobs WHERE memory_id = ${id};")
+  if [[ -n "$blobs" ]]; then
+    echo "--- Blobs ---"
+    while IFS='|' read -r filename filetype description; do
+      filepath="${BLOB_DIR}/${filename}"
+      if [[ -f "$filepath" ]]; then
+        size=$(du -h "$filepath" | cut -f1)
+      else
+        size="MISSING"
+      fi
+      echo "  ${filename} (${filetype}, ${size}) - ${description}"
+    done <<< "$blobs"
+  fi
+}
+
+cmd_search() {
+  check_db
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: memories search <keyword>" >&2
+    exit 1
+  fi
+  bash "$SKILL_SCRIPTS/lookup-memory.sh" "$1"
+}
+
+cmd_keywords() {
+  check_db
+  echo "=== Keywords ==="
+  echo ""
+  sqlite3 -header -column "$DB" "
+    SELECT
+      mk.keyword AS Keyword,
+      COUNT(*) AS Memories
+    FROM memory_keywords mk
+    GROUP BY mk.keyword
+    ORDER BY Memories DESC, mk.keyword;
+  "
+}
+
+cmd_blobs() {
+  check_db
+  echo "=== Blobs ==="
+  echo ""
+  results=$(sqlite3 -separator '|' "$DB" "
+    SELECT mb.filename, mb.filetype, mb.description, mb.memory_id
+    FROM memory_blobs mb
+    ORDER BY mb.created_at DESC;
+  ")
+
+  if [[ -z "$results" ]]; then
+    echo "No blobs stored."
+    return
+  fi
+
+  while IFS='|' read -r filename filetype description memory_id; do
+    filepath="${BLOB_DIR}/${filename}"
+    if [[ -f "$filepath" ]]; then
+      size=$(du -h "$filepath" | cut -f1)
+    else
+      size="MISSING"
+    fi
+    echo "${filename} (${filetype}, ${size}) [memory:${memory_id}]"
+    echo "  ${description}"
+    echo ""
+  done <<< "$results"
+}
+
+cmd_report() {
+  check_db
+
+  total_memories=$(sqlite3 "$DB" "SELECT COUNT(*) FROM memories;")
+  total_keywords=$(sqlite3 "$DB" "SELECT COUNT(DISTINCT keyword) FROM memory_keywords;")
+  total_blobs=$(sqlite3 "$DB" "SELECT COUNT(*) FROM memory_blobs;")
+
+  echo "=== Memory Report ==="
+  echo ""
+  echo "Total memories: ${total_memories}"
+  echo "Total keywords: ${total_keywords}"
+  echo "Total blobs:    ${total_blobs}"
+  echo ""
+
+  cmd_keywords
+  echo ""
+  cmd_list
+  echo ""
+  cmd_blobs
+}
+
+case "${1:-help}" in
+  list)     cmd_list ;;
+  show)     shift; cmd_show "$@" ;;
+  search)   shift; cmd_search "$@" ;;
+  keywords) cmd_keywords ;;
+  blobs)    cmd_blobs ;;
+  report)   cmd_report ;;
+  help|*)   usage ;;
+esac
