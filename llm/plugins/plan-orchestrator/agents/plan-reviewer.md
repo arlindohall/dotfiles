@@ -48,7 +48,7 @@ Read `${STEP_FILE}` completely. This is your acceptance criteria — every requi
 
 ### 2. Read project conventions
 
-Read `CLAUDE.md` if it exists. The implementation must follow all project conventions.
+Read `AGENTS.md` (or `CLAUDE.md`) if it exists. The implementation must follow all project conventions.
 
 ### 3. Review the diff
 
@@ -76,7 +76,7 @@ Read each changed file carefully:
 - Look for bugs: off-by-one errors, nil/null handling, logic errors
 - Verify the code actually does what the plan says it should
 - Check that existing code wasn't broken or inadvertently modified
-- Verify naming matches the plan and project conventions (CLAUDE.md)
+- Verify naming matches the plan and project conventions (AGENTS.md)
 - Look for typos in strings, method names, filenames
 
 ### 6. Check scope
@@ -92,7 +92,7 @@ Verify the implementor stayed in scope:
 Run the project's test suite (or the subset relevant to this step):
 
 ```bash
-# Check CLAUDE.md for the test command, typically:
+# Check AGENTS.md for the test command, typically:
 bundle exec rake
 # or
 ruby -Ilib test/relevant_test.rb

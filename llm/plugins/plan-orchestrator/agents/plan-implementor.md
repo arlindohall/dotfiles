@@ -61,7 +61,7 @@ Skim the top-level `PLAN.md` for overall context only. Do NOT read other step fi
 
 ### 4. Read project conventions
 
-Read `CLAUDE.md` if it exists. Follow all project conventions strictly.
+Read `AGENTS.md` (or `CLAUDE.md`) if it exists. Follow all project conventions strictly.
 
 ### 5. Read existing code
 

@@ -1,5 +1,0 @@
-{
-  "name": "plan-orchestrator",
-  "version": "0.1.0",
-  "description": "Orchestrates multi-step plan implementation using worktrees, implementor agents, and reviewer agents"
-}

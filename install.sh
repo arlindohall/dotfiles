@@ -22,6 +22,7 @@ use_helper rc_helpers.sh
 function install_home_mac {
   set_up_directory_structure
   install_personal_bin
+  install_agent_config
   create_notes_symlink_if_home
 
   rc_install aspell/dictionary.txt var/dictionary.txt
@@ -48,6 +49,7 @@ function install_home_mac {
 function install_home_linux {
   set_up_directory_structure
   install_personal_bin
+  install_agent_config
 
   rc_install aspell/dictionary.txt var/dictionary.txt
   rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
@@ -70,6 +72,7 @@ function install_home_linux {
 function install_work_mac {
   set_up_directory_structure
   install_personal_bin
+  install_agent_config
 
   rc_install aspell/dictionary.txt var/dictionary.txt
   rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
@@ -100,6 +103,7 @@ function install_work_mac {
 function install_work_linux {
   set_up_directory_structure
   install_personal_bin
+  install_agent_config
 
   rc_install aspell/dictionary.txt var/dictionary.txt
   rc_install asdf/fish_config .config/fish/conf.d/600_asdf_config.fish
@@ -117,6 +121,19 @@ function install_work_linux {
   rc_install zsh/work_zshrc .zshrc
 
   install_lazyvim_config
+}
+
+function install_agent_config {
+  echo "Installing agent skills and plugins to ~/.pi/agent/"
+  local llm_dir="$INSTALL_PATH/llm"
+
+  mkdir -p "$HOME/.pi/agent/skills"
+  cp -r "$llm_dir/skills/"* "$HOME/.pi/agent/skills/"
+
+  mkdir -p "$HOME/.pi/agent/plugins"
+  cp -r "$llm_dir/plugins/"* "$HOME/.pi/agent/plugins/"
+
+  cp "$llm_dir/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 }
 
 function install_personal_bin {
