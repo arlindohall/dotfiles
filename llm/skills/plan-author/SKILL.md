@@ -139,20 +139,30 @@ Break the change into steps. Each step should:
 - **Result in a single commit.** One step = one commit. The commit should leave the
   codebase in a valid state (tests pass, no broken references).
 
+- **Write acceptance criteria before the implementation spec.** For each step, define the
+  acceptance criteria first — what must be true when the step is done. Then write the
+  implementation spec that satisfies those criteria. This is the TDE red-green cycle
+  applied to planning. See `skills/test-driven-engineering/SKILL.md`, Principle 1.
+
 - **Include its own tests.** Every step that adds or changes behaviour must include unit
   tests for that behaviour in the same step. Tests are not a separate step — they ship
-  with the code they cover.
+  with the code they cover. Define the test cases (inputs, expected outputs, edge cases)
+  before describing the implementation. The implementor writes the test file first, then
+  the production code.
 
 - **Follow a functional-core / imperative-shell shape.** Pure logic (decisions, transforms,
   calculations) lives in the functional core — small, testable, dependency-free units.
   Side effects (I/O, cookies, HTTP, database) live in a thin imperative shell that calls
-  the core. When designing steps, prefer to introduce the core logic first (easy to test),
-  then wire it into the shell in a later step.
+  the core. When designing steps, introduce the core logic first (easy to test with no
+  mocks), then wire it into the shell in a later step. Shell steps include integration
+  tests that exercise the wiring. See `skills/test-driven-engineering/SKILL.md`,
+  Principle 8.
 
 - **Follow shameless green / flocking rules.** The first step that introduces a new
   concept should do the simplest thing that works — no premature abstractions. Later steps
   can refine. If two pieces of code look similar, that's fine; a future step can extract
-  the duplication once the pattern is clear.
+  the duplication once the pattern is clear. See `skills/test-driven-engineering/SKILL.md`,
+  Principles 2–3.
 
 - **Have clear dependencies.** Each step declares which prior steps it depends on (or
   "None"). Independent steps can be implemented in parallel.
@@ -218,6 +228,33 @@ the safety rails — if any step violates an invariant, something is wrong.>
 existing codebase. Explain the pattern being followed if this step mirrors an
 existing one. Quote or paraphrase relevant type signatures.>
 
+## Tests (write this section BEFORE Files to create / Files to edit)
+
+<Define the test cases this step must include BEFORE describing the implementation.
+The implementor will write these tests first, then write the code that makes them
+pass. This is the TDE cycle applied to each step.
+
+For each test:
+- The test name / description
+- The inputs (concrete values, not placeholders)
+- The expected output or assertion (specific values or properties)
+- Why this test exists (what bug or edge case it would catch)
+
+Include tests for:
+- The happy path with specific expected outputs
+- Edge cases: nil/null, empty, zero, boundary values, invalid input
+- Error/failure paths where the code has explicit error handling
+- For imperative-shell steps: integration tests that verify the wiring
+
+Tests must follow TDE principles (see skills/test-driven-engineering/SKILL.md):
+- Verify behavior by checking outputs, not implementation details (Principle 4)
+- Exercise input properties: empty, nil, invalid (Principle 5)
+- Justify their existence — no tautologies (Principle 6)
+- Never mock the behavior being tested (Principle 7)
+
+If this step modifies an existing test file, describe both the new tests and any
+changes to existing tests.>
+
 ## Files to create
 
 <For each new file: full path, and the complete intended content as a fenced code
@@ -229,20 +266,6 @@ and clear `# TODO` comments for anything mechanical.>
 <For each existing file: the full path, what to change, and a code block showing
 the new or replacement code. Show enough surrounding context that the implementor
 can locate the edit site unambiguously.>
-
-## Tests
-
-<Describe the test cases this step must include. For each test:
-- The test name / description
-- The setup (what state or mocks are needed)
-- The assertion (what the test checks)
-
-If this step modifies an existing test file, say so and describe both the new
-tests and any changes to existing tests.
-
-Tests must assert real behaviour — not tautologies. A test that only checks
-"it doesn't crash" or "returns something truthy" is not sufficient. Tests should
-verify specific return values, state changes, or side effects.>
 
 ## Acceptance criteria
 
@@ -308,17 +331,19 @@ pattern has appeared at least twice and the extraction is obvious. A plan step t
 "refactor X and Y into a shared method" is fine as a later step, but only after both X
 and Y exist.
 
-### No tautological tests
+### Test-driven engineering
 
-A test must assert something that could meaningfully fail. Bad: `assert result` (truthy
-check). Good: `assert_equal "expected-uuid", result` (specific value). Bad:
-`assert_nothing_raised { call_method }` (no-crash check). Good:
-`assert_nil result` when nil is the expected outcome for a specific input.
+All plan steps follow the TDE cycle: write expectations (acceptance criteria, test cases)
+before writing the implementation spec. See `skills/test-driven-engineering/SKILL.md`
+for the full set of principles and examples of good and bad tests.
 
-Tests should cover:
-- The happy path with a specific expected output
-- At least one edge case (nil input, empty collection, missing permission, etc.)
-- Error/failure paths where the code has explicit error handling
+Key rules for tests specified in plan steps:
+- Tests assert specific outputs for specific inputs — no truthy checks, no crash checks
+- Tests exercise edge cases: nil, empty, zero, boundary, invalid
+- Tests justify their existence — they must be able to fail meaningfully
+- Tests never mock the behavior they are testing
+- Tests verify behavior (outputs), not implementation details (internals)
+- Functional-core code gets unit tests; imperative-shell code gets integration tests
 
 ### Commit hygiene
 

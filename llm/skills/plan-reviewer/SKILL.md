@@ -81,6 +81,25 @@ Read each changed file carefully:
 - Verify naming matches the plan and project conventions (AGENTS.md)
 - Look for typos in strings, method names, filenames
 
+### 5b. Check test quality (TDE)
+
+Evaluate tests against the TDE principles (see `skills/test-driven-engineering/SKILL.md`):
+
+- **Behavior, not implementation.** Do tests check outputs for given inputs, or do they
+  inspect internal state or call patterns? Tests coupled to implementation break on
+  refactor.
+- **Input properties.** Do tests exercise nil, empty, zero, boundary, and invalid inputs,
+  or only the happy path?
+- **Justified existence.** Does every test assert something that could meaningfully fail?
+  Flag tautologies: truthy checks, constructor-works tests, getter-returns-what-was-set.
+- **No mocking what's tested.** Does any test mock a dependency and then assert the
+  mocked return value? That tests the mock, not the code.
+- **Functional core / imperative shell.** Is pure logic tested with unit tests (no mocks,
+  no I/O)? Is shell wiring tested with integration tests that exercise the full path?
+
+If tests fail these checks, flag them as issues. Poor test quality is a valid reason
+for NEEDS_REWORK if it means the step's behavior is not actually verified.
+
 ### 6. Check scope
 
 Verify the implementor stayed in scope:
@@ -160,6 +179,7 @@ Return this structure:
 - All plan requirements are met (possibly after your small fixes)
 - No bugs found
 - Tests pass
+- Tests meet TDE quality standards (verify behavior, exercise edge cases, no tautologies, no mocking-what-you-test)
 - Implementation stays in scope
 
 **NEEDS_REWORK** when:
@@ -167,6 +187,8 @@ Return this structure:
 - A plan requirement is missing or fundamentally wrong
 - A bug exists that's too complex for a quick fix
 - Tests fail and the fix isn't trivial
+- Tests are missing for behavior this step introduces or changes
+- Tests are tautological, mock the behavior under test, or only check the happy path
 - Significant scope violation that could affect other steps
 
 ## Rules
@@ -175,4 +197,4 @@ Return this structure:
 - **Don't refactor, restyle, or "improve" working code.** Only fix actual problems.
 - **Small deviations are OK.** If the implementor made a minor choice that differs from the plan but is clearly equivalent or better, note it but approve.
 - **Be specific.** Every issue must reference a file and line, and explain what's wrong and why.
-- **If tests don't exist for this step**, note it but don't block approval on that alone — the test step may come later.
+- **If tests don't exist for this step**, flag it as NEEDS_REWORK. Every step that adds or changes behavior must include tests. Testing is never deferred to a later step.

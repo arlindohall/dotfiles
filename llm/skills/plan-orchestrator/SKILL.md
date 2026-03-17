@@ -25,10 +25,19 @@ If any prerequisite fails, tell the user and stop.
    - The list of steps: step ID, filename, one-line description
    - The dependency graph: which steps block which
    - Which steps are independent and can run in parallel
+   - The **invariants** section — these are your "tests" for the entire plan
 
 2. **Do NOT read the individual step files.** The implementors will read their own files. You only need the index.
 
-3. Present the plan summary and proposed execution order to the user. Show which steps will run in parallel vs. sequentially. Ask for confirmation before proceeding.
+3. **Set your TDE expectations.** Before executing anything, write down the invariants
+   you will verify after every merge. These come from PLAN.md's Invariants section plus
+   these universal invariants (see `skills/test-driven-engineering/SKILL.md`, Principle 1):
+   - The full test suite passes after every step merge
+   - Every step that changes behavior includes tests for that behavior
+   - No step defers testing to a later step
+
+4. Present the plan summary, execution order, and the invariants you will enforce to the
+   user. Ask for confirmation before proceeding.
 
 ## Phase 2: Set Up Orchestrator Worktree
 
@@ -122,15 +131,22 @@ Agent(
 
 When a reviewer returns:
 
-- **If APPROVED**: Merge the step branch into the orchestrator branch and clean up:
+- **If APPROVED**: Merge the step branch into the orchestrator branch, then verify
+  your TDE invariants still hold:
   ```bash
   cd "${ORCH_WORKTREE}"
   git merge --no-ff "orch/${TIMESTAMP}/step-${STEP_ID}" \
     -m "merge: step ${STEP_ID} — [brief description]"
+  # Run tests to verify the invariant: suite still passes after merge
+  # (use the project's test command from AGENTS.md)
   git worktree remove "${ORCH_WORKTREE}-step${STEP_ID}" --force
   ```
+  If tests fail after merge, do NOT proceed to dependent steps. Report the failure
+  and ask the user for guidance.
 
-- **If NEEDS_REWORK**: Report the reviewer's findings to the user. Ask whether to:
+- **If NEEDS_REWORK**: Report the reviewer's findings to the user. Pay special attention
+  to test quality issues — missing tests, tautological tests, or mocking-what-you-test
+  are common rework reasons. Ask whether to:
   1. Re-spawn the implementor with the reviewer's feedback
   2. Let the user fix it manually
   3. Skip the step
@@ -176,3 +192,4 @@ After all steps are merged into `ORCH_BRANCH`:
 4. **Keep the user informed.** Report at each milestone: step started, implemented, reviewed, merged.
 5. **Preserve the original repo.** All work happens in worktrees. The user's working directory is never modified.
 6. **Parallel when possible.** Independent steps should run in parallel (multiple Agent calls in one message).
+7. **Verify invariants at every merge.** You hold TDE expectations (from PLAN.md's Invariants section and the universal invariants). Verify them after each merge — the test suite must pass, and no step may defer its tests. See `skills/test-driven-engineering/SKILL.md`.

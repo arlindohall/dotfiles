@@ -71,22 +71,44 @@ Before writing anything, read the files you'll modify or depend on. Understand:
 - How similar features are structured
 - What your dependencies (from prior steps) actually look like in code
 
-### 6. Implement
+### 6. Implement (test-first)
 
-Write the code specified in your plan file:
+Follow the TDE cycle: write tests first, then the production code. See
+`skills/test-driven-engineering/SKILL.md` for the full principles.
+
+**6a. Write the tests first.**
+Read the Tests section of your plan file. Write the test file with all specified test
+cases before writing any production code. Run the tests — they should fail (red).
+
+**6b. Write the simplest production code that passes the tests (shameless green).**
+Do not add abstractions, generality, or cleverness that the tests don't require. If the
+tests pass with a simple implementation, that implementation is correct — for now.
+
+**6c. Refactor while keeping tests green.**
+If you see opportunities to improve clarity or remove duplication, do so — but run the
+tests after each change. If a refactor breaks tests, revert it.
+
+Additional rules:
 
 - Follow project conventions exactly
 - Match existing code style (indentation, naming, structure)
 - Do not add anything not specified in the plan
 - Do not refactor or "improve" existing code unless the plan says to
 - Do not add extra error handling, comments, or abstractions beyond what the plan specifies
+- Prefer functional-core code (pure functions) for business logic, tested with unit tests
+- Imperative-shell code (I/O, database, HTTP) gets integration tests
+- Never mock the behavior you're testing — mock only external systems (network, third-party APIs)
+- Exercise edge cases in tests: nil, empty, zero, boundary, invalid inputs
 
 ### 7. Verify
 
 Before committing:
 
 - Re-read your plan file — check every requirement against what you wrote
-- Run any tests mentioned in your plan file or that cover your changes
+- Run the full test suite (or the relevant subset) — all tests must pass
+- Verify that your tests exercise edge cases (nil, empty, invalid), not just the happy path
+- Verify that no test mocks the behavior it is checking
+- Verify that every test asserts specific outputs, not just "truthy" or "no error"
 - Use `git diff` to review your own changes for mistakes
 - Ensure you haven't modified files outside your step's scope
 

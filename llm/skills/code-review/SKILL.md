@@ -112,11 +112,27 @@ With full context from phases 1–4, systematically evaluate each of these dimen
 - Does the change increase latency on a hot path?
 - Are there N+1 query patterns, unbounded loops, or unnecessary allocations?
 
-#### 5d. Test Quality
-- Do tests assert the **actual behavior under test**, or just assert no crash (`assert_response :ok`)?
+#### 5d. Test Quality (TDE principles)
+
+Evaluate tests against the test-driven engineering principles defined in
+`skills/test-driven-engineering/SKILL.md`. Specifically:
+
+- **Behavior, not implementation (Principle 4).** Do tests pass inputs and check outputs,
+  or do they inspect internal call patterns, private state, or implementation details?
+  Tests coupled to implementation break on refactor.
+- **Input properties (Principle 5).** Do tests exercise nil, empty, zero, boundary, and
+  invalid inputs? Or do they only cover the happy path?
+- **Justified existence (Principle 6).** Does every test assert something that could
+  meaningfully fail? Flag tautologies: truthy checks (`assert result`), constructor tests
+  (`assert Product.new`), getter-returns-what-was-set.
+- **No mocking what's tested (Principle 7).** Does any test stub a dependency and then
+  assert the stubbed return value? That tests the mock, not the code. Look for patterns
+  where `Dependency.stubs(:method).returns(x)` is followed by `assert_equal x, ...`.
+- **Functional core / imperative shell (Principle 8).** Is pure business logic tested
+  with simple unit tests (no mocks, no I/O setup)? Is shell wiring tested with integration
+  tests that exercise the full path from input to output?
 - Do integration tests verify that values reach the end user (rendered HTML, API response body), or only internal state?
 - Are test descriptions accurate? Does the test body match what the test name claims?
-- Is there excessive mocking that hides real integration bugs?
 - Are error/failure paths tested?
 - Are pre-existing test issues worth flagging (even if not introduced by this PR)?
 
