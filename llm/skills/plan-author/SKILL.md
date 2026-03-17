@@ -44,7 +44,89 @@ Follow these phases in order. Do not skip phases.
    - Any feature flags, configuration, or environment-specific setup
    - Naming conventions and patterns used in the surrounding code
 
-3. **Clarify ambiguities.** If something is under-specified, ask the user. Do not guess.
+3. **Clarify ambiguities.** Do not guess. Do not proceed to Phase 2 until ambiguities
+   are resolved. See Phase 1b below for the detailed Q&A process.
+
+### Phase 1b: Resolve ambiguity through Q&A
+
+The most important thing this skill does is ensure the plan has no gaps — no assumptions
+the human made that the plan leaves implicit, and no assumptions in the plan the human
+hasn't explicitly agreed to. This requires at least one round of Q&A before you begin
+decomposing the work.
+
+#### How the Q&A works
+
+After exploring the codebase (Phase 1 step 2), compile a list of every ambiguity,
+unstated assumption, and open design question. Then present them to the user in a single,
+organized message. Group related questions together under headings.
+
+**Format each question with numbered options whenever possible.** For example:
+
+> **Data storage**
+>
+> 1. Where should session tokens live?
+>    1. In a signed cookie (simple, no server state)
+>    2. In a database-backed session store (more control, more infrastructure)
+>    3. In Redis (fast, ephemeral, requires a Redis dependency)
+
+**When options involve real trade-offs** — different technologies, competing values,
+non-obvious consequences — include a brief pros/cons note for each:
+
+> **Background job framework**
+>
+> The import step needs to run asynchronously. A few options:
+>
+> 1. **Sidekiq**
+>    - Pros: Battle-tested, rich ecosystem, retries built in
+>    - Cons: Requires Redis, adds an operational dependency
+> 2. **GoodJob (Postgres-backed)**
+>    - Pros: No new infrastructure — uses the existing database
+>    - Cons: Less mature, slightly higher DB load under heavy usage
+> 3. **Inline (no job framework)**
+>    - Pros: No dependencies, simplest implementation
+>    - Cons: Blocks the request, not viable for large imports
+
+**When an option is straightforward** — obvious, one-line, no meaningful trade-off — a
+simple numbered list without pros/cons is fine. Do not pad simple choices with unnecessary
+analysis.
+
+#### Rounds
+
+- **Minimum: 1 round.** Always ask at least one round of clarifying questions, even if
+  the request seems clear. There are always implicit assumptions worth surfacing.
+
+- **Maximum: 2–3 rounds.** After the user answers, you may have follow-up questions
+  based on their answers. That's fine — ask them. But do not stretch beyond three rounds.
+  By round three, all major ambiguities should be settled.
+
+- **If ambiguity persists after 2–3 rounds**, the problem is not more questions — it is
+  that the human may not yet have a clear picture of the problem space. In that case,
+  shift from asking questions to **explaining the problem**:
+  - Summarize what you've learned about the codebase and the constraints.
+  - Describe the two or three most likely approaches, with concrete trade-offs.
+  - Identify which decision is the crux — the one choice that determines everything else.
+  - Ask the user to pick a direction on that single crux decision, rather than answering
+    a long list of open questions.
+
+  This reframes the conversation from "answer my questions" to "here is what I see — does
+  this match your understanding?" It makes it easier for the human to collaborate with you
+  on resolving the remaining ambiguity.
+
+#### What counts as an ambiguity
+
+- A requirement the user mentioned vaguely ("make it fast", "handle errors properly")
+- A design decision with multiple reasonable options and no stated preference
+- An interaction between the new code and existing code that could go several ways
+- A scope boundary — something the user might expect but didn't explicitly ask for
+- An assumption you are making about the environment, dependencies, or conventions
+- A constraint the user may not have considered (performance, backwards compatibility,
+  migration path)
+
+#### When to skip Q&A
+
+Never. Even a seemingly clear request has implicit assumptions worth surfacing. If the
+request really is unambiguous, the first round will be short — a few confirmations rather
+than deep questions. That's fine. The round still happens.
 
 ### Phase 2: Design the decomposition
 
