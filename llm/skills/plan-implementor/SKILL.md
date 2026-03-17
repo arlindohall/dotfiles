@@ -94,7 +94,8 @@ Additional rules:
 - Match existing code style (indentation, naming, structure)
 - Do not add anything not specified in the plan
 - Do not refactor or "improve" existing code unless the plan says to
-- Do not add extra error handling, comments, or abstractions beyond what the plan specifies
+- Do not add extra error handling or abstractions beyond what the plan specifies
+- **No comments by default.** Do not add comments to code — not inline, not block, not doc-comments, not TODOs. The only exception is when a comment explains something genuinely surprising: a workaround for a bug, a counterintuitive use of a lesser-known language feature, or a subtle correctness constraint that a reader would likely misunderstand or accidentally break. These cases are rare — most commits, PRs, and features should have zero comments. If you find yourself wanting to add a comment, the code probably needs a better name or clearer structure instead. Never add comments to tests.
 - Prefer functional-core code (pure functions) for business logic, tested with unit tests
 - Imperative-shell code (I/O, database, HTTP) gets integration tests
 - Never mock the behavior you're testing — mock only external systems (network, third-party APIs)
