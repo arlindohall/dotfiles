@@ -5,7 +5,7 @@
 	ui = auto
 [core]
 	pager = delta
-    excludesFile = ~/.gitignore
+	excludesFile = ~/.gitignore
 [interactive]
 	diffFilter = delta --color-only
 
@@ -19,7 +19,7 @@
 	colorMoved = default
 [push]
 	default = simple
-    autoSetupRemote = true
+	autoSetupRemote = true
 [alias]
 	b = branch
 	hash = log -n 1 --pretty=%H
@@ -33,6 +33,7 @@
 	lb = whend --decorate --graph --branches main~1..
 	ln = whend --decorate --graph -n
 	ll = whend --decorate --graph main~1..
+	timeline = log -p --reverse main..
 	names = show --name-only --pretty=""
 	dnames = diff --name-only --pretty=""
 	adog = log --all --decorate --oneline --graph
