@@ -185,7 +185,7 @@ After all steps are merged into `ORCH_BRANCH`:
 
 `PLAN_SLUG` is a short, human-readable, hyphenated slug derived from the plan's overall goal (e.g., `add-docker-support`, `refactor-auth-module`). This makes branches and worktree directories meaningful at a glance.
 
-**Important — branch name collision**: Git does not allow a branch named `orch-PLAN_SLUG` and a branch named `orch/PLAN_SLUG/step-NN` to coexist, because the former acts as a directory prefix that would conflict with the latter's path. Always use a flat separator for step branches: `orch/PLAN_SLUG-step-NN` (hyphen, not slash). The worktree path uses the same pattern: `../PROJECT-orch-PLAN_SLUG-stepNN`.
+**Important — branch name collision**: Git does not allow a branch named `orch-PLAN_SLUG` and a branch named `orch-PLAN_SLUG/step-NN` to coexist, because git treats the former as a directory prefix that conflicts with the latter's ref path. Always use a flat hyphen separator for step branches: `orch-PLAN_SLUG-step-NN` (no slashes). The worktree path uses the same pattern: `../PROJECT-orch-PLAN_SLUG-stepNN`.
 
 ## Running Tests
 

@@ -32,6 +32,7 @@ Your prompt will contain these variables:
 - **REPO_ROOT**: The original repository root path
 - **ORCH_WORKTREE**: The orchestrator's worktree path
 - **ORCH_BRANCH**: The orchestrator's branch name
+- **PLAN_SLUG**: Short hyphenated slug identifying the plan (e.g., "add-docker-support")
 - **STEP_ID**: The step identifier (e.g., "01", "02", "05")
 - **STEP_FILE**: Relative path to the plan file (e.g., "PLAN/01_image_name_and_entry.md")
 - **PLAN_SUMMARY**: Brief summary of the overall plan
@@ -42,10 +43,13 @@ Your prompt will contain these variables:
 ### 1. Create your worktree
 
 ```bash
-cd "${REPO_ROOT}"
-WORKTREE="${ORCH_WORKTREE}-step${STEP_ID}"
-BRANCH="orch-$(basename ${ORCH_BRANCH})/step-${STEP_ID}"
-git worktree add "${WORKTREE}" -b "${BRANCH}" "${ORCH_BRANCH}"
+scripts/setup-step-worktree.sh "${REPO_ROOT}" "${ORCH_WORKTREE}" "${ORCH_BRANCH}" "${PLAN_SLUG}" "${STEP_ID}"
+# Outputs: WORKTREE, BRANCH
+```
+
+See `scripts/setup-step-worktree.sh` for full details. Record the output values, then:
+
+```bash
 cd "${WORKTREE}"
 ```
 
