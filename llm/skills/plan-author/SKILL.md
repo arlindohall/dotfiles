@@ -37,6 +37,7 @@ Follow these phases in order. Do not skip phases.
    themselves.
 
    Specifically, gather:
+
    - The existing code that will be modified or extended
    - The test files for that code
    - The type signatures, interfaces, or protocols involved
@@ -102,6 +103,7 @@ analysis.
 - **If ambiguity persists after 2–3 rounds**, the problem is not more questions — it is
   that the human may not yet have a clear picture of the problem space. In that case,
   shift from asking questions to **explaining the problem**:
+
   - Summarize what you've learned about the codebase and the constraints.
   - Describe the two or three most likely approaches, with concrete trade-offs.
   - Identify which decision is the crux — the one choice that determines everything else.
@@ -158,6 +160,10 @@ Break the change into steps. Each step should:
   tests that exercise the wiring. See `skills/test-driven-engineering/SKILL.md`,
   Principle 8.
 
+  Do not add to the code itself whether it is functional or imperative, but be sure
+  always to label the files mentioned in the PLAN as one or the other, especially if they
+  are new files.
+
 - **Follow shameless green / flocking rules.** The first step that introduces a new
   concept should do the simplest thing that works — no premature abstractions. Later steps
   can refine. If two pieces of code look similar, that's fine; a future step can extract
@@ -194,18 +200,18 @@ architecture or data-flow description instead.>
 
 All changes are in <zone / directory / package>.
 
-| File | Purpose |
-|------|---------|
+| File           | Purpose                           |
+| -------------- | --------------------------------- |
 | `path/to/file` | Brief description of what changes |
-| ... | ... |
+| ...            | ...                               |
 
 ## Steps
 
-| # | File | Description |
-|---|------|-------------|
-| 0 | `PLAN/00_short_name.md` | One-line description |
-| 1 | `PLAN/01_short_name.md` | One-line description |
-| ... | ... | ... |
+| #   | File                    | Description          |
+| --- | ----------------------- | -------------------- |
+| 0   | `PLAN/00_short_name.md` | One-line description |
+| 1   | `PLAN/01_short_name.md` | One-line description |
+| ... | ...                     | ...                  |
 
 ## Invariants
 
@@ -235,18 +241,21 @@ The implementor will write these tests first, then write the code that makes the
 pass. This is the TDE cycle applied to each step.
 
 For each test:
+
 - The test name / description
 - The inputs (concrete values, not placeholders)
 - The expected output or assertion (specific values or properties)
 - Why this test exists (what bug or edge case it would catch)
 
 Include tests for:
+
 - The happy path with specific expected outputs
 - Edge cases: nil/null, empty, zero, boundary values, invalid input
 - Error/failure paths where the code has explicit error handling
 - For imperative-shell steps: integration tests that verify the wiring
 
 Tests must follow TDE principles (see skills/test-driven-engineering/SKILL.md):
+
 - Verify behavior by checking outputs, not implementation details (Principle 4)
 - Exercise input properties: empty, nil, invalid (Principle 5)
 - Justify their existence — no tautologies (Principle 6)
@@ -315,6 +324,7 @@ takes inputs and returns outputs with no dependencies on the environment. The im
 shell orchestrates I/O and calls the core.
 
 When planning steps, introduce the core first:
+
 - Step N: Add the pure-logic class/method with unit tests
 - Step N+1: Wire it into the controller/helper/shell that calls it
 
@@ -338,6 +348,7 @@ before writing the implementation spec. See `skills/test-driven-engineering/SKIL
 for the full set of principles and examples of good and bad tests.
 
 Key rules for tests specified in plan steps:
+
 - Tests assert specific outputs for specific inputs — no truthy checks, no crash checks
 - Tests exercise edge cases: nil, empty, zero, boundary, invalid
 - Tests justify their existence — they must be able to fail meaningfully
@@ -348,6 +359,7 @@ Key rules for tests specified in plan steps:
 ### Commit hygiene
 
 Each step produces one commit. The commit should:
+
 - Leave the test suite green
 - Not break any existing functionality
 - Have a clear, descriptive message
