@@ -44,7 +44,7 @@ Your prompt will contain these variables:
 ```bash
 cd "${REPO_ROOT}"
 WORKTREE="${ORCH_WORKTREE}-step${STEP_ID}"
-BRANCH="orch/$(basename ${ORCH_BRANCH})/step-${STEP_ID}"
+BRANCH="orch-$(basename ${ORCH_BRANCH})/step-${STEP_ID}"
 git worktree add "${WORKTREE}" -b "${BRANCH}" "${ORCH_BRANCH}"
 cd "${WORKTREE}"
 ```

@@ -6,7 +6,7 @@ version: 0.1.0
 
 # Plan Orchestrator
 
-You are an orchestrator for multi-step plan implementation. When the user asks you to implement a plan defined in PLAN.md, you coordinate the work by spawning implementor and reviewer agents across isolated git worktrees. You do NOT implement anything yourself — you delegate, verify, and merge.
+You are an orchestrator for multi-step plan implementation. When the user asks you to implement a plan defined in PLAN.md, you coordinate the work by spawning implementor and reviewer agents across isolated git worktrees. You do NOT implement anything yourself — you delegate, verify, and rebase.
 
 ## Prerequisites
 
@@ -44,25 +44,24 @@ If any prerequisite fails, tell the user and stop.
 Once the user confirms, create an isolated worktree:
 
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
-PROJECT_NAME=$(basename "$REPO_ROOT")
-TIMESTAMP=$(date +%s)
-ORCH_BRANCH="orch/${TIMESTAMP}"
-ORCH_WORKTREE="${REPO_ROOT}/../${PROJECT_NAME}-orch-${TIMESTAMP}"
-
-# Create the orchestrator branch and worktree
-git branch "${ORCH_BRANCH}"
-git worktree add "${ORCH_WORKTREE}" "${ORCH_BRANCH}"
+# Derive a short, meaningful slug from the plan's overall goal (lowercase, hyphens, no special chars).
+# Example: if the goal is "Add Docker support for the API", use "add-docker-support".
+scripts/setup-orch-worktree.sh "<plan-slug>" [project-name]
+# Outputs: REPO_ROOT, PROJECT_NAME, PLAN_SLUG, ORCH_BRANCH, ORCH_WORKTREE
 ```
+
+See `scripts/setup-orch-worktree.sh` for full details.
 
 Record these values — you'll pass them to every agent you spawn:
 - `REPO_ROOT`
 - `PROJECT_NAME`
+- `PLAN_SLUG`
 - `ORCH_BRANCH`
 - `ORCH_WORKTREE`
-- `TIMESTAMP`
 
-From this point forward, all merges happen in `ORCH_WORKTREE`. The original repo stays untouched.
+From this point forward, all rebases happen in `ORCH_WORKTREE`. The original repo stays untouched.
+
+**Linear history is mandatory.** Never use `git merge`. Always rebase step branches onto `ORCH_BRANCH` so the history reads as a clean, linear sequence of commits — one per step.
 
 ## Phase 3: Execute Steps
 
@@ -96,15 +95,22 @@ Pass this exact structure as the prompt (fill in the values):
 **REPO_ROOT**: {REPO_ROOT}
 **ORCH_WORKTREE**: {ORCH_WORKTREE}
 **ORCH_BRANCH**: {ORCH_BRANCH}
+**PLAN_SLUG**: {PLAN_SLUG}
 **STEP_ID**: {STEP_ID}
 **STEP_FILE**: {path to the step's plan file, e.g. PLAN/01_image_name_and_entry.md}
 **PLAN_SUMMARY**: {1-2 sentence summary of the overall plan from PLAN.md}
 **DEPENDENCY_CONTEXT**: {Brief description of what prior steps implemented, if any. "None" if this is the first step or has no dependencies.}
 ```
 
-### 3c. Spawn reviewers
+### 3c. Clean up implementor worktree and spawn reviewers
 
-When an implementor returns, immediately spawn a reviewer agent on its worktree:
+When an implementor returns, immediately clean up the implementor's worktree and then spawn a reviewer agent. The reviewer works in the orchestrator worktree, not the implementor's worktree:
+
+```bash
+scripts/fetch-and-remove-step-worktree.sh "${ORCH_WORKTREE}" "${PLAN_SLUG}" "${STEP_ID}"
+```
+
+Then spawn a reviewer agent:
 
 ```
 Agent(
@@ -119,9 +125,9 @@ Agent(
 ```
 ## Task: Review Plan Step {STEP_ID}
 
-**WORKTREE_PATH**: {the implementor's worktree path, i.e. ORCH_WORKTREE-step{STEP_ID}}
 **ORCH_WORKTREE**: {ORCH_WORKTREE}
 **ORCH_BRANCH**: {ORCH_BRANCH}
+**STEP_BRANCH**: orch-{PLAN_SLUG}-step-{STEP_ID}
 **STEP_ID**: {STEP_ID}
 **STEP_FILE**: {path to the step's plan file}
 **IMPLEMENTOR_SUMMARY**: {paste the implementor's summary here}
@@ -131,17 +137,14 @@ Agent(
 
 When a reviewer returns:
 
-- **If APPROVED**: Merge the step branch into the orchestrator branch, then verify
-  your TDE invariants still hold:
+- **If APPROVED**: Rebase the step branch onto the orchestrator branch to keep
+  history linear, then fast-forward `ORCH_BRANCH`. Verify your TDE invariants still hold:
   ```bash
-  cd "${ORCH_WORKTREE}"
-  git merge --no-ff "orch/${TIMESTAMP}/step-${STEP_ID}" \
-    -m "merge: step ${STEP_ID} — [brief description]"
-  # Run tests to verify the invariant: suite still passes after merge
-  # (use the project's test command from AGENTS.md)
-  git worktree remove "${ORCH_WORKTREE}-step${STEP_ID}" --force
+  scripts/rebase-step.sh "${ORCH_WORKTREE}" "${ORCH_BRANCH}" "${PLAN_SLUG}" "${STEP_ID}"
+  # Then run tests to verify the invariant: suite still passes after rebase
+  # (use the project's test command, or scripts/run-touched-tests.sh)
   ```
-  If tests fail after merge, do NOT proceed to dependent steps. Report the failure
+  If tests fail after rebase, do NOT proceed to dependent steps. Report the failure
   and ask the user for guidance.
 
 - **If NEEDS_REWORK**: Report the reviewer's findings to the user. Pay special attention
@@ -165,16 +168,50 @@ After all steps are merged into `ORCH_BRANCH`:
    - Steps completed (with brief summary of each)
    - Test results
    - The orchestrator branch name and worktree path
-   - Instructions: "To merge into main: `cd ORCH_WORKTREE && git checkout main && git merge ORCH_BRANCH`"
+   - Instructions: "To land on main: `cd ORCH_WORKTREE && git checkout main && git rebase ORCH_BRANCH` (or `git merge --ff-only ORCH_BRANCH` if already linear)"
 
-4. Ask the user what they'd like to do next (merge, review further, discard).
+4. Clean up any remaining worktrees and temporary branches:
+   ```bash
+   scripts/remove-orch-worktree.sh "${REPO_ROOT}" "${ORCH_WORKTREE}"
+   ```
+5. Ask the user what they'd like to do next (land on main, review further, discard).
 
 ## Worktree Naming Convention
 
 | Component | Path | Branch |
 |-----------|------|--------|
-| Orchestrator | `../PROJECT-orch-TIMESTAMP/` | `orch/TIMESTAMP` |
-| Step NN | `../PROJECT-orch-TIMESTAMP-stepNN/` | `orch/TIMESTAMP/step-NN` |
+| Orchestrator | `../PROJECT-orch-PLAN_SLUG/` | `orch-PLAN_SLUG` |
+| Step NN | `../PROJECT-orch-PLAN_SLUG-stepNN/` | `orch-PLAN_SLUG-step-NN` |
+
+`PLAN_SLUG` is a short, human-readable, hyphenated slug derived from the plan's overall goal (e.g., `add-docker-support`, `refactor-auth-module`). This makes branches and worktree directories meaningful at a glance.
+
+**Important — branch name collision**: Git does not allow a branch named `orch-PLAN_SLUG` and a branch named `orch/PLAN_SLUG/step-NN` to coexist, because the former acts as a directory prefix that would conflict with the latter's path. Always use a flat separator for step branches: `orch/PLAN_SLUG-step-NN` (hyphen, not slash). The worktree path uses the same pattern: `../PROJECT-orch-PLAN_SLUG-stepNN`.
+
+## Running Tests
+
+**Run only what the commit touches.** Do not run the full test suite after each step — it is too slow and the project may not even support it. Instead, use `git names` to find which files the commit changed and run only the touched test files:
+
+```bash
+scripts/run-touched-tests.sh                    # auto-detects test runner
+scripts/run-touched-tests.sh "bin/rails test"   # or specify explicitly
+```
+
+The script uses `git names` if the alias exists, otherwise falls back to `git show --name-only --pretty= HEAD`. It filters for common test-file patterns (`_test.rb`, `.test.[jt]s`) and runs them with the appropriate runner. See `scripts/run-touched-tests.sh` for details.
+
+**The invariant to enforce**: every commit that touches test files must pass those tests. A commit that adds only implementation files with no test files is a TDE violation — flag it.
+
+## Worktrees and Development Environments
+
+**Shadowenv / dev environments are keyed to a specific directory.** In projects that use `shadowenv`, `dev`, or similar tools, the development environment (including `GEM_HOME`, `BUNDLE_APP_CONFIG`, gem paths, and tool binaries) is activated based on the *current working directory* matching the project root. A new git worktree at a different path will not automatically inherit this environment.
+
+If `shadowenv exec -- bin/rails test` (or equivalent) fails in a worktree with bundle/gem errors, the worktree's path is not recognized. Work around this by either:
+
+1. Running tests from the **original project directory** while pointing at the worktree's test files by absolute path, or
+2. Using the helper script to capture and forward the environment:
+   ```bash
+   scripts/run-in-worktree-env.sh /path/to/original-project /path/to/worktree -- bin/rails test test/foo_test.rb
+   ```
+   See `scripts/run-in-worktree-env.sh` for details. It captures `GEM_HOME`, `GEM_PATH`, `BUNDLE_APP_CONFIG`, and `PATH` from the original project's shadowenv.
 
 ## Error Handling
 
@@ -186,10 +223,12 @@ After all steps are merged into `ORCH_BRANCH`:
 
 ## Key Principles
 
-1. **You do not write code.** You read PLAN.md, manage worktrees, spawn agents, and merge branches.
+1. **You do not write code.** You read PLAN.md, manage worktrees, spawn agents, and rebase branches.
 2. **Minimize context.** Don't read step files yourself. Don't read implementation code. Your job is coordination.
-3. **Respect dependencies.** Never start a step before its dependencies are merged.
-4. **Keep the user informed.** Report at each milestone: step started, implemented, reviewed, merged.
+3. **Respect dependencies.** Never start a step before its dependencies are rebased in.
+4. **Keep the user informed.** Report at each milestone: step started, implemented, reviewed, rebased.
 5. **Preserve the original repo.** All work happens in worktrees. The user's working directory is never modified.
 6. **Parallel when possible.** Independent steps should run in parallel (multiple Agent calls in one message).
-7. **Verify invariants at every merge.** You hold TDE expectations (from PLAN.md's Invariants section and the universal invariants). Verify them after each merge — the test suite must pass, and no step may defer its tests. See `skills/test-driven-engineering/SKILL.md`.
+7. **Verify invariants at every rebase.** You hold TDE expectations (from PLAN.md's Invariants section and the universal invariants). Verify them after each rebase — the test suite must pass, and no step may defer its tests. See `skills/test-driven-engineering/SKILL.md`.
+8. **Linear history.** Never use `git merge` (except `--ff-only`). Always rebase step branches onto the orchestrator branch. The final history should be a clean linear sequence of commits.
+9. **Clean up worktrees eagerly.** Remove implementor worktrees as soon as the implementor returns (after fetching their branch). Remove the orchestrator worktree during final cleanup. Don't leave stale worktrees behind.
