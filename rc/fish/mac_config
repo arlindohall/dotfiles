@@ -18,3 +18,5 @@ set -g EDITOR /opt/homebrew/bin/nvim
 function pi --description 'alias for pi that sets EDITOR for opening with ctrl-g'
   EDITOR=/opt/homebrew/bin/nvim command pi -n $argv
 end
+
+alias backup-skills "ls ~/.pi/agent/skills/ | rg -v '(agent-slack-read|skill-optimizer|^\$)' | xargs -I% cp -r ~/.pi/agent/skills/% ~/dotfiles/llm/skills/"
