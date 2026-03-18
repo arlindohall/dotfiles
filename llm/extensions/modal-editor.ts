@@ -18,15 +18,19 @@ const NORMAL_KEYS: Record<string, string | null> = {
 	j: "\x1b[B", // down
 	k: "\x1b[A", // up
 	l: "\x1b[C", // right
-	"0": "\x01", // line start
-	$: "\x05", // line end
+	"0": "\x01", // line start (ctrl+a)
+	$: "\x05", // line end (ctrl+e)
 	x: "\x1b[3~", // delete char
 	i: null, // insert mode
 	a: null, // append (insert + right)
+	w: "\x1b[1;5C", // word forward (ctrl+right)
+	b: "\x1b[1;5D", // word backward (ctrl+left)
+	G: "\x1b[F", // end of buffer (end key - moves to end of line, repeated goes to last line)
 };
 
 class ModalEditor extends CustomEditor {
 	private mode: "normal" | "insert" = "insert";
+	private pendingKey: string | null = null;
 
 	handleInput(data: string): void {
 		// Escape toggles to normal mode, or passes through for app handling
@@ -42,6 +46,23 @@ class ModalEditor extends CustomEditor {
 		// Insert mode: pass everything through
 		if (this.mode === "insert") {
 			super.handleInput(data);
+			return;
+		}
+
+		// Handle gg (go to beginning)
+		if (this.pendingKey === "g") {
+			this.pendingKey = null;
+			if (data === "g") {
+				// gg: go to beginning of buffer (home key)
+				super.handleInput("\x1b[H");
+				return;
+			}
+			// g followed by something else - ignore the g and process this key
+		}
+
+		// Start of gg sequence
+		if (data === "g") {
+			this.pendingKey = "g";
 			return;
 		}
 
