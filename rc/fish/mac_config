@@ -19,4 +19,14 @@ function pi --description 'alias for pi that sets EDITOR for opening with ctrl-g
   EDITOR=/opt/homebrew/bin/nvim command pi -n $argv
 end
 
-alias backup-skills "ls ~/.pi/agent/skills/ | rg -v '(agent-slack-read|skill-optimizer|^\$)' | xargs -I% cp -r ~/.pi/agent/skills/% ~/dotfiles/llm/skills/"
+function backup-skills --description 'Backup skills for pi into the dotfiles repo'
+  echo "Backing up .pi/agent/skills"
+  ls ~/.pi/agent/skills/ |
+    rg -v '(agent-slack-read|gworkspace|skill-optimizer)' |
+    xargs -I% cp -r ~/.pi/agent/skills/% ~/dotfiles/llm/skills/
+
+  echo "Backing up .pi/agent/extensions"
+  ls ~/.pi/agent/extensions/ |
+    rg -v '(shopify-proxy)' |
+    xargs -I% cp -r ~/.pi/agent/extensions/% ~/dotfiles/llm/extensions/
+end
