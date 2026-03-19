@@ -82,3 +82,5 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 
 <!-- step-07-applied: created ~/.pi/agent/skills/agent-worktree/ with all scripts moved from plan-orchestrator and plan-implementor; updated orchestrator and implementor SKILL.md files -->
 <!-- step-08-applied: created ~/.pi/agent/skills/agent-progress/SKILL.md -->
+
+<!-- step-09-applied: updated ~/.pi/agent/skills/plan-author/SKILL.md with handle frontmatter -->

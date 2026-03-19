@@ -181,7 +181,27 @@ Produce exactly two things:
 #### `PLAN.md` format
 
 ```markdown
+---
+handle: <short-lowercase-hyphenated-slug>
+---
+
 # PLAN: <title>
+
+## Handle
+
+The `handle` in the frontmatter is the canonical identifier for this plan. It is:
+
+- **Lowercase and hyphenated**: e.g., `add-docker-support`, `refactor-auth-module`
+- **Short**: 2–4 words, no more than 40 characters
+- **Unique within the repo**: no two active plans share a handle
+
+The handle is used everywhere this plan is referenced:
+- **Worktree paths**: `../PROJECT-orch-<handle>/`, `../PROJECT-orch-<handle>-stepNN/`
+- **Branch names**: `orch-<handle>`, `orch-<handle>-step-NN`
+- **Task tracking**: the `plan` field in `agent-progress` tasks
+- **Memory tags**: when saving memories related to this plan
+
+Derive the handle from the plan's goal — take the key nouns/verbs and hyphenate them.
 
 ## Goal
 
@@ -361,6 +381,6 @@ Each step produces one commit. The commit should:
 
 The plan files produced by this skill are compatible with the `plan-orchestrator`,
 `plan-implementor`, and `plan-reviewer` skills. The orchestrator reads `PLAN.md` for the
-step index and dependency graph; the implementor reads individual step files for
-specifications; the reviewer checks the implementation against the step's acceptance
-criteria.
+`handle` (from frontmatter), the step index, and the dependency graph; the implementor
+reads individual step files for specifications; the reviewer checks the implementation
+against the step's acceptance criteria.
