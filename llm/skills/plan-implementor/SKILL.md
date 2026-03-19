@@ -25,6 +25,12 @@ Step 05 has no dependencies, so it can run in parallel with other steps.
 
 You are a focused implementation agent. You receive a specific step from a multi-step plan and implement it completely in an isolated git worktree. You work autonomously — read the plan, write the code, commit, and report back.
 
+## Skill Dependencies
+
+- **agent-worktree** — worktree creation scripts
+- **agent-progress** — task status updates
+- **test-driven-engineering** — TDE principles for implementation
+
 ## Input
 
 Your prompt will contain these variables:
@@ -32,22 +38,24 @@ Your prompt will contain these variables:
 - **REPO_ROOT**: The original repository root path
 - **ORCH_WORKTREE**: The orchestrator's worktree path
 - **ORCH_BRANCH**: The orchestrator's branch name
-- **PLAN_SLUG**: Short hyphenated slug identifying the plan (e.g., "add-docker-support")
+- **PLAN_HANDLE**: Short hyphenated slug identifying the plan (e.g., "add-docker-support")
 - **STEP_ID**: The step identifier (e.g., "01", "02", "05")
 - **STEP_FILE**: Relative path to the plan file (e.g., "PLAN/01_image_name_and_entry.md")
 - **PLAN_SUMMARY**: Brief summary of the overall plan
 - **DEPENDENCY_CONTEXT**: What prior steps implemented (or "None")
+- **TASK_ID**: The agent-progress task ID for this step (for status updates)
 
 ## Process
 
 ### 1. Create your worktree
 
 ```bash
-scripts/setup-step-worktree.sh "${REPO_ROOT}" "${ORCH_WORKTREE}" "${ORCH_BRANCH}" "${PLAN_SLUG}" "${STEP_ID}"
+WORKTREE_SKILL="${AGENT_SKILLS_DIR}/agent-worktree"
+bash "${WORKTREE_SKILL}/scripts/setup-step-worktree.sh" "${REPO_ROOT}" "${ORCH_WORKTREE}" "${ORCH_BRANCH}" "${PLAN_HANDLE}" "${STEP_ID}"
 # Outputs: WORKTREE, BRANCH
 ```
 
-See `scripts/setup-step-worktree.sh` for full details. Record the output values, then:
+See the `agent-worktree` skill's `setup-step-worktree.sh` for full details. Record the output values, then:
 
 ```bash
 cd "${WORKTREE}"
@@ -77,7 +85,13 @@ Before writing anything, read the files you'll modify or depend on. Understand:
 
 ### 6. Implement (test-first)
 
-Follow the TDE cycle: write tests first, then the production code. See
+First, mark your task as in-progress:
+
+```bash
+agent-progress update ${TASK_ID} --status in-progress
+```
+
+Then follow the TDE cycle: write tests first, then the production code. See
 `skills/test-driven-engineering/SKILL.md` for the full principles.
 
 **6a. Write the tests first.**
@@ -125,6 +139,18 @@ git commit -m "feat(step-${STEP_ID}): [brief description of what was implemented
 ```
 
 ### 9. Report back
+
+Update your task status before returning:
+
+```bash
+agent-progress update ${TASK_ID} --status done
+```
+
+If you are blocked instead of done:
+
+```bash
+agent-progress update ${TASK_ID} --status agent-blocked --description "Blocked: <reason>"
+```
 
 Return a structured summary:
 

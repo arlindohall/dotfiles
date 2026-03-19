@@ -79,3 +79,5 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 - Every PLAN.md produced by plan-author will have a `handle` frontmatter field after step 9
 - The dependency graph across skills is acyclic: memory and progress know nothing about plan-*; plan-* skills reference progress and memory; progress can reference memory but not vice versa
 - Worktree scripts are moved to agent-worktree, not duplicated — plan-* skills reference the new location
+
+<!-- step-07-applied: created ~/.pi/agent/skills/agent-worktree/ with all scripts moved from plan-orchestrator and plan-implementor; updated orchestrator and implementor SKILL.md files -->
