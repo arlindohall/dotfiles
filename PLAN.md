@@ -88,3 +88,5 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 <!-- step-11-applied: updated ~/.pi/agent/skills/memory/SKILL.md -->
 
 <!-- step-10-applied: updated plan-orchestrator, plan-implementor, and plan-reviewer SKILL.md with agent-progress task tracking and agent-worktree references -->
+
+<!-- step-12-applied: added agent-progress and agent-worktree to ~/.pi/agent/AGENTS.md available_skills -->
