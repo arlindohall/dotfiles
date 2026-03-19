@@ -102,11 +102,6 @@ pub enum Command {
 }
 
 pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
-    if let Command::Tui = &cli.command {
-        println!("TUI not yet implemented");
-        return Ok(());
-    }
-
     let conn = Connection::open(&cli.db)?;
     init_db(&conn)?;
 
@@ -218,7 +213,10 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             remove_tag(&conn, id, &tag)?;
             println!("Removed tag '{tag}' from task {id}");
         }
-        Command::Tui => unreachable!(),
+        Command::Tui => {
+            crate::db::ops::init_db(&conn)?;
+            crate::tui::app::run_tui(&conn)?;
+        }
     }
     Ok(())
 }
