@@ -4,6 +4,12 @@ mod db;
 mod domain;
 mod tui;
 
+use clap::Parser;
+
 fn main() {
-    println!("agent-progress v0.1.0");
+    let cli = cli::Cli::parse();
+    if let Err(e) = cli::run(cli) {
+        eprintln!("Error: {e}");
+        std::process::exit(1);
+    }
 }
