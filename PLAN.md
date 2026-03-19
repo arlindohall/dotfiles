@@ -81,3 +81,4 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 - Worktree scripts are moved to agent-worktree, not duplicated — plan-* skills reference the new location
 
 <!-- step-07-applied: created ~/.pi/agent/skills/agent-worktree/ with all scripts moved from plan-orchestrator and plan-implementor; updated orchestrator and implementor SKILL.md files -->
+<!-- step-08-applied: created ~/.pi/agent/skills/agent-progress/SKILL.md -->
