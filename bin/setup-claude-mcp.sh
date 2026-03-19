@@ -37,8 +37,8 @@ if ! test "$OBSERVE_API_TOKEN"; then
   exit 1
 fi
 
-echo "VAULT_API_TOKEN: $VAULT_API_TOKEN"
-echo "OBSERVE_API_TOKEN: $OBSERVE_API_TOKEN"
+echo "VAULT_API_TOKEN: $(echo $VAULT_API_TOKEN | xxhsum - | cut -wf1)"
+echo "OBSERVE_API_TOKEN: $(echo $OBSERVE_API_TOKEN | xxhsum - | cut -wf1)"
 
 $claude_command mcp add \
   vault \
