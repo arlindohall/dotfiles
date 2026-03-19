@@ -20,6 +20,10 @@ Save a memory when:
 - Important project context is established (repo conventions, architecture decisions)
 - The user explicitly asks you to remember something
 - A non-obvious discovery is made that would be useful in future sessions
+- You discover work that is outside the scope of your current task — a bug, a needed
+  refactor, a missing feature, or a dependency issue. Save a memory with keywords
+  describing the affected area so it can be found later. If a task tracker is available,
+  also create a task for it; the memory provides context that outlives the task.
 
 Do NOT save ephemeral or trivially re-derivable information.
 

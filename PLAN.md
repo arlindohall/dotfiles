@@ -84,3 +84,5 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 <!-- step-08-applied: created ~/.pi/agent/skills/agent-progress/SKILL.md -->
 
 <!-- step-09-applied: updated ~/.pi/agent/skills/plan-author/SKILL.md with handle frontmatter -->
+
+<!-- step-11-applied: updated ~/.pi/agent/skills/memory/SKILL.md -->
