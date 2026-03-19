@@ -2,7 +2,8 @@ use crate::db::ops::{
     add_tag, create_task, get_task, init_db, list_tasks, remove_tag, update_task, TaskFilters,
     TaskUpdate,
 };
-use crate::domain::{format_task_json, format_task_list_json, format_task_list_yaml, format_task_yaml, Status};
+use crate::domain::format::{render_json, render_list_json, render_list_yaml, render_yaml, summary_line};
+use crate::domain::Status;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::Connection;
 use std::str::FromStr;
@@ -135,8 +136,8 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             )?;
             let task = get_task(&conn, id)?.ok_or("task not found after create")?;
             let out = match format {
-                OutputFormat::Json => format_task_json(&task)?,
-                OutputFormat::Yaml => format_task_yaml(&task)?,
+                OutputFormat::Json => render_json(&task)?,
+                OutputFormat::Yaml => render_yaml(&task)?,
             };
             print!("{out}");
         }
@@ -171,16 +172,16 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             )?;
             let task = get_task(&conn, id)?.ok_or("task not found after update")?;
             let out = match format {
-                OutputFormat::Json => format_task_json(&task)?,
-                OutputFormat::Yaml => format_task_yaml(&task)?,
+                OutputFormat::Json => render_json(&task)?,
+                OutputFormat::Yaml => render_yaml(&task)?,
             };
             print!("{out}");
         }
         Command::Show { id, format } => {
             let task = get_task(&conn, id)?.ok_or_else(|| format!("task {id} not found"))?;
             let out = match format {
-                OutputFormat::Json => format_task_json(&task)?,
-                OutputFormat::Yaml => format_task_yaml(&task)?,
+                OutputFormat::Json => render_json(&task)?,
+                OutputFormat::Yaml => render_yaml(&task)?,
             };
             print!("{out}");
         }
@@ -202,9 +203,10 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
                     search: search.as_deref(),
                 },
             )?;
+            eprintln!("{}", summary_line(tasks.len()));
             let out = match format {
-                OutputFormat::Json => format_task_list_json(&tasks)?,
-                OutputFormat::Yaml => format_task_list_yaml(&tasks)?,
+                OutputFormat::Json => render_list_json(&tasks)?,
+                OutputFormat::Yaml => render_list_yaml(&tasks)?,
             };
             print!("{out}");
         }
@@ -466,7 +468,7 @@ mod tests {
         conn: &Connection,
         command: Command,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        use crate::domain::{format_task_json, format_task_list_json, format_task_list_yaml, format_task_yaml, Status};
+        use crate::domain::format::{render_json, render_list_json, render_list_yaml, render_yaml};
         use std::str::FromStr;
 
         match command {
@@ -495,8 +497,8 @@ mod tests {
                 )?;
                 let task = get_task(conn, id)?.ok_or("not found")?;
                 Ok(match format {
-                    OutputFormat::Json => format_task_json(&task)?,
-                    OutputFormat::Yaml => format_task_yaml(&task)?,
+                    OutputFormat::Json => render_json(&task)?,
+                    OutputFormat::Yaml => render_yaml(&task)?,
                 })
             }
             Command::Update {
@@ -530,15 +532,15 @@ mod tests {
                 )?;
                 let task = get_task(conn, id)?.ok_or("not found")?;
                 Ok(match format {
-                    OutputFormat::Json => format_task_json(&task)?,
-                    OutputFormat::Yaml => format_task_yaml(&task)?,
+                    OutputFormat::Json => render_json(&task)?,
+                    OutputFormat::Yaml => render_yaml(&task)?,
                 })
             }
             Command::Show { id, format } => {
                 let task = get_task(conn, id)?.ok_or_else(|| format!("task {id} not found"))?;
                 Ok(match format {
-                    OutputFormat::Json => format_task_json(&task)?,
-                    OutputFormat::Yaml => format_task_yaml(&task)?,
+                    OutputFormat::Json => render_json(&task)?,
+                    OutputFormat::Yaml => render_yaml(&task)?,
                 })
             }
             Command::List {
@@ -560,8 +562,8 @@ mod tests {
                     },
                 )?;
                 Ok(match format {
-                    OutputFormat::Json => format_task_list_json(&tasks)?,
-                    OutputFormat::Yaml => format_task_list_yaml(&tasks)?,
+                    OutputFormat::Json => render_list_json(&tasks)?,
+                    OutputFormat::Yaml => render_list_yaml(&tasks)?,
                 })
             }
             Command::Tag { id, tag } => {
