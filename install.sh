@@ -124,14 +124,14 @@ function install_work_linux {
 }
 
 function install_agent_config {
-  echo "Installing agent skills and plugins to ~/.pi/agent/"
+  echo "Installing agent skills and extensions to ~/.pi/agent/"
   local llm_dir="$INSTALL_PATH/llm"
 
   mkdir -p "$HOME/.pi/agent/skills"
   cp -r "$llm_dir/skills/"* "$HOME/.pi/agent/skills/"
 
-  # mkdir -p "$HOME/.pi/agent/plugins"
-  # cp -r "$llm_dir/plugins/"* "$HOME/.pi/agent/plugins/"
+  mkdir -p "$HOME/.pi/agent/extensions"
+  cp -r "$llm_dir/extensions/"* "$HOME/.pi/agent/extensions/"
 
   cp "$llm_dir/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 }
