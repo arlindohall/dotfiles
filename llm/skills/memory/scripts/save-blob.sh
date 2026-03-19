@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: save-blob.sh <memory_id> <filetype> <description> [content or - for stdin]
 # Saves a blob file associated with an existing memory.
-# filetype must be "md" or "json". Content is written to ~/claude_memories/.
+# filetype must be "md" or "json". Content is written to ~/agent_memories/.
 # File is named with a hash prefix to avoid collisions. Never overwrites.
 set -euo pipefail
 

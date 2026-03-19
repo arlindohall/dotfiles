@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: setup-db.sh
-# Creates the claude_memories.sqlite database and all tables if they do not exist.
-# Also creates ~/claude_memories/ directory for blob storage.
+# Creates the agent_memories.sqlite database and all tables if they do not exist.
+# Also creates ~/agent_memories/ directory for blob storage.
 # Safe to run multiple times (idempotent).
 set -euo pipefail
 

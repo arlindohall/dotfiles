@@ -8,8 +8,8 @@ description: >
 
 # Agent Memory
 
-Persistent memory across Claude Code sessions. Data lives in `~/claude_memories.sqlite`
-with overflow blob storage in `~/claude_memories/`.
+Persistent memory across Claude Code sessions. Data lives in `~/agent_memories.sqlite`
+with overflow blob storage in `~/agent_memories/`.
 
 Helper scripts are in [scripts/](scripts/). Run them with `bash` from the skill directory.
 

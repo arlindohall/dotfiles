@@ -12,8 +12,8 @@
 #   help              Show this help
 set -euo pipefail
 
-DB="$HOME/claude_memories.sqlite"
-BLOB_DIR="$HOME/claude_memories"
+DB="$HOME/agent_memories.sqlite"
+BLOB_DIR="$HOME/agent_memories"
 SKILL_SCRIPTS="$HOME/dotfiles/skills/memory/scripts"
 
 usage() {
@@ -31,8 +31,8 @@ Commands:
   report            Full report: keywords, memories, and blobs
   help              Show this help
 
-Database: ~/claude_memories.sqlite
-Blob dir: ~/claude_memories/
+Database: ~/agent_memories.sqlite
+Blob dir: ~/agent_memories/
 EOF
 }
 

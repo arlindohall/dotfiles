@@ -2,8 +2,8 @@
 # Common variables and helpers for memory scripts.
 # Source this file; do not execute directly.
 
-DB="$HOME/claude_memories.sqlite"
-BLOB_DIR="$HOME/claude_memories"
+DB="$HOME/agent_memories.sqlite"
+BLOB_DIR="$HOME/agent_memories"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 sql_escape() {
