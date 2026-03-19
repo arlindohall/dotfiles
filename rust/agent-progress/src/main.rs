@@ -1,5 +1,6 @@
 mod cli;
 mod db;
+#[allow(dead_code)]
 mod domain;
 mod tui;
 
