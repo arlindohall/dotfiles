@@ -35,7 +35,9 @@
 	ll = whend --decorate --graph main~1..
 	timeline = log -p --reverse main..
 	names = show --name-only --pretty=""
+	namese = show --name-only --pretty="" --diff-filter=d
 	dnames = diff --name-only --pretty=""
+	dnamese = diff --name-only --pretty="" --diff-filter=d
 	adog = log --all --decorate --oneline --graph
 	bdog = log --branches --decorate --oneline --graph
 	stat = show --stat --pretty=""
