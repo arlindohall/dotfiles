@@ -86,3 +86,5 @@ All changes span `~/dotfiles/rust/agent-progress/` (new Rust crate),
 <!-- step-09-applied: updated ~/.pi/agent/skills/plan-author/SKILL.md with handle frontmatter -->
 
 <!-- step-11-applied: updated ~/.pi/agent/skills/memory/SKILL.md -->
+
+<!-- step-10-applied: updated plan-orchestrator, plan-implementor, and plan-reviewer SKILL.md with agent-progress task tracking and agent-worktree references -->
